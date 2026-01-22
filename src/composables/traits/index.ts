@@ -123,3 +123,29 @@ export {
   type ArrowableState,
   type ArrowableHandlers
 } from './useArrowable';
+
+// === Traits globaux (Application) ===
+
+// Thèmes
+export {
+  useThemeable,
+  useThemeState,
+  PRESET_THEMES,
+  type Theme,
+  type ColorPalette,
+  type ArchimateLayerColors,
+  type ThemeableState,
+  type ThemeableHandlers
+} from './useThemeable';
+
+// Event Sourcing & Lignage
+export {
+  useHistorable,
+  useHistoryState,
+  EventType,
+  type HistoryEvent,
+  type ObjectLineage,
+  type HistorableOptions,
+  type HistorableState,
+  type HistorableHandlers
+} from './useHistorable';

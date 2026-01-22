@@ -37,15 +37,23 @@
 | `useRoutable` | 4 types de routage | useRoutable.ts |
 | `useArrowable` | 18 types de flèches | useArrowable.ts |
 
+### Traits globaux (Application)
+| Trait | Description | Fichier |
+|-------|-------------|---------|
+| `useThemeable` | Thèmes globaux avec 5 presets | useThemeable.ts |
+| `useHistorable` | Event sourcing & lignage objets | useHistorable.ts |
+
 ---
 
 ## Statistiques
 
-- **23 traits** implémentés
+- **25 traits** implémentés
 - **22 formes** SVG (Rectangle, Ellipse, Diamond, Star, Cloud, Actor, etc.)
 - **60+ types** Archimate dans 7 layers
 - **18 types** de flèches (dont Archimate)
 - **4 modes** de routage (Straight, Orthogonal, Curved, Bezier)
+- **5 thèmes** prédéfinis (Light, Dark, Archimate, Blueprint, High Contrast)
+- **Event sourcing** avec lignage complet des objets
 
 ---
 
