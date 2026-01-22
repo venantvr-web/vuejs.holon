@@ -10,8 +10,9 @@
   },
   "dependencies": {
     "dexie": "^3.2.2",
-    "use-dexie": "^1.0.7",
+    "nanoid": "^5.1.6",
     "pinia": "^2.0.14",
+    "use-dexie": "^1.0.7",
     "vue": "^3.2.47"
   },
   "devDependencies": {
