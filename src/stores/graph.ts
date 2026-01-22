@@ -1,16 +1,23 @@
-
 // src/stores/graph.ts
 import { defineStore } from 'pinia';
-import { ref, readonly } from 'vue';
+import { ref, readonly, computed } from 'vue';
 import { db } from '../db';
 import type { Node, Edge } from '../types';
-import { nanoid } from 'nanoid'; // Pour générer des IDs uniques
+import { nanoid } from 'nanoid';
 
 export const useGraphStore = defineStore('graph', () => {
   // --- STATE ---
-  // Utilisation de Record<string, T> pour un accès O(1)
   const nodes = ref<Record<string, Node>>({});
   const edges = ref<Record<string, Edge>>({});
+
+  // --- GETTERS ---
+  const rootNodes = computed(() => {
+    return Object.values(nodes.value).filter(n => n.parentId === null);
+  });
+
+  const getChildren = (parentId: string) => {
+    return Object.values(nodes.value).filter(n => n.parentId === parentId);
+  };
 
   // --- ACTIONS ---
 
@@ -34,8 +41,6 @@ export const useGraphStore = defineStore('graph', () => {
 
   /**
    * Crée un nouveau noeud et le sauvegarde en base.
-   * @param partialNode - Données initiales du noeud (type, géométrie...)
-   * @param parentId - ID du parent, ou null pour la racine.
    */
   async function createNode(partialNode: Omit<Node, 'id'>, parentId: string | null) {
     const id = nanoid();
@@ -51,26 +56,115 @@ export const useGraphStore = defineStore('graph', () => {
 
   /**
    * Met à jour un noeud existant.
-   * @param id - ID du noeud à mettre à jour.
-   * @param updates - Champs à modifier.
    */
   async function updateNode(id: string, updates: Partial<Node>) {
     if (nodes.value[id]) {
-      Object.assign(nodes.value[id], updates);
+      const updatedNode = { ...nodes.value[id], ...updates };
+      nodes.value[id] = updatedNode;
       await db.nodes.update(id, updates);
     }
   }
 
-  // ... autres actions (deleteNode, createEdge, etc.)
+  /**
+   * Supprime un noeud et tous ses enfants récursivement.
+   */
+  async function deleteNode(id: string) {
+    // Récupérer tous les enfants récursivement
+    const toDelete: string[] = [id];
+    const collectChildren = (parentId: string) => {
+      const children = Object.values(nodes.value).filter(n => n.parentId === parentId);
+      for (const child of children) {
+        toDelete.push(child.id);
+        collectChildren(child.id);
+      }
+    };
+    collectChildren(id);
+
+    // Supprimer les arêtes connectées
+    const edgesToDelete = Object.values(edges.value)
+      .filter(e => toDelete.includes(e.sourceId) || toDelete.includes(e.targetId))
+      .map(e => e.id);
+
+    for (const edgeId of edgesToDelete) {
+      delete edges.value[edgeId];
+      await db.edges.delete(edgeId);
+    }
+
+    // Supprimer les noeuds
+    for (const nodeId of toDelete) {
+      delete nodes.value[nodeId];
+      await db.nodes.delete(nodeId);
+    }
+  }
+
+  /**
+   * Crée une nouvelle arête entre deux noeuds.
+   */
+  async function createEdge(sourceId: string, targetId: string, routing: 'straight' | 'orthogonal' = 'straight') {
+    // Vérifier que les noeuds existent
+    if (!nodes.value[sourceId] || !nodes.value[targetId]) return null;
+
+    // Vérifier qu'une arête n'existe pas déjà
+    const exists = Object.values(edges.value).some(
+      e => (e.sourceId === sourceId && e.targetId === targetId) ||
+           (e.sourceId === targetId && e.targetId === sourceId)
+    );
+    if (exists) return null;
+
+    const id = nanoid();
+    const newEdge: Edge = { id, sourceId, targetId, routing };
+    edges.value[id] = newEdge;
+    await db.edges.put(newEdge);
+    return newEdge;
+  }
+
+  /**
+   * Supprime une arête.
+   */
+  async function deleteEdge(id: string) {
+    if (edges.value[id]) {
+      delete edges.value[id];
+      await db.edges.delete(id);
+    }
+  }
+
+  /**
+   * Déplace un noeud vers un nouveau parent.
+   */
+  async function reparentNode(nodeId: string, newParentId: string | null) {
+    if (nodes.value[nodeId]) {
+      nodes.value[nodeId].parentId = newParentId;
+      await db.nodes.update(nodeId, { parentId: newParentId });
+    }
+  }
+
+  /**
+   * Efface tout le graphe.
+   */
+  async function clearAll() {
+    nodes.value = {};
+    edges.value = {};
+    await db.nodes.clear();
+    await db.edges.clear();
+  }
 
   return {
-    // State (lecture seule à l'extérieur du store)
+    // State
     nodes: readonly(nodes),
     edges: readonly(edges),
+
+    // Getters
+    rootNodes,
+    getChildren,
 
     // Actions
     loadFromDB,
     createNode,
     updateNode,
+    deleteNode,
+    createEdge,
+    deleteEdge,
+    reparentNode,
+    clearAll,
   };
 });
