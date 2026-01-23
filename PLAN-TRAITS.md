@@ -37,6 +37,7 @@
 | `useRoutable` | 4 types de routage | useRoutable.ts |
 | `useArrowable` | 18 types de flèches | useArrowable.ts |
 | `useRelationTypeable` | 13 types de relations Archimate + validation | useRelationTypeable.ts |
+| `useEdgeLayering` | Z-order edges, visibilité contextuelle, boost noeuds | useEdgeLayering.ts |
 
 ### Traits globaux (Application)
 | Trait | Description | Fichier |
@@ -76,7 +77,7 @@ interface ContainmentRule {
 
 ## Statistiques
 
-- **27 traits** implémentés
+- **28 traits** implémentés
 - **22 formes** SVG (Rectangle, Ellipse, Diamond, Star, Cloud, Actor, etc.)
 - **60+ types** Archimate dans 7 layers
 - **13 types** de relations Archimate avec validation

@@ -152,6 +152,23 @@ export {
   type RelationTypeableHandlers
 } from './useRelationTypeable';
 
+// Z-order et visibilité des edges
+export {
+  useEdgeLayering,
+  useEdgeLayeringState,
+  useNodeZIndexWithEdgeBoost,
+  EdgeVisibilityMode,
+  VISIBILITY_MODE_LABELS,
+  DEFAULT_EDGE_LAYERING_CONFIG,
+  type EdgeLayeringConfig,
+  type EdgeComputedStyle,
+  type EdgeLayeringOptions,
+  type EdgeLayeringState,
+  type EdgeLayeringHandlers,
+  type EdgeLayeringGlobalState,
+  type EdgeLayeringGlobalHandlers
+} from './useEdgeLayering';
+
 // === Traits globaux (Application) ===
 
 // Thèmes
