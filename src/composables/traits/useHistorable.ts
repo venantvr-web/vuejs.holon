@@ -3,7 +3,7 @@
 import { ref, computed, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import { nanoid } from 'nanoid';
-import type { Node, Edge } from '../../types';
+// Types Node et Edge utilisés implicitement via graphStore
 
 // Types d'événements
 export enum EventType {
@@ -271,7 +271,7 @@ export function useHistorable(options: HistorableOptions = {}): HistorableState 
   }
 
   // Démarre un batch d'événements
-  function startBatch(reason?: string): string {
+  function startBatch(_reason?: string): string {
     currentBatchId.value = nanoid();
     return currentBatchId.value;
   }
@@ -392,7 +392,7 @@ export function useHistorable(options: HistorableOptions = {}): HistorableState 
           x: sourceNode.geometry.x + 20,
           y: sourceNode.geometry.y + 20,
         },
-        style: { ...sourceNode.style },
+        styling: { ...sourceNode.styling },
         data: {
           ...sourceNode.data,
           clonedFrom: sourceId,

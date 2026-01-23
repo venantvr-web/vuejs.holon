@@ -212,8 +212,8 @@ export function useTypeable(options: TypeableOptions): TypeableState & TypeableH
         ...node.data,
         archimateType: type,
       },
-      style: {
-        ...node.style,
+      styling: {
+        ...node.styling,
         fill: layerColor,
       },
     });

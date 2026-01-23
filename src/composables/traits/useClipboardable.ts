@@ -104,9 +104,9 @@ export function useClipboardable(): ClipboardableHandlers {
     const idMapping = new Map<string, string>();
     const newNodeIds: string[] = [];
 
-    // Calculer le bounding box pour centrer le paste
-    const minX = Math.min(...nodes.map(n => n.geometry.x));
-    const minY = Math.min(...nodes.map(n => n.geometry.y));
+    // Calculer le bounding box pour centrer le paste (réservé pour future utilisation)
+    const _minX = Math.min(...nodes.map(n => n.geometry.x));
+    const _minY = Math.min(...nodes.map(n => n.geometry.y));
 
     // Créer les nouveaux noeuds avec de nouveaux IDs
     for (const node of nodes) {
@@ -137,7 +137,7 @@ export function useClipboardable(): ClipboardableHandlers {
         {
           type: newNode.type,
           geometry: newNode.geometry,
-          style: newNode.style,
+          styling: newNode.styling,
           data: newNode.data,
         },
         newNode.parentId

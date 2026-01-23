@@ -1,5 +1,5 @@
 // src/composables/traits/useThemeable.ts
-import { ref, computed, watch, type Ref } from 'vue';
+import { ref, computed, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 
 // Définition d'un thème
@@ -435,8 +435,8 @@ export function useThemeable(): ThemeableState & ThemeableHandlers {
     const defaults = currentTheme.value.nodeDefaults;
 
     graphStore.updateNode(nodeId, {
-      style: {
-        ...node.style,
+      styling: {
+        ...node.styling,
         fill: defaults.fill,
         stroke: defaults.stroke,
         strokeWidth: defaults.strokeWidth,
