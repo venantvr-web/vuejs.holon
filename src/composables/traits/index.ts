@@ -126,6 +126,8 @@ export {
   ArrowType,
   ARROW_MARKERS,
   ARROW_TYPE_LABELS,
+  START_MARKER_TYPES,
+  END_MARKER_TYPES,
   type ArrowConfig,
   type ArrowableOptions,
   type ArrowableState,
