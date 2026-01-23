@@ -36,6 +36,7 @@
 | `useAnchorable` | Points d'ancrage avec intersection | useAnchorable.ts |
 | `useRoutable` | 4 types de routage | useRoutable.ts |
 | `useArrowable` | 18 types de flèches | useArrowable.ts |
+| `useRelationTypeable` | 13 types de relations Archimate + validation | useRelationTypeable.ts |
 
 ### Traits globaux (Application)
 | Trait | Description | Fichier |
@@ -74,9 +75,10 @@ interface ContainmentRule {
 
 ## Statistiques
 
-- **25 traits** implémentés
+- **26 traits** implémentés
 - **22 formes** SVG (Rectangle, Ellipse, Diamond, Star, Cloud, Actor, etc.)
 - **60+ types** Archimate dans 7 layers
+- **13 types** de relations Archimate avec validation
 - **18 types** de flèches (dont Archimate)
 - **4 modes** de routage (Straight, Orthogonal, Curved, Bezier)
 - **5 thèmes** prédéfinis (Light, Dark, Archimate, Blueprint, High Contrast)

@@ -124,6 +124,26 @@ export {
   type ArrowableHandlers
 } from './useArrowable';
 
+// Types de relations Archimate
+export {
+  useRelationTypeable,
+  getRelationsByCategory,
+  getAllRelationTypes,
+  getRelationConfig,
+  RelationType,
+  RelationCategory,
+  RELATION_CONFIGS,
+  RELATION_TYPE_LABELS,
+  type RelationConfig,
+  type RelationValidation,
+  type AccessType,
+  type InfluenceStrength,
+  type FlowType,
+  type RelationTypeableOptions,
+  type RelationTypeableState,
+  type RelationTypeableHandlers
+} from './useRelationTypeable';
+
 // === Traits globaux (Application) ===
 
 // Thèmes
