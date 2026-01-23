@@ -137,6 +137,58 @@ export const ARROW_MARKERS: Record<ArrowType, (size: number, filled: boolean) =>
   `,
 };
 
+// Calcule le point de référence (refX, refY) du marker selon le type et la position
+// Le point de référence est le point qui sera aligné avec l'extrémité du path
+function getMarkerRefPoint(
+  type: ArrowType,
+  position: 'start' | 'end',
+  size: number
+): { refX: number; refY: number } {
+  const center = size / 2;
+
+  // Types centrés (points/cercles) - le centre doit être sur l'intersection
+  const centeredTypes = [
+    ArrowType.Dot,
+    ArrowType.SmallDot,
+    ArrowType.Circle,
+    ArrowType.FilledCircle,
+  ];
+
+  if (centeredTypes.includes(type)) {
+    return { refX: center, refY: center };
+  }
+
+  // Types diamant - le centre du losange doit être sur l'intersection
+  const diamondTypes = [
+    ArrowType.Diamond,
+    ArrowType.FilledDiamond,
+    ArrowType.ArchiComposition,
+    ArrowType.ArchiAggregation,
+  ];
+
+  if (diamondTypes.includes(type)) {
+    return { refX: center, refY: center };
+  }
+
+  // Types carrés
+  const squareTypes = [ArrowType.Square, ArrowType.FilledSquare];
+
+  if (squareTypes.includes(type)) {
+    return { refX: center, refY: center };
+  }
+
+  // Types flèches directionnelles
+  // Pour end: la pointe (à droite du path) doit être sur l'intersection
+  // Pour start: la base de la flèche doit être sur l'intersection
+  if (position === 'end') {
+    return { refX: size, refY: center };
+  } else {
+    // Pour start, on veut que le marqueur soit visible au départ
+    // refX=0 place la base de la flèche sur le point
+    return { refX: 0, refY: center };
+  }
+}
+
 export function useArrowable(options: ArrowableOptions): ArrowableState & ArrowableHandlers {
   const graphStore = useGraphStore();
 
@@ -175,7 +227,11 @@ export function useArrowable(options: ArrowableOptions): ArrowableState & Arrowa
 
     const size = arrowSize.value;
     const id = `arrow-${type}-${position}-${color.replace('#', '')}`;
-    const refX = position === 'end' ? size : 0;
+
+    // Calculer refX/refY selon le type de marqueur et la position
+    // Pour les points (Dot, SmallDot, Circle, FilledCircle), le centre doit être sur l'intersection
+    // Pour les flèches, la pointe doit être sur l'intersection (position end) ou la base (position start)
+    const { refX, refY } = getMarkerRefPoint(type, position, size);
     const orient = position === 'end' ? 'auto' : 'auto-start-reverse';
 
     const markerContent = ARROW_MARKERS[type]?.(size, type.includes('filled')) ?? '';
@@ -186,7 +242,7 @@ export function useArrowable(options: ArrowableOptions): ArrowableState & Arrowa
         markerWidth="${size}"
         markerHeight="${size}"
         refX="${refX}"
-        refY="${size / 2}"
+        refY="${refY}"
         orient="${orient}"
         markerUnits="userSpaceOnUse"
         style="color: ${color}"
