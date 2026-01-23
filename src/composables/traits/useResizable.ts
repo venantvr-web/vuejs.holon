@@ -1,5 +1,5 @@
 // src/composables/traits/useResizable.ts
-import { ref, computed, type Ref } from 'vue';
+import { ref, computed, onMounted, onUnmounted, getCurrentInstance, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 
 // === CONFIGURATION AUTOSIZE ===
@@ -7,6 +7,7 @@ import { useGraphStore } from '../../stores/graph';
 export interface AutosizeConfig {
   enabled: boolean;              // Activer l'autosize
   padding: number;               // Marge intérieure de base (en pixels à zoom 1)
+  paddingTop: number;            // Marge supérieure (pour laisser place au label parent)
   paddingScaleWithZoom: boolean; // La marge s'adapte au zoom
   minPaddingAtZoom: number;      // Padding minimum quand zoomé très loin
   maxPaddingAtZoom: number;      // Padding maximum quand zoomé très près
@@ -17,6 +18,7 @@ export interface AutosizeConfig {
 export const DEFAULT_AUTOSIZE_CONFIG: AutosizeConfig = {
   enabled: true,
   padding: 20,
+  paddingTop: 35,                // Plus haut pour le label du parent
   paddingScaleWithZoom: true,
   minPaddingAtZoom: 10,
   maxPaddingAtZoom: 40,
@@ -125,6 +127,22 @@ export function useResizable(options: ResizableOptions): ResizableState & Resiza
     return Math.max(
       config.minPaddingAtZoom,
       Math.min(config.maxPaddingAtZoom, scaledPadding)
+    );
+  });
+
+  // Padding top effectif (pour laisser place au label du parent)
+  const effectivePaddingTop = computed(() => {
+    const config = autosizeConfigRef.value;
+    const zoom = options.zoomLevel?.value ?? 1;
+
+    if (!config.paddingScaleWithZoom) {
+      return config.paddingTop;
+    }
+
+    const scaledPadding = config.paddingTop * Math.sqrt(zoom);
+    return Math.max(
+      config.minPaddingAtZoom,
+      Math.min(config.maxPaddingAtZoom * 1.5, scaledPadding)
     );
   });
 
@@ -313,18 +331,33 @@ export function useResizable(options: ResizableOptions): ResizableState & Resiza
     }
 
     const padding = effectivePadding.value;
+    const paddingTop = effectivePaddingTop.value;
 
-    // Calculer la nouvelle taille
+    // === STRATÉGIE D'ENGLOBEMENT ===
+    //
+    // Les bounds donnent la zone rectangulaire couverte par tous les enfants:
+    //   - minX, minY : coin supérieur gauche de la zone enfants
+    //   - maxX, maxY : coin inférieur droit de la zone enfants
+    //   - width, height : taille de la zone (maxX - minX, maxY - minY)
+    //
+    // Le parent doit englober cette zone avec un padding sur tous les côtés.
+    // Le padding top est plus grand pour laisser place au label du parent.
+    //
+    // Si les enfants ne sont pas positionnés correctement,
+    // on les décale tous pour qu'ils respectent les paddings.
+
+    // Taille nécessaire pour englober tous les enfants + padding
+    // Hauteur = paddingTop + hauteur_enfants + padding (bas)
     const newW = Math.max(minSize, bounds.width + padding * 2);
-    const newH = Math.max(minSize, bounds.height + padding * 2);
+    const newH = Math.max(minSize, bounds.height + paddingTop + padding);
 
-    // Calculer le décalage nécessaire pour les enfants
-    // (si minX ou minY sont négatifs ou trop petits)
-    const offsetX = padding - bounds.minX;
-    const offsetY = padding - bounds.minY;
+    // Décalage à appliquer aux enfants pour que le premier enfant (minX, minY)
+    // soit positionné à (padding, paddingTop) dans le parent
+    const childOffsetX = padding - bounds.minX;
+    const childOffsetY = paddingTop - bounds.minY;
 
     // Appliquer le décalage aux enfants si nécessaire
-    if (Math.abs(offsetX) > 1 || Math.abs(offsetY) > 1) {
+    if (Math.abs(childOffsetX) > 0.5 || Math.abs(childOffsetY) > 0.5) {
       const children = Object.values(graphStore.nodes).filter(
         n => n.parentId === options.nodeId.value
       );
@@ -333,15 +366,19 @@ export function useResizable(options: ResizableOptions): ResizableState & Resiza
         graphStore.updateNode(child.id, {
           geometry: {
             ...child.geometry,
-            x: child.geometry.x + offsetX,
-            y: child.geometry.y + offsetY,
+            x: child.geometry.x + childOffsetX,
+            y: child.geometry.y + childOffsetY,
           },
         });
       }
     }
 
     // Mettre à jour la taille du parent
-    if (Math.abs(node.geometry.w - newW) > 1 || Math.abs(node.geometry.h - newH) > 1) {
+    const geometryChanged =
+      Math.abs(node.geometry.w - newW) > 1 ||
+      Math.abs(node.geometry.h - newH) > 1;
+
+    if (geometryChanged) {
       graphStore.updateNode(options.nodeId.value, {
         geometry: {
           ...node.geometry,
@@ -374,6 +411,7 @@ export function useResizable(options: ResizableOptions): ResizableState & Resiza
     if (!node || !child || child.parentId !== options.nodeId.value) return;
 
     const padding = effectivePadding.value;
+    const paddingTop = effectivePaddingTop.value;
 
     // Vérifier si l'enfant dépasse
     const childRight = child.geometry.x + child.geometry.w + padding;
@@ -409,8 +447,9 @@ export function useResizable(options: ResizableOptions): ResizableState & Resiza
       needsUpdate = true;
     }
 
-    if (child.geometry.y < padding) {
-      const offset = padding - child.geometry.y;
+    // Utiliser paddingTop pour la marge supérieure (espace pour le label)
+    if (child.geometry.y < paddingTop) {
+      const offset = paddingTop - child.geometry.y;
       const children = Object.values(graphStore.nodes).filter(
         n => n.parentId === options.nodeId.value
       );
@@ -445,9 +484,33 @@ export function useResizable(options: ResizableOptions): ResizableState & Resiza
     }, autosizeConfigRef.value.debounceMs);
   }
 
-  // Exposer la fonction de scheduling pour utilisation externe
-  // (le composant parent peut l'appeler quand un enfant change)
-  (window as any).__scheduleAutosize = scheduleAutosize;
+  // === ÉCOUTE DES ÉVÉNEMENTS DE DÉPLACEMENT D'ENFANTS ===
+
+  function handleChildMoved(event: Event) {
+    const customEvent = event as CustomEvent<{ childId: string; parentId: string }>;
+    const { parentId } = customEvent.detail;
+
+    // Vérifier si c'est un de nos enfants
+    if (parentId === options.nodeId.value) {
+      scheduleAutosize();
+    }
+  }
+
+  // Enregistrer/désenregistrer l'écouteur d'événements
+  // Note: Ces hooks ne sont appelés que dans le contexte d'un composant Vue
+  const instance = getCurrentInstance();
+  if (instance) {
+    onMounted(() => {
+      window.addEventListener('child-moved', handleChildMoved);
+    });
+
+    onUnmounted(() => {
+      window.removeEventListener('child-moved', handleChildMoved);
+    });
+  } else {
+    // Fallback pour les tests ou les appels hors composant
+    window.addEventListener('child-moved', handleChildMoved);
+  }
 
   return {
     // State

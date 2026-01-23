@@ -79,4 +79,25 @@ La complexité principale de ce projet réside dans la gestion des différents s
     npm run dev
     ```
 
-3.  **Ouvrir l'application** : Naviguez vers l'URL fournie par votre outil de build (ex: `http://localhost:5173`).
+3.  **Lancer les tests :**
+    ```bash
+    npm run test      # Mode watch
+    npm run test:run  # Exécution unique
+    ```
+
+4.  **Ouvrir l'application** : Naviguez vers l'URL fournie par votre outil de build (ex: `http://localhost:5173`).
+
+## Tests
+
+Le projet utilise **Vitest** avec **happy-dom** pour les tests unitaires.
+
+- **42 tests** couvrant les traits principaux
+- Tests des composables : `useResizable`, `useAnchorable`, `useDraggable`, `useRoutable`
+- Documentation complète dans [TESTS.md](./TESTS.md)
+
+## Traits (Composables)
+
+Le projet utilise un système de **traits** (composables Vue) pour ajouter des comportements aux noeuds et edges.
+
+- **28 traits** implémentés
+- Voir [PLAN-TRAITS.md](./PLAN-TRAITS.md) pour la liste complète
