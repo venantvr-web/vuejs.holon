@@ -7,6 +7,7 @@ import {
   getNodeCenter,
   calculateArrowAngle,
   RoutingType,
+  ArrowType,
 } from '../../composables/traits';
 import type { Edge } from '../../types';
 
@@ -168,8 +169,32 @@ const arrowSize = 10;
 
 <template>
   <g class="edge-layer">
-    <!-- Définition du marker flèche -->
+    <!-- Définition des markers -->
     <defs>
+      <!-- Marker de départ: petit point -->
+      <marker
+        id="start-dot"
+        markerWidth="10"
+        markerHeight="10"
+        refX="5"
+        refY="5"
+        orient="auto"
+        markerUnits="userSpaceOnUse"
+      >
+        <circle cx="5" cy="5" r="2.5" fill="#333" />
+      </marker>
+      <marker
+        id="start-dot-blue"
+        markerWidth="10"
+        markerHeight="10"
+        refX="5"
+        refY="5"
+        orient="auto"
+        markerUnits="userSpaceOnUse"
+      >
+        <circle cx="5" cy="5" r="2.5" fill="#3b82f6" />
+      </marker>
+      <!-- Marker d'arrivée: flèche -->
       <marker
         id="arrowhead"
         markerWidth="10"
@@ -210,6 +235,7 @@ const arrowSize = 10;
         fill="none"
         stroke="#333"
         stroke-width="2"
+        marker-start="url(#start-dot)"
         marker-end="url(#arrowhead)"
         class="edge-line"
       />
@@ -223,6 +249,7 @@ const arrowSize = 10;
       stroke="#3b82f6"
       stroke-width="2"
       stroke-dasharray="5,5"
+      marker-start="url(#start-dot-blue)"
       marker-end="url(#arrowhead-blue)"
       class="edge-pending"
     />
