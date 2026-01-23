@@ -7,7 +7,7 @@
 |-------|-------------|---------|
 | `useDraggable` | Déplacement des noeuds avec zoom | useDraggable.ts |
 | `useResizable` | Redimensionnement avec scaling des enfants | useResizable.ts |
-| `useDockable` | Hiérarchie parent/enfant dynamique | useDockable.ts |
+| `useDockable` | Hiérarchie + règles de containment Archimate | useDockable.ts |
 | `useEditable` | Édition inline du label | useEditable.ts |
 | `useStyleable` | Couleurs fill/stroke, opacité | useStyleable.ts |
 | `useConnectable` | Création de liens entre noeuds | useConnectable.ts |
@@ -42,6 +42,33 @@
 |-------|-------------|---------|
 | `useThemeable` | Thèmes globaux avec 5 presets | useThemeable.ts |
 | `useHistorable` | Event sourcing & lignage objets | useHistorable.ts |
+
+---
+
+## Fonctionnalités de Containment (useDockable)
+
+Le trait `useDockable` gère maintenant les règles de containment Archimate :
+
+### ContainmentRule
+```typescript
+interface ContainmentRule {
+  canContain?: boolean;           // Peut avoir des enfants
+  canBeContained?: boolean;       // Peut être mis dans un container
+  allowedParentTypes?: string[];  // Types de parents autorisés
+  allowedChildTypes?: string[];   // Types d'enfants autorisés
+  forbiddenParentTypes?: string[];// Types de parents interdits
+  forbiddenChildTypes?: string[]; // Types d'enfants interdits
+  maxChildren?: number;           // Nombre max d'enfants
+  maxDepth?: number;              // Profondeur max de nesting
+}
+```
+
+### Règles par défaut
+- `generic-location` : peut contenir, ne peut pas être contenu
+- `business-process` : peut contenir business-function, business-event, business-interaction
+- `application-component` : peut contenir application-function, application-process, application-data-object
+- `technology-node` : peut contenir technology-device, system-software, artifact
+- `generic-grouping` : max 50 enfants
 
 ---
 

@@ -278,7 +278,7 @@ export function useShapeable(options: ShapeableOptions): ShapeableState & Shapea
     if (!node) return;
 
     const metadata = SHAPE_METADATA[newShape];
-    let updates: Partial<typeof node> = {
+    const updates: Record<string, unknown> = {
       data: {
         ...node.data,
         shape: newShape,

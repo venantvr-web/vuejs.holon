@@ -42,7 +42,7 @@ export const useGraphStore = defineStore('graph', () => {
   /**
    * Crée un nouveau noeud et le sauvegarde en base.
    */
-  async function createNode(partialNode: Omit<Node, 'id'>, parentId: string | null) {
+  async function createNode(partialNode: Omit<Node, 'id' | 'parentId'>, parentId: string | null) {
     const id = nanoid();
     const newNode: Node = {
       ...partialNode,

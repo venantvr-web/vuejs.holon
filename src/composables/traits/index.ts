@@ -4,7 +4,7 @@
 // === Traits de base ===
 export { useDraggable, type DraggableOptions, type DraggableState, type DraggableHandlers } from './useDraggable';
 export { useResizable, type ResizableOptions, type ResizableState, type ResizableHandlers } from './useResizable';
-export { useDockable, type DockableOptions, type DockableState, type DockableHandlers } from './useDockable';
+export { useDockable, useContainmentRules, DEFAULT_CONTAINMENT_RULES, type DockableOptions, type DockableState, type DockableHandlers, type ContainmentRule } from './useDockable';
 export { useEditable, type EditableOptions, type EditableState, type EditableHandlers } from './useEditable';
 export { useStyleable, type StyleableOptions, type StyleableState, type StyleableHandlers, PRESET_COLORS, FILL_TYPES, type FillType } from './useStyleable';
 export { useConnectable, useConnectionState, type ConnectableOptions, type ConnectableState, type ConnectableHandlers } from './useConnectable';
