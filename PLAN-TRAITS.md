@@ -5,8 +5,8 @@
 ### Traits de base (Noeuds)
 | Trait | Description | Fichier |
 |-------|-------------|---------|
-| `useDraggable` | Déplacement des noeuds avec zoom | useDraggable.ts |
-| `useResizable` | Redimensionnement avec scaling des enfants | useResizable.ts |
+| `useDraggable` | Déplacement avec zoom + notification parent autosize | useDraggable.ts |
+| `useResizable` | Redimensionnement + autosize automatique parent/enfants | useResizable.ts |
 | `useDockable` | Hiérarchie + règles de containment Archimate | useDockable.ts |
 | `useEditable` | Édition inline du label | useEditable.ts |
 | `useStyleable` | Couleurs fill/stroke, opacité | useStyleable.ts |
@@ -75,9 +75,47 @@ interface ContainmentRule {
 
 ---
 
+## Fonctionnalités d'Autosize (useResizable)
+
+Le trait `useResizable` gère l'autosize automatique des parents pour englober leurs enfants.
+
+### Comportement
+
+1. **Calcul des bounds** : `minX`, `minY`, `maxX`, `maxY` de tous les enfants
+2. **Taille du parent** : `bounds.width + 2*padding` et `bounds.height + 2*padding`
+3. **Repositionnement** : Les enfants sont décalés ensemble pour respecter le padding
+
+### Configuration
+
+```typescript
+interface AutosizeConfig {
+  enabled: boolean;              // Activer l'autosize
+  padding: number;               // Marge intérieure (défaut: 20px)
+  paddingScaleWithZoom: boolean; // Adapter au zoom
+  minPaddingAtZoom: number;      // Padding min (défaut: 10px)
+  maxPaddingAtZoom: number;      // Padding max (défaut: 40px)
+  debounceMs: number;            // Délai avant recalcul (défaut: 50ms)
+}
+```
+
+### Événement child-moved
+
+Quand un enfant est déplacé (`useDraggable`), un événement `child-moved` est émis :
+
+```typescript
+window.dispatchEvent(new CustomEvent('child-moved', {
+  detail: { childId, parentId }
+}));
+```
+
+Le parent écoute cet événement et déclenche `applyAutosize()` automatiquement.
+
+---
+
 ## Statistiques
 
 - **28 traits** implémentés
+- **42 tests** unitaires (Vitest)
 - **22 formes** SVG (Rectangle, Ellipse, Diamond, Star, Cloud, Actor, etc.)
 - **60+ types** Archimate dans 7 layers
 - **13 types** de relations Archimate avec validation

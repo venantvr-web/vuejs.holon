@@ -1,7 +1,6 @@
 // src/composables/traits/useDraggable.ts
 import { ref, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
-import type { Node } from '../../types';
 
 export interface DraggableOptions {
   nodeId: Ref<string>;
@@ -9,6 +8,8 @@ export interface DraggableOptions {
   onDragStart?: () => void;
   onDragMove?: (dx: number, dy: number) => void;
   onDragEnd?: () => void;
+  /** Si true, notifie le parent pour qu'il recalcule son autosize */
+  notifyParentOnMove?: boolean;
 }
 
 export interface DraggableState {
@@ -71,10 +72,31 @@ export function useDraggable(options: DraggableOptions): DraggableState & Dragga
 
   function handleDragEnd() {
     isDragging.value = false;
+
+    // Notifier le parent pour recalculer l'autosize
+    if (options.notifyParentOnMove !== false) {
+      notifyParentAutosize();
+    }
+
     options.onDragEnd?.();
 
     window.removeEventListener('mousemove', handleDragMove);
     window.removeEventListener('mouseup', handleDragEnd);
+  }
+
+  /** Notifie le parent que cet enfant a bougé, pour déclencher l'autosize */
+  function notifyParentAutosize() {
+    const node = graphStore.nodes[options.nodeId.value];
+    if (!node?.parentId) return;
+
+    // Émettre un événement custom que le parent peut écouter
+    // On utilise un CustomEvent sur window pour découpler les composants
+    window.dispatchEvent(new CustomEvent('child-moved', {
+      detail: {
+        childId: options.nodeId.value,
+        parentId: node.parentId,
+      }
+    }));
   }
 
   return {

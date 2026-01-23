@@ -7,7 +7,7 @@ import NodeRenderer from './NodeRenderer.vue';
 import EdgeLayer from './EdgeLayer.vue';
 
 const graphStore = useGraphStore();
-const { screenToLocalCoordinates } = useGeometry();
+const { screenToLocalCoordinates, getNodeAbsolutePosition } = useGeometry();
 
 const svgRoot = ref<SVGSVGElement | null>(null);
 const zoomLevel = ref(1);
@@ -21,6 +21,20 @@ const lastMousePos = ref({ x: 0, y: 0 });
 const connectionMode = ref(false);
 const connectionSource = ref<string | null>(null);
 const connectionPreview = ref<{ x: number; y: number } | null>(null);
+
+// Centre absolu du noeud source pour l'aperçu de connexion
+const connectionSourceCenter = computed(() => {
+  if (!connectionSource.value) return { x: 0, y: 0 };
+  const node = graphStore.nodes[connectionSource.value];
+  if (!node) return { x: 0, y: 0 };
+
+  // Obtenir la position absolue du noeud (en tenant compte des parents)
+  const absPos = getNodeAbsolutePosition(connectionSource.value);
+  return {
+    x: absPos.x + node.geometry.w / 2,
+    y: absPos.y + node.geometry.h / 2,
+  };
+});
 
 // Transformation pour le groupe SVG principal
 const transform = computed(() => `translate(${pan.value.x} ${pan.value.y}) scale(${zoomLevel.value})`);
@@ -209,8 +223,8 @@ defineExpose({ svgRoot, pan, zoomLevel });
         <!-- Aperçu de la connexion en cours -->
         <line
           v-if="connectionMode && connectionSource && connectionPreview"
-          :x1="(graphStore.nodes[connectionSource]?.geometry.x ?? 0) + (graphStore.nodes[connectionSource]?.geometry.w ?? 0) / 2"
-          :y1="(graphStore.nodes[connectionSource]?.geometry.y ?? 0) + (graphStore.nodes[connectionSource]?.geometry.h ?? 0) / 2"
+          :x1="connectionSourceCenter.x"
+          :y1="connectionSourceCenter.y"
           :x2="connectionPreview.x"
           :y2="connectionPreview.y"
           stroke="#3b82f6"

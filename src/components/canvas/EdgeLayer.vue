@@ -1,6 +1,6 @@
 <!-- src/components/canvas/EdgeLayer.vue -->
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import {
   calculateEdgeIntersection,
@@ -20,6 +20,62 @@ const props = defineProps<{
 }>();
 
 const graphStore = useGraphStore();
+
+// État de sélection des edges
+const selectedEdgeId = ref<string | null>(null);
+
+function selectEdge(edgeId: string, event: MouseEvent) {
+  event.stopPropagation();
+  selectedEdgeId.value = edgeId;
+}
+
+function deselectEdge() {
+  selectedEdgeId.value = null;
+}
+
+function deleteSelectedEdge() {
+  if (selectedEdgeId.value) {
+    graphStore.deleteEdge(selectedEdgeId.value);
+    selectedEdgeId.value = null;
+  }
+}
+
+function handleEdgeContextMenu(edgeId: string, event: MouseEvent) {
+  event.preventDefault();
+  event.stopPropagation();
+  // Supprimer directement au clic droit
+  graphStore.deleteEdge(edgeId);
+  if (selectedEdgeId.value === edgeId) {
+    selectedEdgeId.value = null;
+  }
+}
+
+function handleKeyDown(event: KeyboardEvent) {
+  if ((event.key === 'Delete' || event.key === 'Backspace') && selectedEdgeId.value) {
+    event.preventDefault();
+    deleteSelectedEdge();
+  } else if (event.key === 'Escape') {
+    deselectEdge();
+  }
+}
+
+// Écouter les clics sur le canvas pour désélectionner
+function handleGlobalClick(event: MouseEvent) {
+  const target = event.target as Element;
+  if (!target.closest('.edge-group')) {
+    deselectEdge();
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('click', handleGlobalClick);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown);
+  window.removeEventListener('click', handleGlobalClick);
+});
 
 // Type de routage par défaut
 const defaultRouting = ref<RoutingType>(RoutingType.Straight);
@@ -220,23 +276,39 @@ const arrowSize = 10;
     </defs>
 
     <!-- Arêtes existantes -->
-    <g v-for="edge in renderedEdges" :key="edge.id" class="edge-group">
+    <g
+      v-for="edge in renderedEdges"
+      :key="edge.id"
+      class="edge-group"
+      @click="selectEdge(edge.id, $event)"
+      @contextmenu="handleEdgeContextMenu(edge.id, $event)"
+    >
       <!-- Zone de hit plus large pour la sélection -->
       <path
         :d="edge.path"
         fill="none"
         stroke="transparent"
-        stroke-width="10"
+        stroke-width="12"
         class="edge-hitbox cursor-pointer"
+      />
+      <!-- Halo de sélection -->
+      <path
+        v-if="selectedEdgeId === edge.id"
+        :d="edge.path"
+        fill="none"
+        stroke="#3b82f6"
+        stroke-width="6"
+        stroke-opacity="0.3"
+        class="edge-selection-halo"
       />
       <!-- Trait visible -->
       <path
         :d="edge.path"
         fill="none"
-        stroke="#333"
+        :stroke="selectedEdgeId === edge.id ? '#3b82f6' : '#333'"
         stroke-width="2"
-        marker-start="url(#start-dot)"
-        marker-end="url(#arrowhead)"
+        :marker-start="selectedEdgeId === edge.id ? 'url(#start-dot-blue)' : 'url(#start-dot)'"
+        :marker-end="selectedEdgeId === edge.id ? 'url(#arrowhead-blue)' : 'url(#arrowhead)'"
         class="edge-line"
       />
     </g>

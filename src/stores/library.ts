@@ -13,7 +13,7 @@ export const useLibraryStore = defineStore('library', () => {
       type: 'container',
       geometry: { x: 0, y: 0, w: 200, h: 150 },
       styling: { fill: 'rgba(0,0,0,0.05)', stroke: '#999', strokeWidth: 1, opacity: 1 },
-      data: { name: 'Container' },
+      data: { name: 'Container', autosize: true },
     },
     {
       type: 'shape',
