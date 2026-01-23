@@ -5,14 +5,18 @@ import { useGraphStore } from '../../stores/graph';
 // Types de flèches
 export enum ArrowType {
   None = 'none',
-  Arrow = 'arrow', // Flèche simple
-  FilledArrow = 'filled-arrow', // Flèche pleine
-  Diamond = 'diamond', // Losange (composition)
+  // Marqueur de départ discret (point d'origine)
+  Dot = 'dot',                     // Petit point discret (défaut pour départ)
+  SmallDot = 'small-dot',          // Point très petit
+  // Flèches standard
+  Arrow = 'arrow',                 // Flèche simple
+  FilledArrow = 'filled-arrow',    // Flèche pleine
+  Diamond = 'diamond',             // Losange (composition)
   FilledDiamond = 'filled-diamond', // Losange plein (composition forte)
-  Circle = 'circle', // Cercle
-  FilledCircle = 'filled-circle', // Cercle plein
-  Square = 'square', // Carré
-  FilledSquare = 'filled-square', // Carré plein
+  Circle = 'circle',               // Cercle
+  FilledCircle = 'filled-circle',  // Cercle plein
+  Square = 'square',               // Carré
+  FilledSquare = 'filled-square',  // Carré plein
   // Types Archimate
   ArchiComposition = 'archi-composition',
   ArchiAggregation = 'archi-aggregation',
@@ -52,6 +56,15 @@ export interface ArrowableHandlers {
 // Définitions SVG des marqueurs de flèches
 export const ARROW_MARKERS: Record<ArrowType, (size: number, filled: boolean) => string> = {
   [ArrowType.None]: () => '',
+
+  // Points de départ discrets
+  [ArrowType.Dot]: (size) => `
+    <circle cx="${size / 2}" cy="${size / 2}" r="${size / 4}" fill="currentColor"/>
+  `,
+
+  [ArrowType.SmallDot]: (size) => `
+    <circle cx="${size / 2}" cy="${size / 2}" r="${size / 6}" fill="currentColor"/>
+  `,
 
   [ArrowType.Arrow]: (size) => `
     <path d="M 0 0 L ${size} ${size / 2} L 0 ${size}" fill="none" stroke="currentColor" stroke-width="1.5"/>
@@ -131,7 +144,8 @@ export function useArrowable(options: ArrowableOptions): ArrowableState & Arrowa
 
   const startArrow = computed((): ArrowType => {
     const e = edge.value;
-    return ((e as any)?.startArrow as ArrowType) ?? ArrowType.None;
+    // Par défaut : petit point discret pour marquer le départ
+    return ((e as any)?.startArrow as ArrowType) ?? ArrowType.Dot;
   });
 
   const endArrow = computed((): ArrowType => {
@@ -195,7 +209,9 @@ export function useArrowable(options: ArrowableOptions): ArrowableState & Arrowa
 
 // Labels pour l'UI
 export const ARROW_TYPE_LABELS: Record<ArrowType, string> = {
-  [ArrowType.None]: 'Aucune',
+  [ArrowType.None]: 'Aucun',
+  [ArrowType.Dot]: 'Point',
+  [ArrowType.SmallDot]: 'Petit point',
   [ArrowType.Arrow]: 'Flèche',
   [ArrowType.FilledArrow]: 'Flèche pleine',
   [ArrowType.Diamond]: 'Losange',
@@ -214,3 +230,23 @@ export const ARROW_TYPE_LABELS: Record<ArrowType, string> = {
   [ArrowType.ArchiTrigger]: 'Déclencheur',
   [ArrowType.ArchiFlow]: 'Flux',
 };
+
+// Marqueurs recommandés pour le départ (discrets)
+export const START_MARKER_TYPES: ArrowType[] = [
+  ArrowType.Dot,
+  ArrowType.SmallDot,
+  ArrowType.None,
+  ArrowType.FilledCircle,
+  ArrowType.Circle,
+];
+
+// Marqueurs recommandés pour l'arrivée (directionnels)
+export const END_MARKER_TYPES: ArrowType[] = [
+  ArrowType.Arrow,
+  ArrowType.FilledArrow,
+  ArrowType.Diamond,
+  ArrowType.FilledDiamond,
+  ArrowType.Circle,
+  ArrowType.FilledCircle,
+  ArrowType.None,
+];
