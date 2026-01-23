@@ -57,38 +57,26 @@ function handleDragOver(event: DragEvent) {
   event.preventDefault();
 }
 
-// --- Zoom et Pan avec la molette ---
+// --- Zoom avec la molette ---
 function handleWheel(event: WheelEvent) {
   event.preventDefault();
 
-  // Ctrl + molette = zoom
-  // Molette seule = pan vertical
-  // Shift + molette = pan horizontal
-  if (event.ctrlKey || event.metaKey) {
-    // Zoom
-    const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
-    const newZoom = Math.max(0.1, Math.min(5, zoomLevel.value * zoomFactor));
+  // Molette = zoom centré sur la souris
+  const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
+  const newZoom = Math.max(0.1, Math.min(5, zoomLevel.value * zoomFactor));
 
-    if (svgRoot.value) {
-      const rect = svgRoot.value.getBoundingClientRect();
-      const mouseX = event.clientX - rect.left;
-      const mouseY = event.clientY - rect.top;
+  if (svgRoot.value) {
+    const rect = svgRoot.value.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
 
-      // Zoom centré sur la souris
-      const zoomRatio = newZoom / zoomLevel.value;
-      pan.value.x = mouseX - (mouseX - pan.value.x) * zoomRatio;
-      pan.value.y = mouseY - (mouseY - pan.value.y) * zoomRatio;
-    }
-
-    zoomLevel.value = newZoom;
-  } else if (event.shiftKey) {
-    // Pan horizontal avec Shift + molette
-    pan.value.x -= event.deltaY;
-  } else {
-    // Pan avec molette (scroll naturel)
-    pan.value.x -= event.deltaX;
-    pan.value.y -= event.deltaY;
+    // Zoom centré sur la souris
+    const zoomRatio = newZoom / zoomLevel.value;
+    pan.value.x = mouseX - (mouseX - pan.value.x) * zoomRatio;
+    pan.value.y = mouseY - (mouseY - pan.value.y) * zoomRatio;
   }
+
+  zoomLevel.value = newZoom;
 }
 
 // --- Pan avec clic milieu, clic gauche sur fond, ou espace + clic ---
