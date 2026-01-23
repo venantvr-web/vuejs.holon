@@ -57,34 +57,64 @@ function handleDragOver(event: DragEvent) {
   event.preventDefault();
 }
 
-// --- Zoom avec la molette ---
+// --- Zoom et Pan avec la molette ---
 function handleWheel(event: WheelEvent) {
   event.preventDefault();
 
-  const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
-  const newZoom = Math.max(0.1, Math.min(5, zoomLevel.value * zoomFactor));
+  // Ctrl + molette = zoom
+  // Molette seule = pan vertical
+  // Shift + molette = pan horizontal
+  if (event.ctrlKey || event.metaKey) {
+    // Zoom
+    const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
+    const newZoom = Math.max(0.1, Math.min(5, zoomLevel.value * zoomFactor));
 
-  if (svgRoot.value) {
-    const rect = svgRoot.value.getBoundingClientRect();
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
+    if (svgRoot.value) {
+      const rect = svgRoot.value.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
 
-    // Zoom centré sur la souris
-    const zoomRatio = newZoom / zoomLevel.value;
-    pan.value.x = mouseX - (mouseX - pan.value.x) * zoomRatio;
-    pan.value.y = mouseY - (mouseY - pan.value.y) * zoomRatio;
+      // Zoom centré sur la souris
+      const zoomRatio = newZoom / zoomLevel.value;
+      pan.value.x = mouseX - (mouseX - pan.value.x) * zoomRatio;
+      pan.value.y = mouseY - (mouseY - pan.value.y) * zoomRatio;
+    }
+
+    zoomLevel.value = newZoom;
+  } else if (event.shiftKey) {
+    // Pan horizontal avec Shift + molette
+    pan.value.x -= event.deltaY;
+  } else {
+    // Pan avec molette (scroll naturel)
+    pan.value.x -= event.deltaX;
+    pan.value.y -= event.deltaY;
   }
-
-  zoomLevel.value = newZoom;
 }
 
-// --- Pan avec clic milieu ou espace + clic ---
+// --- Pan avec clic milieu, clic gauche sur fond, ou espace + clic ---
 function handleMouseDown(event: MouseEvent) {
   // Clic milieu pour pan
   if (event.button === 1) {
     event.preventDefault();
     isPanning.value = true;
     lastMousePos.value = { x: event.clientX, y: event.clientY };
+    return;
+  }
+
+  // Clic gauche sur le fond pour pan
+  if (event.button === 0) {
+    const target = event.target as Element;
+    // Vérifier si on clique sur le SVG, le groupe principal, ou le fond transparent
+    const isCanvasClick =
+      target.tagName === 'svg' ||
+      target.classList.contains('canvas-root') ||
+      target.classList.contains('canvas-background');
+
+    if (isCanvasClick) {
+      event.preventDefault();
+      isPanning.value = true;
+      lastMousePos.value = { x: event.clientX, y: event.clientY };
+    }
   }
 }
 
@@ -174,7 +204,17 @@ defineExpose({ svgRoot, pan, zoomLevel });
       @mousemove="handleMouseMove"
       :class="{ 'cursor-grab': !isPanning, 'cursor-grabbing': isPanning }"
     >
-      <g :transform="transform">
+      <g :transform="transform" class="canvas-root">
+        <!-- Rectangle de fond pour capturer les clics sur le canvas vide -->
+        <rect
+          x="-10000"
+          y="-10000"
+          width="20000"
+          height="20000"
+          fill="transparent"
+          class="canvas-background"
+        />
+
         <!-- Calque des arêtes (en dessous des noeuds) -->
         <EdgeLayer />
 
