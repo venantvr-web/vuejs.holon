@@ -43,6 +43,7 @@
 |-------|-------------|---------|
 | `useThemeable` | Thèmes globaux avec 5 presets | useThemeable.ts |
 | `useHistorable` | Event sourcing & lignage objets | useHistorable.ts |
+| `useModelingConfidence` | Maturité, sources, questions ouvertes | useModelingConfidence.ts |
 
 ---
 
@@ -75,7 +76,7 @@ interface ContainmentRule {
 
 ## Statistiques
 
-- **26 traits** implémentés
+- **27 traits** implémentés
 - **22 formes** SVG (Rectangle, Ellipse, Diamond, Star, Cloud, Actor, etc.)
 - **60+ types** Archimate dans 7 layers
 - **13 types** de relations Archimate avec validation

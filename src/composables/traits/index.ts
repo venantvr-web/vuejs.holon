@@ -169,3 +169,32 @@ export {
   type HistorableState,
   type HistorableHandlers
 } from './useHistorable';
+
+// Confiance et maturité de modélisation
+export {
+  useModelingConfidence,
+  ModelingMaturity,
+  MATURITY_LABELS,
+  MATURITY_DESCRIPTIONS,
+  MATURITY_VISUAL_STYLES,
+  SOURCE_TYPE_LABELS,
+  TEMPORAL_STATE_LABELS,
+  TEMPORAL_STATE_STYLES,
+  SCOPE_STATUS_LABELS,
+  DEFAULT_MODELING_METADATA,
+  getMaturityColor,
+  getMaturityBadge,
+  isMaturitySufficient,
+  generateMaturitySvgStyle,
+  type MaturityVisualStyle,
+  type SourceType,
+  type TemporalState,
+  type ScopeStatus,
+  type ModelingSource,
+  type OpenQuestion,
+  type Alternative,
+  type ModelingMetadata,
+  type ModelingConfidenceOptions,
+  type ModelingConfidenceState,
+  type ModelingConfidenceHandlers
+} from './useModelingConfidence';
