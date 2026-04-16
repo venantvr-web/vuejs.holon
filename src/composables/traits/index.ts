@@ -281,3 +281,49 @@ export {
   type FocusableState,
   type FocusableHandlers
 } from './useFocusable';
+
+// === Données et Layout (Sprint 6) ===
+
+// Propriétés personnalisées
+export {
+  usePropertyable,
+  PREDEFINED_TEMPLATES,
+  type PropertyType,
+  type CustomProperty,
+  type PropertyTemplate,
+  type PropertyableOptions,
+  type PropertyableState,
+  type PropertyableHandlers
+} from './usePropertyable';
+
+// Tags
+export {
+  useTaggable,
+  PREDEFINED_TAGS,
+  type Tag,
+  type TaggableOptions,
+  type TaggableState,
+  type TaggableHandlers
+} from './useTaggable';
+
+// Labels sur arêtes
+export {
+  useLabelableEdge,
+  type EdgeLabel,
+  type LabelStyle,
+  type LabelBackground,
+  type LabelableEdgeOptions,
+  type LabelableEdgeState,
+  type LabelableEdgeHandlers
+} from './useLabelableEdge';
+
+// Layout automatique
+export {
+  useLayoutable,
+  type LayoutAlgorithm,
+  type LayoutOptions,
+  type ForceLayoutOptions,
+  type HierarchicalLayoutOptions,
+  type LayoutableState,
+  type LayoutableHandlers
+} from './useLayoutable';
