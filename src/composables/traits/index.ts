@@ -225,3 +225,20 @@ export {
   type ModelingConfidenceState,
   type ModelingConfidenceHandlers
 } from './useModelingConfidence';
+
+// Export/Import
+export {
+  useExportable,
+  type ExportFormat,
+  type ExportOptions,
+  type ExportableHandlers
+} from './useExportable';
+
+export {
+  useImportable,
+  type ConflictStrategy,
+  type MergeStrategy,
+  type ImportOptions,
+  type ImportResult,
+  type ImportableHandlers
+} from './useImportable';

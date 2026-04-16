@@ -14,10 +14,13 @@
   },
   "dependencies": {
     "dexie": "^3.2.2",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "nanoid": "^5.1.6",
     "pinia": "^2.0.14",
     "use-dexie": "^1.0.7",
-    "vue": "^3.2.47"
+    "vue": "^3.2.47",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.1.0",
