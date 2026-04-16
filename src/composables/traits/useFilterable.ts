@@ -3,44 +3,154 @@ import { ref, computed, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import type { Node } from '../../types';
 
+/**
+ * Critère de filtrage pour les noeuds.
+ */
 export interface FilterCriteria {
+  /**
+   * Identifiant unique du critère.
+   */
   id: string;
+  /**
+   * Nom affiché du critère.
+   */
   name: string;
+  /**
+   * Type de filtrage à appliquer.
+   */
   type: 'type' | 'tag' | 'property' | 'layer' | 'custom';
+  /**
+   * Valeur du filtre (string, array ou fonction personnalisée).
+   */
   value: string | string[] | ((node: Node) => boolean);
+  /**
+   * Opérateur de comparaison (défaut: 'equals').
+   */
   operator?: 'equals' | 'contains' | 'startsWith' | 'endsWith' | 'regex';
 }
 
+/**
+ * Filtre sauvegardé pour réutilisation.
+ */
 export interface SavedFilter {
+  /**
+   * Identifiant unique du filtre sauvegardé.
+   */
   id: string;
+  /**
+   * Nom du filtre.
+   */
   name: string;
+  /**
+   * Critères composant le filtre.
+   */
   criteria: FilterCriteria[];
+  /**
+   * Mode de combinaison des critères (ET ou OU).
+   */
   mode: 'and' | 'or';
+  /**
+   * Timestamp de création.
+   */
   createdAt: number;
 }
 
+/**
+ * Mode d'affichage des noeuds filtrés.
+ */
 export type FilterDisplayMode = 'highlight' | 'hide' | 'dim';
 
+/**
+ * État réactif exposé par le trait Filterable.
+ */
 export interface FilterableState {
+  /**
+   * Liste des critères de filtrage actifs.
+   */
   activeFilters: Ref<FilterCriteria[]>;
+  /**
+   * Mode de combinaison des filtres (ET ou OU).
+   */
   filterMode: Ref<'and' | 'or'>;
+  /**
+   * Mode d'affichage des noeuds filtrés.
+   */
   displayMode: Ref<FilterDisplayMode>;
+  /**
+   * Set des IDs de noeuds correspondant aux filtres.
+   */
   filteredNodeIds: Ref<Set<string>>;
+  /**
+   * Set des IDs de noeuds cachés (inverse des filtrés en mode hide).
+   */
   hiddenNodeIds: Ref<Set<string>>;
+  /**
+   * Liste des filtres sauvegardés.
+   */
   savedFilters: Ref<SavedFilter[]>;
 }
 
+/**
+ * Handlers (actions) exposés par le trait Filterable.
+ */
 export interface FilterableHandlers {
+  /**
+   * Ajoute un critère de filtrage.
+   * @param criteria - Critère à ajouter
+   */
   addFilter: (criteria: FilterCriteria) => void;
+  /**
+   * Retire un critère de filtrage.
+   * @param criteriaId - ID du critère à retirer
+   */
   removeFilter: (criteriaId: string) => void;
+  /**
+   * Vide tous les filtres actifs.
+   */
   clearFilters: () => void;
+  /**
+   * Change le mode de combinaison des filtres.
+   * @param mode - 'and' ou 'or'
+   */
   setFilterMode: (mode: 'and' | 'or') => void;
+  /**
+   * Change le mode d'affichage des noeuds filtrés.
+   * @param mode - Mode d'affichage
+   */
   setDisplayMode: (mode: FilterDisplayMode) => void;
+  /**
+   * Sauvegarde la configuration de filtrage actuelle.
+   * @param name - Nom du filtre sauvegardé
+   * @returns Filtre sauvegardé
+   */
   saveFilter: (name: string) => SavedFilter;
+  /**
+   * Charge un filtre sauvegardé.
+   * @param filterId - ID du filtre à charger
+   */
   loadFilter: (filterId: string) => void;
+  /**
+   * Supprime un filtre sauvegardé.
+   * @param filterId - ID du filtre à supprimer
+   */
   deleteFilter: (filterId: string) => void;
+  /**
+   * Vérifie si un noeud est visible selon les filtres actifs.
+   * @param nodeId - ID du noeud
+   * @returns true si visible
+   */
   isNodeVisible: (nodeId: string) => boolean;
+  /**
+   * Vérifie si un noeud est mis en évidence par les filtres.
+   * @param nodeId - ID du noeud
+   * @returns true si mis en évidence
+   */
   isNodeHighlighted: (nodeId: string) => boolean;
+  /**
+   * Calcule l'opacité d'un noeud selon les filtres et le mode d'affichage.
+   * @param nodeId - ID du noeud
+   * @returns Valeur d'opacité (0-1)
+   */
   getNodeOpacity: (nodeId: string) => number;
 }
 
@@ -50,6 +160,21 @@ const filterMode = ref<'and' | 'or'>('and');
 const displayMode = ref<FilterDisplayMode>('highlight');
 const savedFilters = ref<SavedFilter[]>([]);
 
+/**
+ * Trait permettant de filtrer les noeuds selon des critères multiples.
+ *
+ * Supporte différents types de filtres (type, tags, propriétés, layer) avec
+ * plusieurs modes d'affichage (highlight, hide, dim) et sauvegarde des configurations.
+ *
+ * @returns État réactif et handlers pour le filtrage
+ *
+ * @example
+ * ```typescript
+ * const { addFilter, setDisplayMode, filteredNodeIds } = useFilterable();
+ * addFilter(PRESET_FILTERS.byLayer('business'));
+ * setDisplayMode('highlight');
+ * ```
+ */
 export function useFilterable(): FilterableState & FilterableHandlers {
   const graphStore = useGraphStore();
 

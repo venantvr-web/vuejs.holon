@@ -2,7 +2,9 @@
 import { computed, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 
-// Types de flèches
+/**
+ * Types de flèches disponibles pour les marqueurs d'edges.
+ */
 export enum ArrowType {
   None = 'none',
   // Marqueur de départ discret (point d'origine)
@@ -29,27 +31,82 @@ export enum ArrowType {
   ArchiFlow = 'archi-flow',
 }
 
+/**
+ * Configuration complète des flèches pour un edge.
+ */
 export interface ArrowConfig {
+  /**
+   * Type de flèche au départ de l'edge.
+   */
   startArrow: ArrowType;
+  /**
+   * Type de flèche à l'arrivée de l'edge.
+   */
   endArrow: ArrowType;
+  /**
+   * Taille du marqueur de flèche.
+   */
   size: number;
+  /**
+   * Couleur du marqueur (optionnel).
+   */
   color?: string;
 }
 
+/**
+ * Options de configuration pour le trait Arrowable.
+ */
 export interface ArrowableOptions {
+  /**
+   * Référence réactive vers l'ID de l'edge concerné.
+   */
   edgeId: Ref<string>;
 }
 
+/**
+ * État réactif exposé par le trait Arrowable.
+ */
 export interface ArrowableState {
+  /**
+   * Type de flèche au départ de l'edge.
+   */
   startArrow: Ref<ArrowType>;
+  /**
+   * Type de flèche à l'arrivée de l'edge.
+   */
   endArrow: Ref<ArrowType>;
+  /**
+   * Taille des marqueurs de flèche.
+   */
   arrowSize: Ref<number>;
 }
 
+/**
+ * Handlers (actions) exposés par le trait Arrowable.
+ */
 export interface ArrowableHandlers {
+  /**
+   * Définit le type de flèche au départ de l'edge.
+   * @param type - Type de flèche à appliquer
+   */
   setStartArrow: (type: ArrowType) => void;
+  /**
+   * Définit le type de flèche à l'arrivée de l'edge.
+   * @param type - Type de flèche à appliquer
+   */
   setEndArrow: (type: ArrowType) => void;
+  /**
+   * Définit la taille des marqueurs de flèche.
+   * @param size - Taille en pixels
+   */
   setArrowSize: (size: number) => void;
+  /**
+   * Génère la définition SVG du marqueur de flèche.
+   * @param type - Type de flèche
+   * @param position - Position du marqueur (start ou end)
+   * @param color - Couleur du marqueur
+   * @returns Définition SVG du marqueur
+   */
   getArrowMarkerDef: (type: ArrowType, position: 'start' | 'end', color: string) => string;
 }
 
@@ -189,6 +246,21 @@ function getMarkerRefPoint(
   }
 }
 
+/**
+ * Trait permettant de gérer les marqueurs de flèches (start/end) pour les edges.
+ *
+ * Fournit un large éventail de types de flèches incluant les styles standards
+ * et les types spécifiques ArchiMate pour la modélisation d'architecture.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et handlers pour la gestion des flèches
+ *
+ * @example
+ * ```typescript
+ * const { startArrow, endArrow, setEndArrow } = useArrowable({ edgeId: ref('edge-123') });
+ * setEndArrow(ArrowType.FilledArrow); // Flèche pleine à l'arrivée
+ * ```
+ */
 export function useArrowable(options: ArrowableOptions): ArrowableState & ArrowableHandlers {
   const graphStore = useGraphStore();
 

@@ -2,36 +2,69 @@
 import { ref, computed, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 
+/**
+ * Configuration du système de magnétisme.
+ */
 export interface SnapConfig {
+  /** Taille de la grille en pixels */
   gridSize: number;
+  /** Active le magnétisme sur la grille */
   snapToGrid: boolean;
+  /** Active le magnétisme sur les autres noeuds */
   snapToNodes: boolean;
+  /** Active le magnétisme sur les guides personnalisés */
   snapToGuides: boolean;
-  snapDistance: number; // Distance en pixels pour le snap
+  /** Distance maximale en pixels pour déclencher le magnétisme */
+  snapDistance: number;
 }
 
+/**
+ * Guide de magnétisme horizontal ou vertical.
+ */
 export interface SnapGuide {
+  /** Type de guide */
   type: 'horizontal' | 'vertical';
+  /** Position du guide en pixels */
   position: number;
+  /** Identifiant du noeud source si le guide provient d'un alignement */
   sourceNodeId?: string;
 }
 
+/**
+ * Options de configuration pour le trait Snappable.
+ */
 export interface SnappableOptions {
+  /** Identifiant réactif du noeud */
   nodeId: Ref<string>;
+  /** Configuration partielle du magnétisme */
   config?: Partial<SnapConfig>;
 }
 
+/**
+ * État réactif géré par le trait Snappable.
+ */
 export interface SnappableState {
+  /** Indique si un magnétisme est actuellement actif */
   isSnapping: Ref<boolean>;
+  /** Liste des guides actifs lors du magnétisme */
   activeGuides: Ref<SnapGuide[]>;
+  /** Configuration complète du magnétisme */
   config: Ref<SnapConfig>;
 }
 
+/**
+ * Gestionnaires d'actions fournis par le trait Snappable.
+ */
 export interface SnappableHandlers {
+  /** Applique le magnétisme à une position et retourne la position ajustée avec les guides */
   snapPosition: (x: number, y: number) => { x: number; y: number; guides: SnapGuide[] };
+  /** Applique le magnétisme sur la grille à une taille */
   snapSize: (w: number, h: number) => { w: number; h: number };
+  /** Met à jour la configuration du magnétisme */
   setConfig: (config: Partial<SnapConfig>) => void;
+  /** Bascule le magnétisme sur la grille */
   toggleGridSnap: () => void;
+  /** Bascule le magnétisme sur les autres noeuds */
   toggleNodeSnap: () => void;
 }
 
@@ -47,6 +80,16 @@ const globalConfig = ref<SnapConfig>({
 // Guides personnalisés (globaux)
 const customGuides = ref<SnapGuide[]>([]);
 
+/**
+ * Ajoute la capacité de magnétisme sur grille, noeuds et guides à un noeud.
+ *
+ * Gère l'alignement automatique des positions et tailles sur une grille configurable,
+ * sur les bords et centres des autres noeuds, et sur des guides personnalisés.
+ * Affiche des guides visuels lors du magnétisme.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et gestionnaires pour le magnétisme
+ */
 export function useSnappable(options: SnappableOptions): SnappableState & SnappableHandlers {
   const graphStore = useGraphStore();
 

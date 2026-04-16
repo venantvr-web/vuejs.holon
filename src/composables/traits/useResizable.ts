@@ -2,17 +2,26 @@
 import { ref, computed, onMounted, onUnmounted, getCurrentInstance, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 
-// === CONFIGURATION AUTOSIZE ===
-
+/**
+ * Configuration du dimensionnement automatique.
+ */
 export interface AutosizeConfig {
-  enabled: boolean;              // Activer l'autosize
-  padding: number;               // Marge intérieure de base (en pixels à zoom 1)
-  paddingTop: number;            // Marge supérieure (pour laisser place au label parent)
-  paddingScaleWithZoom: boolean; // La marge s'adapte au zoom
-  minPaddingAtZoom: number;      // Padding minimum quand zoomé très loin
-  maxPaddingAtZoom: number;      // Padding maximum quand zoomé très près
-  animationDuration: number;     // Durée de l'animation en ms (0 = instantané)
-  debounceMs: number;            // Délai avant recalcul (évite les recalculs en cascade)
+  /** Active le dimensionnement automatique */
+  enabled: boolean;
+  /** Marge intérieure de base en pixels (à zoom 1) */
+  padding: number;
+  /** Marge supérieure pour laisser place au label parent */
+  paddingTop: number;
+  /** Indique si la marge s'adapte au niveau de zoom */
+  paddingScaleWithZoom: boolean;
+  /** Marge minimale quand zoomé très loin */
+  minPaddingAtZoom: number;
+  /** Marge maximale quand zoomé très près */
+  maxPaddingAtZoom: number;
+  /** Durée de l'animation en millisecondes (0 = instantané) */
+  animationDuration: number;
+  /** Délai avant recalcul pour éviter les recalculs en cascade */
+  debounceMs: number;
 }
 
 export const DEFAULT_AUTOSIZE_CONFIG: AutosizeConfig = {
@@ -26,48 +35,81 @@ export const DEFAULT_AUTOSIZE_CONFIG: AutosizeConfig = {
   debounceMs: 50,
 };
 
-// === OPTIONS ===
-
+/**
+ * Options de configuration pour le trait Resizable.
+ */
 export interface ResizableOptions {
+  /** Identifiant réactif du noeud */
   nodeId: Ref<string>;
+  /** Niveau de zoom actuel pour ajuster les calculs */
   zoomLevel?: Ref<number>;
+  /** Taille minimale autorisée */
   minSize?: number;
+  /** Préserve le ratio d'aspect lors du redimensionnement */
   preserveAspectRatio?: boolean;
-  // Autosize
+  /** Configuration du dimensionnement automatique */
   autosizeConfig?: Partial<AutosizeConfig>;
+  /** Callback appelé au début du redimensionnement */
   onResizeStart?: () => void;
+  /** Callback appelé à la fin du redimensionnement */
   onResizeEnd?: () => void;
+  /** Callback appelé après application de l'autosize */
   onAutosizeApplied?: (bounds: ChildrenBounds) => void;
 }
 
+/**
+ * État réactif géré par le trait Resizable.
+ */
 export interface ResizableState {
+  /** Indique si un redimensionnement manuel est en cours */
   isResizing: Ref<boolean>;
+  /** Indique si le dimensionnement automatique est actif */
   autosize: Ref<boolean>;
+  /** Configuration complète de l'autosize */
   autosizeConfig: Ref<AutosizeConfig>;
+  /** Limites calculées des enfants */
   childrenBounds: Ref<ChildrenBounds | null>;
+  /** Marge effective tenant compte du zoom */
   effectivePadding: Ref<number>;
 }
 
+/**
+ * Gestionnaires d'actions fournis par le trait Resizable.
+ */
 export interface ResizableHandlers {
+  /** Démarre un redimensionnement manuel par drag */
   handleResizeStart: (event: MouseEvent) => void;
-  // Autosize
+  /** Active ou désactive le dimensionnement automatique */
   setAutosize: (enabled: boolean) => void;
+  /** Met à jour la configuration de l'autosize */
   setAutosizeConfig: (config: Partial<AutosizeConfig>) => void;
+  /** Applique immédiatement le dimensionnement automatique */
   applyAutosize: () => void;
+  /** Calcule les limites rectangulaires englobant tous les enfants */
   calculateChildrenBounds: () => ChildrenBounds | null;
+  /** Ajuste la taille du conteneur pour englober tous les enfants */
   fitToChildren: (animate?: boolean) => void;
+  /** Agrandit le conteneur si un enfant dépasse */
   expandToFitChild: (childId: string) => void;
 }
 
-// === BOUNDS DES ENFANTS ===
-
+/**
+ * Limites rectangulaires englobant tous les enfants d'un conteneur.
+ */
 export interface ChildrenBounds {
+  /** Coordonnée X minimale */
   minX: number;
+  /** Coordonnée Y minimale */
   minY: number;
+  /** Coordonnée X maximale */
   maxX: number;
+  /** Coordonnée Y maximale */
   maxY: number;
+  /** Largeur de la zone englobante */
   width: number;
+  /** Hauteur de la zone englobante */
   height: number;
+  /** Nombre d'enfants */
   childCount: number;
 }
 
@@ -78,6 +120,24 @@ interface GeometrySnapshot {
   h: number;
 }
 
+/**
+ * Ajoute la capacité de redimensionnement manuel et automatique à un conteneur.
+ *
+ * Gère le redimensionnement manuel par drag avec mise à l'échelle proportionnelle
+ * des enfants, et le dimensionnement automatique (autosize) qui ajuste la taille
+ * du conteneur pour englober tous ses enfants avec des marges configurables.
+ * Les marges s'adaptent au niveau de zoom pour une meilleure UX.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et gestionnaires pour le redimensionnement
+ *
+ * @example
+ * ```ts
+ * const { autosize, setAutosize, fitToChildren } = useResizable({ nodeId });
+ * setAutosize(true); // Active l'autosize
+ * fitToChildren(); // Ajuste immédiatement la taille
+ * ```
+ */
 export function useResizable(options: ResizableOptions): ResizableState & ResizableHandlers {
   const graphStore = useGraphStore();
   const minSize = options.minSize ?? 30;

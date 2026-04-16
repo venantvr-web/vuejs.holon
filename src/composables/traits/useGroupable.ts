@@ -5,36 +5,113 @@ import { useSelectionState } from './useSelectable';
 import { nanoid } from 'nanoid';
 import type { Node } from '../../types';
 
+/**
+ * Représente un groupe de noeuds.
+ */
 export interface NodeGroup {
+  /**
+   * Identifiant unique du groupe.
+   */
   id: string;
+  /**
+   * Nom affiché du groupe.
+   */
   name: string;
+  /**
+   * Set des IDs des noeuds membres du groupe.
+   */
   nodeIds: Set<string>;
+  /**
+   * Couleur optionnelle du groupe.
+   */
   color?: string;
+  /**
+   * Indique si le groupe est verrouillé.
+   */
   locked?: boolean;
+  /**
+   * Timestamp de création du groupe.
+   */
   createdAt: number;
 }
 
+/**
+ * Options de configuration pour le trait Groupable.
+ */
 export interface GroupableOptions {
+  /**
+   * Référence réactive vers l'ID du noeud concerné.
+   */
   nodeId: Ref<string>;
 }
 
+/**
+ * État réactif exposé par le trait Groupable.
+ */
 export interface GroupableState {
+  /**
+   * ID du groupe auquel appartient le noeud (null si non groupé).
+   */
   groupId: Ref<string | null>;
+  /**
+   * Nom du groupe auquel appartient le noeud (null si non groupé).
+   */
   groupName: Ref<string | null>;
+  /**
+   * Indique si le noeud appartient à un groupe.
+   */
   isGrouped: Ref<boolean>;
+  /**
+   * Liste des IDs des autres membres du groupe.
+   */
   groupMembers: Ref<string[]>;
 }
 
+/**
+ * Handlers (actions) exposés par le trait Groupable.
+ */
 export interface GroupableHandlers {
+  /**
+   * Crée un nouveau groupe avec les noeuds sélectionnés.
+   * @param name - Nom du groupe (optionnel, généré automatiquement si omis)
+   * @returns ID du groupe créé (null si échec)
+   */
   createGroup: (name?: string) => string | null;
+  /**
+   * Ajoute ce noeud à un groupe existant.
+   * @param groupId - ID du groupe cible
+   */
   addToGroup: (groupId: string) => void;
+  /**
+   * Retire ce noeud de son groupe actuel.
+   */
   removeFromGroup: () => void;
+  /**
+   * Dissout complètement le groupe actuel.
+   */
   dissolveGroup: () => void;
 }
 
 // État global des groupes
 const groups = ref<Map<string, NodeGroup>>(new Map());
 
+/**
+ * Trait permettant de grouper logiquement plusieurs noeuds ensemble.
+ *
+ * Les groupes permettent de sélectionner, déplacer ou styler collectivement
+ * des noeuds sans hiérarchie parent-enfant.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et handlers pour la gestion des groupes
+ *
+ * @example
+ * ```typescript
+ * const { isGrouped, createGroup, groupMembers } = useGroupable({
+ *   nodeId: ref('node-123')
+ * });
+ * createGroup('Mon groupe'); // Crée un groupe avec les noeuds sélectionnés
+ * ```
+ */
 export function useGroupable(options: GroupableOptions): GroupableState & GroupableHandlers {
   const graphStore = useGraphStore();
   const { selectedNodeIds } = useSelectionState();

@@ -5,7 +5,9 @@ import { useGraphStore } from '../../stores/graph';
 import { nanoid } from 'nanoid';
 // Types Node et Edge utilisés implicitement via graphStore
 
-// Types d'événements
+/**
+ * Types d'événements traçables dans l'historique.
+ */
 export enum EventType {
   // Noeuds
   NodeCreated = 'node:created',
@@ -45,52 +47,141 @@ export enum EventType {
   Redo = 'history:redo',
 }
 
-// Structure d'un événement
+/**
+ * Événement historique traçant une modification dans le graphe.
+ */
 export interface HistoryEvent {
+  /**
+   * Identifiant unique de l'événement.
+   */
   id: string;
+  /**
+   * Type d'événement.
+   */
   type: EventType;
+  /**
+   * Timestamp de l'événement.
+   */
   timestamp: number;
-  // L'objet concerné
+  /**
+   * ID de l'objet concerné.
+   */
   targetId: string;
+  /**
+   * Type de l'objet concerné.
+   */
   targetType: 'node' | 'edge' | 'group' | 'diagram';
-  // Données avant/après pour rollback
-  before?: any;
-  after?: any;
-  // Métadonnées
+  /**
+   * Données avant modification pour rollback.
+   * Type unknown car peut contenir n'importe quel snapshot d'objet (Node, Edge, etc.).
+   */
+  before?: unknown;
+  /**
+   * Données après modification.
+   * Type unknown car peut contenir n'importe quel snapshot d'objet (Node, Edge, etc.).
+   */
+  after?: unknown;
+  /**
+   * Métadonnées additionnelles de l'événement.
+   */
   metadata?: {
+    /**
+     * Utilisateur ayant déclenché l'événement.
+     */
     user?: string;
+    /**
+     * Raison de la modification.
+     */
     reason?: string;
-    parentEventId?: string; // Pour les événements liés
-    batchId?: string; // Pour grouper les événements d'une même action
+    /**
+     * ID de l'événement parent (pour événements liés).
+     */
+    parentEventId?: string;
+    /**
+     * ID du batch (pour grouper les événements d'une même action).
+     */
+    batchId?: string;
   };
-  // Lignage
+  /**
+   * Information de lignage pour traçabilité des clones.
+   */
   lineage?: {
-    clonedFrom?: string; // ID de l'objet source si clone
-    derivedFrom?: string[]; // IDs des objets sources si dérivé
-    version?: number; // Version de l'objet
+    /**
+     * ID de l'objet source si clone.
+     */
+    clonedFrom?: string;
+    /**
+     * IDs des objets sources si dérivé.
+     */
+    derivedFrom?: string[];
+    /**
+     * Version de l'objet.
+     */
+    version?: number;
   };
 }
 
-// Structure de lignage d'un objet
+/**
+ * Structure de lignage d'un objet pour traçabilité complète.
+ */
 export interface ObjectLineage {
+  /**
+   * ID de l'objet tracé.
+   */
   objectId: string;
+  /**
+   * Type de l'objet.
+   */
   objectType: 'node' | 'edge';
+  /**
+   * Timestamp de création.
+   */
   createdAt: number;
+  /**
+   * Créateur de l'objet.
+   */
   createdBy?: string;
-  // Origine
+  /**
+   * Information sur l'origine de l'objet.
+   */
   origin: {
+    /**
+     * Type d'origine.
+     */
     type: 'created' | 'cloned' | 'imported' | 'derived';
-    sourceId?: string; // Si cloned ou derived
-    sourceIds?: string[]; // Si derived de plusieurs
+    /**
+     * ID de l'objet source si cloné ou dérivé.
+     */
+    sourceId?: string;
+    /**
+     * IDs des objets sources si dérivé de plusieurs.
+     */
+    sourceIds?: string[];
   };
-  // Historique des versions
+  /**
+   * Historique des versions de l'objet.
+   */
   versions: {
+    /**
+     * Numéro de version.
+     */
     version: number;
+    /**
+     * Timestamp de la version.
+     */
     timestamp: number;
+    /**
+     * ID de l'événement ayant créé cette version.
+     */
     eventId: string;
-    changes: string[]; // Description des changements
+    /**
+     * Liste des champs modifiés.
+     */
+    changes: string[];
   }[];
-  // Descendants (clones)
+  /**
+   * IDs des descendants (objets clonés depuis celui-ci).
+   */
   descendants: string[];
 }
 
@@ -100,58 +191,175 @@ const lineages = ref<Map<string, ObjectLineage>>(new Map());
 const currentBatchId = ref<string | null>(null);
 const maxEvents = ref(1000);
 
+/**
+ * Options de configuration pour le trait Historable.
+ */
 export interface HistorableOptions {
+  /**
+   * ID du noeud à tracer (optionnel, pour filtrage de l'historique).
+   */
   nodeId?: Ref<string>;
+  /**
+   * Nombre maximum d'événements à conserver en mémoire.
+   */
   maxHistory?: number;
 }
 
+/**
+ * État réactif exposé par le trait Historable.
+ */
 export interface HistorableState {
+  /**
+   * Liste complète des événements historiques.
+   */
   events: Ref<HistoryEvent[]>;
+  /**
+   * Lignage de l'objet spécifié dans les options (null si non spécifié).
+   */
   objectLineage: Ref<ObjectLineage | null>;
+  /**
+   * Historique filtré pour l'objet spécifié dans les options.
+   */
   objectHistory: Ref<HistoryEvent[]>;
+  /**
+   * Version actuelle de l'objet.
+   */
   currentVersion: Ref<number>;
 }
 
+/**
+ * Handlers (actions) exposés par le trait Historable.
+ */
 export interface HistorableHandlers {
-  // Enregistrement d'événements
+  /**
+   * Enregistre un événement dans l'historique.
+   * @param type - Type d'événement
+   * @param targetId - ID de l'objet concerné
+   * @param targetType - Type de l'objet
+   * @param before - Snapshot avant modification
+   * @param after - Snapshot après modification
+   * @param metadata - Métadonnées optionnelles
+   * @returns ID de l'événement créé
+   */
   recordEvent: (
     type: EventType,
     targetId: string,
     targetType: 'node' | 'edge' | 'group' | 'diagram',
-    before?: any,
-    after?: any,
+    before?: unknown,
+    after?: unknown,
     metadata?: HistoryEvent['metadata']
   ) => string;
-
-  // Batch d'événements
+  /**
+   * Démarre un batch d'événements groupés.
+   * @param reason - Raison du batch
+   * @returns ID du batch
+   */
   startBatch: (reason?: string) => string;
+  /**
+   * Termine le batch d'événements en cours.
+   */
   endBatch: () => void;
-
-  // Rollback
+  /**
+   * Annule les modifications jusqu'à un événement spécifique.
+   * @param eventId - ID de l'événement cible
+   * @returns true si succès
+   */
   rollbackToEvent: (eventId: string) => boolean;
+  /**
+   * Annule le dernier événement.
+   * @returns true si succès
+   */
   rollbackLastEvent: () => boolean;
+  /**
+   * Restaure un objet à une version spécifique.
+   * @param objectId - ID de l'objet
+   * @param version - Numéro de version cible
+   * @returns true si succès
+   */
   rollbackObject: (objectId: string, version: number) => boolean;
-
-  // Lignage
+  /**
+   * Récupère le lignage complet d'un objet.
+   * @param objectId - ID de l'objet
+   * @returns Lignage de l'objet (null si non trouvé)
+   */
   getLineage: (objectId: string) => ObjectLineage | null;
+  /**
+   * Récupère la chaîne d'ancêtres d'un objet (clones successifs).
+   * @param objectId - ID de l'objet
+   * @returns IDs des ancêtres
+   */
   getAncestors: (objectId: string) => string[];
+  /**
+   * Récupère tous les descendants d'un objet (clones).
+   * @param objectId - ID de l'objet
+   * @returns IDs des descendants
+   */
   getDescendants: (objectId: string) => string[];
+  /**
+   * Clone un noeud avec traçabilité du lignage.
+   * @param sourceId - ID du noeud source
+   * @returns ID du clone créé (null si échec)
+   */
   cloneWithLineage: (sourceId: string) => Promise<string | null>;
-
-  // Requêtes
+  /**
+   * Récupère tous les événements concernant un objet.
+   * @param objectId - ID de l'objet
+   * @returns Liste des événements
+   */
   getEventsForObject: (objectId: string) => HistoryEvent[];
+  /**
+   * Récupère les événements dans une plage temporelle.
+   * @param startTime - Timestamp de début
+   * @param endTime - Timestamp de fin
+   * @returns Liste des événements
+   */
   getEventsBetween: (startTime: number, endTime: number) => HistoryEvent[];
+  /**
+   * Récupère tous les événements d'un type donné.
+   * @param type - Type d'événement
+   * @returns Liste des événements
+   */
   getEventsByType: (type: EventType) => HistoryEvent[];
-
-  // Export
+  /**
+   * Exporte l'historique complet en JSON.
+   * @returns JSON de l'historique
+   */
   exportHistory: () => string;
+  /**
+   * Exporte le lignage d'un objet en JSON.
+   * @param objectId - ID de l'objet
+   * @returns JSON du lignage (null si non trouvé)
+   */
   exportLineage: (objectId: string) => string | null;
-
-  // Nettoyage
+  /**
+   * Vide complètement l'historique.
+   */
   clearHistory: () => void;
+  /**
+   * Nettoie les événements anciens en conservant les N derniers.
+   * @param keepLast - Nombre d'événements à conserver
+   * @returns Nombre d'événements supprimés
+   */
   pruneOldEvents: (keepLast: number) => number;
 }
 
+/**
+ * Trait permettant de tracer l'historique complet des modifications avec Event Sourcing.
+ *
+ * Implémente un système de lignage d'objets pour tracer les clones et dérivations,
+ * avec support du rollback et de l'export pour audit.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et handlers pour la gestion de l'historique
+ *
+ * @example
+ * ```typescript
+ * const { recordEvent, rollbackLastEvent, exportHistory } = useHistorable({
+ *   maxHistory: 500
+ * });
+ * recordEvent(EventType.NodeUpdated, 'node-123', 'node', oldData, newData);
+ * ```
+ */
 export function useHistorable(options: HistorableOptions = {}): HistorableState & HistorableHandlers {
   const graphStore = useGraphStore();
 
@@ -181,8 +389,8 @@ export function useHistorable(options: HistorableOptions = {}): HistorableState 
     type: EventType,
     targetId: string,
     targetType: 'node' | 'edge' | 'group' | 'diagram',
-    before?: any,
-    after?: any,
+    before?: unknown,
+    after?: unknown,
     metadata?: HistoryEvent['metadata']
   ): string {
     const eventId = nanoid();
@@ -222,8 +430,8 @@ export function useHistorable(options: HistorableOptions = {}): HistorableState 
     objectType: 'node' | 'edge',
     eventType: EventType,
     eventId: string,
-    before?: any,
-    after?: any
+    before?: unknown,
+    after?: unknown
   ) {
     let lineage = lineages.value.get(objectId);
 

@@ -127,23 +127,50 @@ export const ARCHIMATE_TYPES = {
 export type ArchimateLayer = keyof typeof ARCHIMATE_TYPES;
 export type ArchimateType = string;
 
+/**
+ * Options de configuration pour le trait Typeable.
+ */
 export interface TypeableOptions {
+  /** Identifiant réactif du noeud */
   nodeId: Ref<string>;
 }
 
+/**
+ * État réactif géré par le trait Typeable.
+ */
 export interface TypeableState {
+  /** Type ArchiMate du noeud */
   archimateType: Ref<ArchimateType | null>;
+  /** Couche ArchiMate à laquelle appartient le type */
   archimateLayer: Ref<ArchimateLayer | null>;
+  /** Libellé du type en toutes lettres */
   typeLabel: Ref<string>;
+  /** Icône associée au type */
   typeIcon: Ref<string>;
+  /** Couleur de la couche ArchiMate */
   typeColor: Ref<string>;
 }
 
+/**
+ * Gestionnaires d'actions fournis par le trait Typeable.
+ */
 export interface TypeableHandlers {
+  /** Définit le type ArchiMate et applique automatiquement la couleur de couche */
   setType: (type: ArchimateType) => void;
+  /** Supprime le type ArchiMate du noeud */
   clearType: () => void;
 }
 
+/**
+ * Ajoute la capacité de typage ArchiMate à un noeud.
+ *
+ * Gère l'attribution d'un type ArchiMate parmi 7 couches (Business, Application,
+ * Technology, Motivation, Strategy, Implementation, Physical) avec application
+ * automatique des couleurs standards et métadonnées (icônes, libellés).
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et gestionnaires pour le typage ArchiMate
+ */
 export function useTypeable(options: TypeableOptions): TypeableState & TypeableHandlers {
   const graphStore = useGraphStore();
 

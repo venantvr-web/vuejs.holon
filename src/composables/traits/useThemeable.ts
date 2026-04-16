@@ -2,49 +2,83 @@
 import { ref, computed, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 
-// Définition d'un thème
+/**
+ * Palette de couleurs pour un thème.
+ */
 export interface ColorPalette {
-  // Couleurs de base
+  /** Couleur primaire */
   primary: string;
+  /** Couleur secondaire */
   secondary: string;
+  /** Couleur d'accentuation */
   accent: string;
+  /** Couleur de fond */
   background: string;
+  /** Couleur de surface */
   surface: string;
+  /** Couleur du texte principal */
   text: string;
+  /** Couleur du texte atténué */
   textMuted: string;
+  /** Couleur de bordure */
   border: string;
 
-  // États
+  /** Couleur de succès */
   success: string;
+  /** Couleur d'avertissement */
   warning: string;
+  /** Couleur d'erreur */
   error: string;
+  /** Couleur d'information */
   info: string;
 
-  // Sélection / Interaction
+  /** Couleur de sélection */
   selection: string;
+  /** Couleur de survol */
   hover: string;
+  /** Couleur de focus */
   focus: string;
 }
 
+/**
+ * Couleurs spécifiques aux couches ArchiMate.
+ */
 export interface ArchimateLayerColors {
+  /** Couleur de la couche Business */
   business: string;
+  /** Couleur de la couche Application */
   application: string;
+  /** Couleur de la couche Technology */
   technology: string;
+  /** Couleur de la couche Motivation */
   motivation: string;
+  /** Couleur de la couche Strategy */
   strategy: string;
+  /** Couleur de la couche Implementation */
   implementation: string;
+  /** Couleur de la couche Physical */
   physical: string;
+  /** Couleur pour les éléments génériques */
   generic: string;
 }
 
+/**
+ * Définition complète d'un thème visuel.
+ */
 export interface Theme {
+  /** Identifiant unique du thème */
   id: string;
+  /** Nom du thème */
   name: string;
+  /** Description optionnelle */
   description?: string;
+  /** Indique si c'est un thème sombre */
   isDark: boolean;
+  /** Palette de couleurs */
   colors: ColorPalette;
+  /** Couleurs des couches ArchiMate */
   archimate: ArchimateLayerColors;
-  // Styles par défaut pour les noeuds
+  /** Styles par défaut pour les noeuds */
   nodeDefaults: {
     fill: string;
     stroke: string;
@@ -52,15 +86,17 @@ export interface Theme {
     opacity: number;
     borderRadius: number;
   };
-  // Styles par défaut pour les edges
+  /** Styles par défaut pour les arêtes */
   edgeDefaults: {
     stroke: string;
     strokeWidth: number;
     arrowColor: string;
   };
-  // Métadonnées
+  /** Date de création (timestamp) */
   createdAt?: number;
+  /** Date de dernière modification (timestamp) */
   modifiedAt?: number;
+  /** Auteur du thème */
   author?: string;
 }
 
@@ -301,27 +337,64 @@ export const PRESET_THEMES: Record<string, Theme> = {
 const currentThemeId = ref<string>('light');
 const customThemes = ref<Map<string, Theme>>(new Map());
 
+/**
+ * État réactif géré par le trait Themeable.
+ */
 export interface ThemeableState {
+  /** Thème actuellement actif */
   currentTheme: Ref<Theme>;
+  /** Identifiant du thème actuel */
   currentThemeId: Ref<string>;
+  /** Liste de tous les thèmes disponibles (presets + personnalisés) */
   availableThemes: Ref<Theme[]>;
+  /** Indique si le mode sombre est actif */
   isDarkMode: Ref<boolean>;
 }
 
+/**
+ * Gestionnaires d'actions fournis par le trait Themeable.
+ */
 export interface ThemeableHandlers {
+  /** Active un thème par son identifiant */
   setTheme: (themeId: string) => void;
+  /** Crée un nouveau thème personnalisé et retourne son ID */
   createTheme: (theme: Omit<Theme, 'id' | 'createdAt'>) => string;
+  /** Met à jour un thème personnalisé existant */
   updateTheme: (themeId: string, updates: Partial<Theme>) => void;
+  /** Supprime un thème personnalisé (impossible pour les presets) */
   deleteTheme: (themeId: string) => boolean;
+  /** Duplique un thème existant avec un nouveau nom */
   duplicateTheme: (themeId: string, newName: string) => string | null;
+  /** Exporte un thème au format JSON */
   exportTheme: (themeId: string) => string | null;
+  /** Importe un thème depuis du JSON */
   importTheme: (json: string) => string | null;
+  /** Récupère une couleur de la palette du thème actuel */
   getColor: (key: keyof ColorPalette) => string;
+  /** Récupère la couleur d'une couche ArchiMate */
   getArchimateColor: (layer: keyof ArchimateLayerColors) => string;
+  /** Applique les styles par défaut du thème à un noeud */
   applyThemeToNode: (nodeId: string) => void;
+  /** Bascule entre thème clair et sombre */
   toggleDarkMode: () => void;
 }
 
+/**
+ * Ajoute la capacité de gestion de thèmes visuels à l'application.
+ *
+ * Gère 5 thèmes prédéfinis (light, dark, archimate, blueprint, highContrast)
+ * et permet la création, modification et persistance de thèmes personnalisés.
+ * Applique automatiquement les variables CSS et gère le mode sombre.
+ *
+ * @returns État réactif et gestionnaires pour la gestion des thèmes
+ *
+ * @example
+ * ```ts
+ * const { setTheme, createTheme, getArchimateColor } = useThemeable();
+ * setTheme('dark');
+ * const businessColor = getArchimateColor('business');
+ * ```
+ */
 export function useThemeable(): ThemeableState & ThemeableHandlers {
   const graphStore = useGraphStore();
 

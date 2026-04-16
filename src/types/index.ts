@@ -1,6 +1,9 @@
 
 // src/types/index.ts
 
+// Export des types utilitaires
+export * from './trait-utilities';
+
 /**
  * La géométrie d'un noeud, relative à son parent.
  */
@@ -32,7 +35,30 @@ export interface Node {
   type: 'container' | 'shape';
   geometry: Geometry;
   styling: Styling;
-  data: Record<string, any>; // Contenu libre (texte, métadonnées...)
+  /**
+   * Données libres du noeud (métadonnées, configuration, état applicatif).
+   *
+   * Type `any` **justifié** : chaque trait peut stocker des données de types différents
+   * (string, number, boolean, objects complexes) sans contrainte structurelle.
+   *
+   * Les traits individuels doivent valider les types lors de l'accès :
+   * ```typescript
+   * const name = node.data.name as string | undefined;
+   * if (typeof name === 'string') { ... }
+   * ```
+   *
+   * @example
+   * // Exemples de données courantes
+   * {
+   *   name: 'Mon noeud',
+   *   description: 'Description longue',
+   *   archimateType: 'BusinessActor',
+   *   locked: true,
+   *   collapsed: false,
+   *   defaultAnchor: AnchorPosition.Auto
+   * }
+   */
+  data: Record<string, any>;
 }
 
 /**

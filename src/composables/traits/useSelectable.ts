@@ -6,22 +6,47 @@ import { useGraphStore } from '../../stores/graph';
 const selectedNodeIds = ref<Set<string>>(new Set());
 const focusedNodeId = ref<string | null>(null);
 
+/**
+ * Options de configuration pour le trait Selectable.
+ */
 export interface SelectableOptions {
+  /** Identifiant réactif du noeud */
   nodeId: Ref<string>;
 }
 
+/**
+ * État réactif géré par le trait Selectable.
+ */
 export interface SelectableState {
+  /** Indique si le noeud est sélectionné */
   isSelected: Ref<boolean>;
+  /** Indique si le noeud a le focus */
   isFocused: Ref<boolean>;
 }
 
+/**
+ * Gestionnaires d'actions fournis par le trait Selectable.
+ */
 export interface SelectableHandlers {
+  /** Sélectionne le noeud et lui donne le focus */
   select: (addToSelection?: boolean) => void;
+  /** Désélectionne le noeud */
   deselect: () => void;
+  /** Donne le focus au noeud sans modifier la sélection */
   focus: () => void;
+  /** Retire le focus du noeud */
   blur: () => void;
 }
 
+/**
+ * Ajoute la capacité de sélection et de focus à un noeud.
+ *
+ * Gère la sélection multiple via un état global partagé et permet de
+ * distinguer le noeud ayant le focus parmi les noeuds sélectionnés.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et gestionnaires pour la sélection et le focus
+ */
 export function useSelectable(options: SelectableOptions): SelectableState & SelectableHandlers {
   const graphStore = useGraphStore();
 

@@ -13,43 +13,95 @@ export enum RoutingType {
   Bezier = 'bezier',
 }
 
-// Point de contrôle pour les courbes
+/**
+ * Point de contrôle pour les courbes de Bézier.
+ */
 export interface ControlPoint {
+  /** Coordonnée X du point de contrôle */
   x: number;
+  /** Coordonnée Y du point de contrôle */
   y: number;
 }
 
+/**
+ * Point sur le tracé d'une arête.
+ */
 export interface RoutePoint {
+  /** Coordonnée X du point */
   x: number;
+  /** Coordonnée Y du point */
   y: number;
 }
 
+/**
+ * Tracé complet d'une arête avec points et path SVG.
+ */
 export interface EdgeRoute {
+  /** Point de départ sur le bord du noeud source */
   sourcePoint: RoutePoint;
+  /** Point d'arrivée sur le bord du noeud cible */
   targetPoint: RoutePoint;
+  /** Points de contrôle pour les courbes */
   controlPoints: ControlPoint[];
-  path: string; // SVG path
+  /** Path SVG généré pour le rendu */
+  path: string;
 }
 
+/**
+ * Options de configuration pour le trait Routable.
+ */
 export interface RoutableOptions {
+  /** Identifiant réactif de l'arête */
   edgeId: Ref<string>;
 }
 
+/**
+ * État réactif géré par le trait Routable.
+ */
 export interface RoutableState {
+  /** Type de routage actuel (straight, orthogonal, curved, bezier) */
   routingType: Ref<RoutingType>;
+  /** Points de contrôle pour les courbes de Bézier */
   controlPoints: Ref<ControlPoint[]>;
+  /** Tracé complet calculé de l'arête */
   route: Ref<EdgeRoute | null>;
 }
 
+/**
+ * Gestionnaires d'actions fournis par le trait Routable.
+ */
 export interface RoutableHandlers {
+  /** Définit le type de routage de l'arête */
   setRoutingType: (type: RoutingType) => void;
+  /** Ajoute un point de contrôle à la position spécifiée ou à la fin */
   addControlPoint: (point: ControlPoint, index?: number) => void;
+  /** Supprime un point de contrôle par son index */
   removeControlPoint: (index: number) => void;
+  /** Met à jour les coordonnées d'un point de contrôle */
   updateControlPoint: (index: number, point: ControlPoint) => void;
+  /** Supprime tous les points de contrôle */
   clearControlPoints: () => void;
+  /** Calcule le tracé complet de l'arête avec le type de routage actuel */
   calculateRoute: () => EdgeRoute | null;
 }
 
+/**
+ * Ajoute la capacité de routage personnalisé à une arête.
+ *
+ * Gère 4 types de routage (droit, orthogonal, courbe, Bézier) avec support
+ * des points de contrôle pour les courbes. Calcule automatiquement les points
+ * d'intersection avec les bords des noeuds et génère le path SVG correspondant.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et gestionnaires pour le routage d'arête
+ *
+ * @example
+ * ```ts
+ * const { setRoutingType, addControlPoint } = useRoutable({ edgeId });
+ * setRoutingType(RoutingType.Bezier);
+ * addControlPoint({ x: 100, y: 200 });
+ * ```
+ */
 export function useRoutable(options: RoutableOptions): RoutableState & RoutableHandlers {
   const graphStore = useGraphStore();
 

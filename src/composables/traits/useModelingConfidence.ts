@@ -259,69 +259,117 @@ export const DEFAULT_MODELING_METADATA: ModelingMetadata = {
   scope: 'tbd',
 };
 
-// === COMPOSABLE ===
-
+/**
+ * Options de configuration pour le trait ModelingConfidence.
+ */
 export interface ModelingConfidenceOptions {
+  /** Identifiant réactif du noeud (mutuellement exclusif avec edgeId) */
   nodeId?: Ref<string>;
+  /** Identifiant réactif de l'arête (mutuellement exclusif avec nodeId) */
   edgeId?: Ref<string>;
 }
 
+/**
+ * État réactif géré par le trait ModelingConfidence.
+ */
 export interface ModelingConfidenceState {
+  /** Métadonnées complètes de confiance */
   metadata: Ref<ModelingMetadata>;
+  /** Niveau de maturité actuel (7 niveaux de unknown à certified) */
   maturity: Ref<ModelingMaturity>;
+  /** Score de confiance de 0 à 100 */
   confidence: Ref<number>;
+  /** Style visuel correspondant au niveau de maturité */
   visualStyle: Ref<MaturityVisualStyle>;
+  /** État temporel (current, planned, deprecated, etc.) */
   temporalState: Ref<TemporalState>;
+  /** Statut de portée (in-scope, out-scope, uncertain) */
   scope: Ref<ScopeStatus>;
+  /** Indique s'il existe des questions ouvertes */
   hasOpenQuestions: Ref<boolean>;
+  /** Nombre de questions ouvertes */
   openQuestionsCount: Ref<number>;
+  /** Nombre de sources référencées */
   sourcesCount: Ref<number>;
+  /** Indique si l'élément est complètement documenté */
   isFullyDocumented: Ref<boolean>;
 }
 
+/**
+ * Gestionnaires d'actions fournis par le trait ModelingConfidence.
+ */
 export interface ModelingConfidenceHandlers {
-  // Maturité
+  /** Définit le niveau de maturité avec raison optionnelle */
   setMaturity: (maturity: ModelingMaturity, reason?: string) => void;
+  /** Améliore le niveau de maturité d'un cran */
   upgradeMaturity: (reason?: string) => void;
+  /** Réduit le niveau de maturité d'un cran */
   downgradeMaturity: (reason?: string) => void;
 
-  // Confiance
+  /** Définit le score de confiance (0-100) */
   setConfidence: (confidence: number) => void;
 
-  // Sources
+  /** Ajoute une source de modélisation */
   addSource: (source: Omit<ModelingSource, 'date'>) => void;
+  /** Supprime une source par son index */
   removeSource: (index: number) => void;
 
-  // Questions
+  /** Ajoute une question ouverte et retourne son ID */
   addQuestion: (question: Omit<OpenQuestion, 'id' | 'status'>) => string;
+  /** Met à jour une question existante */
   updateQuestion: (id: string, updates: Partial<OpenQuestion>) => void;
+  /** Marque une question comme répondue */
   answerQuestion: (id: string) => void;
+  /** Supprime une question */
   removeQuestion: (id: string) => void;
 
-  // Alternatives
+  /** Ajoute une alternative et retourne son ID */
   addAlternative: (alt: Omit<Alternative, 'id'>) => string;
+  /** Supprime une alternative */
   removeAlternative: (id: string) => void;
 
-  // Temporalité
+  /** Définit l'état temporel */
   setTemporalState: (state: TemporalState) => void;
+  /** Définit la période de validité */
   setValidityPeriod: (from?: string, until?: string) => void;
 
-  // Scope
+  /** Définit le statut de portée avec note optionnelle */
   setScope: (scope: ScopeStatus, note?: string) => void;
 
-  // Notes
+  /** Définit les notes de modélisation */
   setModelingNotes: (notes: string) => void;
+  /** Marque comme revu par quelqu'un */
   markAsReviewed: (by?: string) => void;
 
-  // Bulk
+  /** Met à jour plusieurs métadonnées simultanément */
   setMetadata: (metadata: Partial<ModelingMetadata>) => void;
+  /** Réinitialise toutes les métadonnées aux valeurs par défaut */
   resetMetadata: () => void;
 
-  // Helpers
+  /** Récupère le style visuel pour un niveau de maturité */
   getVisualStyleForMaturity: (maturity: ModelingMaturity) => MaturityVisualStyle;
+  /** Calcule le niveau de maturité suggéré basé sur les sources */
   calculateSuggestedMaturity: () => ModelingMaturity;
 }
 
+/**
+ * Ajoute la capacité de traçabilité et confiance dans la modélisation.
+ *
+ * Gère 7 niveaux de maturité (unknown, hypothesis, inferred, declared, documented,
+ * verified, certified) avec styles visuels discriminants, suivi des sources de
+ * modélisation, questions ouvertes, alternatives envisagées, état temporel et portée.
+ * Permet d'assurer la qualité et la traçabilité des modèles d'architecture.
+ *
+ * @param options - Configuration du trait (nodeId ou edgeId)
+ * @returns État réactif et gestionnaires pour la gestion de la confiance
+ *
+ * @example
+ * ```ts
+ * const { maturity, setMaturity, addSource } = useModelingConfidence({ nodeId });
+ * setMaturity(ModelingMaturity.Verified, 'Vérifié par test');
+ * addSource({ type: 'code', reference: 'src/app.ts', author: 'Dev Team' });
+ * ```
+ */
 export function useModelingConfidence(
   options: ModelingConfidenceOptions
 ): ModelingConfidenceState & ModelingConfidenceHandlers {
