@@ -2,6 +2,7 @@
 import { computed, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import type { Node } from '../../types';
+import { getNodeAbsolutePosition, getNodeCenter as getNodeCenterHelper } from './utils/trait-helpers';
 
 // Types d'ancrage
 export enum AnchorPosition {
@@ -39,27 +40,6 @@ export interface AnchorableHandlers {
   setDefaultAnchor: (position: AnchorPosition) => void;
 }
 
-// Calcule la position absolue d'un noeud (en tenant compte des parents)
-function getNodeAbsolutePosition(nodeId: string, nodes: Record<string, Node>): { x: number; y: number } {
-  const node = nodes[nodeId];
-  if (!node) return { x: 0, y: 0 };
-
-  let x = node.geometry.x;
-  let y = node.geometry.y;
-
-  // Remonter la hiérarchie
-  let parentId = node.parentId;
-  while (parentId) {
-    const parent = nodes[parentId];
-    if (!parent) break;
-    x += parent.geometry.x;
-    y += parent.geometry.y;
-    parentId = parent.parentId;
-  }
-
-  return { x, y };
-}
-
 export function useAnchorable(options: AnchorableOptions): AnchorableState & AnchorableHandlers {
   const graphStore = useGraphStore();
 
@@ -73,7 +53,8 @@ export function useAnchorable(options: AnchorableOptions): AnchorableState & Anc
     const node = graphStore.nodes[options.nodeId.value];
     if (!node) return [];
 
-    const abs = getNodeAbsolutePosition(options.nodeId.value, graphStore.nodes);
+    const abs = getNodeAbsolutePosition(options.nodeId.value);
+    if (!abs) return [];
     const w = node.geometry.w;
     const h = node.geometry.h;
 
@@ -94,7 +75,8 @@ export function useAnchorable(options: AnchorableOptions): AnchorableState & Anc
     const node = graphStore.nodes[options.nodeId.value];
     if (!node) return { x: 0, y: 0, position };
 
-    const abs = getNodeAbsolutePosition(options.nodeId.value, graphStore.nodes);
+    const abs = getNodeAbsolutePosition(options.nodeId.value);
+    if (!abs) return { x: 0, y: 0, position };
     const w = node.geometry.w;
     const h = node.geometry.h;
 
@@ -155,7 +137,8 @@ export function useAnchorable(options: AnchorableOptions): AnchorableState & Anc
     const node = graphStore.nodes[options.nodeId.value];
     if (!node) return { x: 0, y: 0, position: AnchorPosition.Center };
 
-    const abs = getNodeAbsolutePosition(options.nodeId.value, graphStore.nodes);
+    const abs = getNodeAbsolutePosition(options.nodeId.value);
+    if (!abs) return { x: 0, y: 0, position: AnchorPosition.Center };
     const w = node.geometry.w;
     const h = node.geometry.h;
 
@@ -237,7 +220,8 @@ export function calculateEdgeIntersection(
   const node = nodes[nodeId];
   if (!node) return { x: 0, y: 0 };
 
-  const abs = getNodeAbsolutePosition(nodeId, nodes);
+  const abs = getNodeAbsolutePosition(nodeId);
+  if (!abs) return { x: 0, y: 0 };
   const w = node.geometry.w;
   const h = node.geometry.h;
 
@@ -262,13 +246,7 @@ export function calculateEdgeIntersection(
 }
 
 // Helper pour calculer le centre absolu d'un noeud
+// Note: Wrapper pour compatibilité avec l'ancienne signature qui prend 'nodes'
 export function getNodeCenter(nodeId: string, nodes: Record<string, Node>): { x: number; y: number } {
-  const node = nodes[nodeId];
-  if (!node) return { x: 0, y: 0 };
-
-  const abs = getNodeAbsolutePosition(nodeId, nodes);
-  return {
-    x: abs.x + node.geometry.w / 2,
-    y: abs.y + node.geometry.h / 2,
-  };
+  return getNodeCenterHelper(nodeId) || { x: 0, y: 0 };
 }

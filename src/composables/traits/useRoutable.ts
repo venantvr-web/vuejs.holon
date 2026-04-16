@@ -3,6 +3,7 @@ import { computed, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import { calculateEdgeIntersection, getNodeCenter } from './useAnchorable';
 import type { Node, Edge } from '../../types';
+import { getNodeAbsolutePosition } from './utils/trait-helpers';
 
 // Types de routage
 export enum RoutingType {
@@ -47,26 +48,6 @@ export interface RoutableHandlers {
   updateControlPoint: (index: number, point: ControlPoint) => void;
   clearControlPoints: () => void;
   calculateRoute: () => EdgeRoute | null;
-}
-
-// Calcul de position absolue d'un noeud
-function getNodeAbsolutePosition(nodeId: string, nodes: Record<string, Node>): { x: number; y: number } {
-  const node = nodes[nodeId];
-  if (!node) return { x: 0, y: 0 };
-
-  let x = node.geometry.x;
-  let y = node.geometry.y;
-
-  let parentId = node.parentId;
-  while (parentId) {
-    const parent = nodes[parentId];
-    if (!parent) break;
-    x += parent.geometry.x;
-    y += parent.geometry.y;
-    parentId = parent.parentId;
-  }
-
-  return { x, y };
 }
 
 export function useRoutable(options: RoutableOptions): RoutableState & RoutableHandlers {
