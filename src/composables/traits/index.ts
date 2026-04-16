@@ -242,3 +242,42 @@ export {
   type ImportResult,
   type ImportableHandlers
 } from './useImportable';
+
+// Navigation et visualisation
+export {
+  useViewable,
+  type SavedView,
+  type ViewableState,
+  type ViewableHandlers
+} from './useViewable';
+
+export {
+  useSearchable,
+  type SearchScope,
+  type SearchOptions,
+  type SearchResult,
+  type SearchableState,
+  type SearchableHandlers
+} from './useSearchable';
+
+export {
+  useZoomable,
+  type ZoomableOptions,
+  type ZoomableState,
+  type ZoomableHandlers
+} from './useZoomable';
+
+export {
+  usePannable,
+  type PannableOptions,
+  type PannableState,
+  type PannableHandlers
+} from './usePannable';
+
+export {
+  useFocusable,
+  useFocusTrap,
+  type FocusableOptions,
+  type FocusableState,
+  type FocusableHandlers
+} from './useFocusable';
