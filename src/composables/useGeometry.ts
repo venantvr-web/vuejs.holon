@@ -1,34 +1,16 @@
 // src/composables/useGeometry.ts
 import { useGraphStore } from '../stores/graph';
+import {
+  getNodeAbsolutePosition,
+  getNodeDepth as getNodeDepthHelper,
+  isAncestorOf as isAncestorOfHelper,
+} from './traits/utils/trait-helpers';
 
 /**
  * Un hook composable pour toutes les opérations géométriques complexes.
  */
 export function useGeometry() {
   const graphStore = useGraphStore();
-
-  /**
-   * Calcule les coordonnées absolues (World Space) d'un noeud en remontant l'arbre des parents.
-   */
-  function getNodeAbsolutePosition(nodeId: string): { x: number; y: number } {
-    let currentNode = graphStore.nodes[nodeId];
-    if (!currentNode) return { x: 0, y: 0 };
-
-    let absoluteX = currentNode.geometry.x;
-    let absoluteY = currentNode.geometry.y;
-
-    while (currentNode.parentId) {
-      const parentNode = graphStore.nodes[currentNode.parentId];
-      if (!parentNode) break;
-
-      absoluteX += parentNode.geometry.x;
-      absoluteY += parentNode.geometry.y;
-
-      currentNode = parentNode;
-    }
-
-    return { x: absoluteX, y: absoluteY };
-  }
 
   /**
    * Convertit les coordonnées de l'écran en coordonnées locales SVG.
@@ -55,6 +37,8 @@ export function useGeometry() {
     }
 
     const parentAbsolutePos = getNodeAbsolutePosition(targetParentId);
+    if (!parentAbsolutePos) return { x: svgPoint.x, y: svgPoint.y };
+
     return {
       x: svgPoint.x - parentAbsolutePos.x,
       y: svgPoint.y - parentAbsolutePos.y,
@@ -69,6 +53,8 @@ export function useGeometry() {
     if (!node) return false;
 
     const nodePos = getNodeAbsolutePosition(nodeId);
+    if (!nodePos) return false;
+
     return (
       absX >= nodePos.x &&
       absX <= nodePos.x + node.geometry.w &&
@@ -81,12 +67,7 @@ export function useGeometry() {
    * Vérifie si un noeud est un descendant d'un autre (pour éviter les cycles).
    */
   function isDescendantOf(nodeId: string, potentialAncestorId: string): boolean {
-    let current = graphStore.nodes[nodeId];
-    while (current && current.parentId) {
-      if (current.parentId === potentialAncestorId) return true;
-      current = graphStore.nodes[current.parentId];
-    }
-    return false;
+    return isAncestorOfHelper(potentialAncestorId, nodeId);
   }
 
   /**
@@ -106,7 +87,7 @@ export function useGeometry() {
     const sortedByDepth = containers
       .map(node => ({
         node,
-        depth: getNodeDepth(node.id),
+        depth: getNodeDepthHelper(node.id),
       }))
       .sort((a, b) => b.depth - a.depth);
 
@@ -123,19 +104,6 @@ export function useGeometry() {
   }
 
   /**
-   * Calcule la profondeur d'un noeud dans la hiérarchie.
-   */
-  function getNodeDepth(nodeId: string): number {
-    let depth = 0;
-    let current = graphStore.nodes[nodeId];
-    while (current && current.parentId) {
-      depth++;
-      current = graphStore.nodes[current.parentId];
-    }
-    return depth;
-  }
-
-  /**
    * Convertit les coordonnées d'un noeud d'un parent à un autre.
    */
   function convertCoordinates(
@@ -148,6 +116,7 @@ export function useGeometry() {
 
     // Position absolue actuelle du noeud
     const absolutePos = getNodeAbsolutePosition(nodeId);
+    if (!absolutePos) return { x: 0, y: 0 };
 
     // Si le nouveau parent est null (racine), retourner la position absolue
     if (toParentId === null) {
@@ -156,6 +125,8 @@ export function useGeometry() {
 
     // Sinon, soustraire la position absolue du nouveau parent
     const newParentPos = getNodeAbsolutePosition(toParentId);
+    if (!newParentPos) return { x: absolutePos.x, y: absolutePos.y };
+
     return {
       x: absolutePos.x - newParentPos.x,
       y: absolutePos.y - newParentPos.y,
@@ -163,12 +134,12 @@ export function useGeometry() {
   }
 
   return {
-    getNodeAbsolutePosition,
+    getNodeAbsolutePosition: (nodeId: string) => getNodeAbsolutePosition(nodeId) || { x: 0, y: 0 },
     screenToLocalCoordinates,
     isPointInsideNode,
     isDescendantOf,
     findContainerAtPoint,
-    getNodeDepth,
+    getNodeDepth: getNodeDepthHelper,
     convertCoordinates,
   };
 }
