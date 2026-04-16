@@ -3,6 +3,9 @@ import { computed } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import { useSelectionState } from './useSelectable';
 
+/**
+ * Types d'alignement disponibles pour les noeuds.
+ */
 export type AlignmentType =
   | 'left'
   | 'center-h'
@@ -11,16 +14,57 @@ export type AlignmentType =
   | 'center-v'
   | 'bottom';
 
+/**
+ * Types de distribution disponibles pour les noeuds.
+ */
 export type DistributionType = 'horizontal' | 'vertical';
 
+/**
+ * Handlers (actions) exposés par le trait Alignable.
+ */
 export interface AlignableHandlers {
+  /**
+   * Aligne plusieurs noeuds selon le type d'alignement spécifié.
+   * @param type - Type d'alignement à appliquer
+   * @param nodeIds - IDs des noeuds à aligner (par défaut: noeuds sélectionnés)
+   */
   alignNodes: (type: AlignmentType, nodeIds?: string[]) => void;
+  /**
+   * Distribue uniformément plusieurs noeuds selon un axe.
+   * @param type - Direction de distribution (horizontal ou vertical)
+   * @param nodeIds - IDs des noeuds à distribuer (par défaut: noeuds sélectionnés)
+   */
   distributeNodes: (type: DistributionType, nodeIds?: string[]) => void;
+  /**
+   * Harmonise la largeur de plusieurs noeuds à la largeur maximale.
+   * @param nodeIds - IDs des noeuds à modifier (par défaut: noeuds sélectionnés)
+   */
   matchWidth: (nodeIds?: string[]) => void;
+  /**
+   * Harmonise la hauteur de plusieurs noeuds à la hauteur maximale.
+   * @param nodeIds - IDs des noeuds à modifier (par défaut: noeuds sélectionnés)
+   */
   matchHeight: (nodeIds?: string[]) => void;
+  /**
+   * Harmonise la taille (largeur et hauteur) de plusieurs noeuds aux valeurs maximales.
+   * @param nodeIds - IDs des noeuds à modifier (par défaut: noeuds sélectionnés)
+   */
   matchSize: (nodeIds?: string[]) => void;
 }
 
+/**
+ * Trait permettant d'aligner, distribuer et harmoniser les dimensions de plusieurs noeuds.
+ *
+ * @returns Handlers pour l'alignement et la distribution de noeuds
+ *
+ * @example
+ * ```typescript
+ * const { alignNodes, distributeNodes, matchSize } = useAlignable();
+ * alignNodes('left'); // Aligne les noeuds sélectionnés à gauche
+ * distributeNodes('horizontal'); // Distribue horizontalement
+ * matchSize(); // Harmonise les tailles
+ * ```
+ */
 export function useAlignable(): AlignableHandlers {
   const graphStore = useGraphStore();
   const { selectedNodeIds } = useSelectionState();

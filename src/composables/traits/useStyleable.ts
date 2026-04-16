@@ -3,23 +3,43 @@ import { ref, computed, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import type { Styling } from '../../types';
 
+/**
+ * Options de configuration pour le trait Styleable.
+ */
 export interface StyleableOptions {
+  /** Identifiant réactif du noeud */
   nodeId: Ref<string>;
 }
 
+/**
+ * État réactif géré par le trait Styleable.
+ */
 export interface StyleableState {
+  /** Indique si le panneau de style est ouvert */
   isStylePanelOpen: Ref<boolean>;
+  /** Style actuel du noeud (fond, bordure, opacité) */
   currentStyle: Ref<Styling>;
 }
 
+/**
+ * Gestionnaires d'actions fournis par le trait Styleable.
+ */
 export interface StyleableHandlers {
+  /** Ouvre le panneau de modification du style */
   openStylePanel: () => void;
+  /** Ferme le panneau de modification du style */
   closeStylePanel: () => void;
+  /** Bascule l'affichage du panneau de style */
   toggleStylePanel: () => void;
+  /** Met à jour la couleur de remplissage */
   updateFill: (color: string) => void;
+  /** Met à jour la couleur de bordure */
   updateStroke: (color: string) => void;
+  /** Met à jour l'épaisseur de bordure (valeur minimale 0) */
   updateStrokeWidth: (width: number) => void;
+  /** Met à jour l'opacité (valeur entre 0 et 1) */
   updateOpacity: (opacity: number) => void;
+  /** Met à jour plusieurs propriétés de style simultanément */
   updateStyle: (updates: Partial<Styling>) => void;
 }
 
@@ -45,6 +65,15 @@ export const FILL_TYPES: { value: FillType; label: string }[] = [
   { value: 'pattern', label: 'Motif' },
 ];
 
+/**
+ * Ajoute la capacité de modification du style visuel à un noeud.
+ *
+ * Gère les propriétés de style (couleur de fond, bordure, opacité)
+ * et fournit une palette de couleurs prédéfinies.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et gestionnaires pour la modification du style
+ */
 export function useStyleable(options: StyleableOptions): StyleableState & StyleableHandlers {
   const graphStore = useGraphStore();
 

@@ -4,7 +4,9 @@ import { useGraphStore } from '../../stores/graph';
 import type { Node } from '../../types';
 import { getNodeAbsolutePosition, getNodeCenter as getNodeCenterHelper } from './utils/trait-helpers';
 
-// Types d'ancrage
+/**
+ * Positions d'ancrage disponibles pour les points de connexion.
+ */
 export enum AnchorPosition {
   North = 'north',
   South = 'south',
@@ -18,28 +20,94 @@ export enum AnchorPosition {
   Auto = 'auto', // Calcul automatique du point le plus proche
 }
 
+/**
+ * Représente un point d'ancrage avec ses coordonnées et sa position.
+ */
 export interface AnchorPoint {
+  /**
+   * Coordonnée X absolue du point d'ancrage.
+   */
   x: number;
+  /**
+   * Coordonnée Y absolue du point d'ancrage.
+   */
   y: number;
+  /**
+   * Position de l'ancrage sur le noeud.
+   */
   position: AnchorPosition;
 }
 
+/**
+ * Options de configuration pour le trait Anchorable.
+ */
 export interface AnchorableOptions {
+  /**
+   * Référence réactive vers l'ID du noeud concerné.
+   */
   nodeId: Ref<string>;
 }
 
+/**
+ * État réactif exposé par le trait Anchorable.
+ */
 export interface AnchorableState {
+  /**
+   * Liste de tous les points d'ancrage disponibles pour le noeud.
+   */
   anchors: Ref<AnchorPoint[]>;
+  /**
+   * Position d'ancrage par défaut du noeud.
+   */
   defaultAnchor: Ref<AnchorPosition>;
 }
 
+/**
+ * Handlers (actions) exposés par le trait Anchorable.
+ */
 export interface AnchorableHandlers {
+  /**
+   * Récupère les coordonnées d'un point d'ancrage spécifique.
+   * @param position - Position de l'ancrage demandée
+   * @returns Point d'ancrage avec coordonnées
+   */
   getAnchorPoint: (position: AnchorPosition) => AnchorPoint;
+  /**
+   * Trouve l'ancrage le plus proche d'un point cible donné.
+   * @param targetX - Coordonnée X du point cible
+   * @param targetY - Coordonnée Y du point cible
+   * @returns Point d'ancrage le plus proche
+   */
   getNearestAnchor: (targetX: number, targetY: number) => AnchorPoint;
+  /**
+   * Calcule le point d'intersection précis avec le bord du noeud en direction d'un point cible.
+   * @param targetX - Coordonnée X du point cible
+   * @param targetY - Coordonnée Y du point cible
+   * @returns Point d'intersection avec le bord du noeud
+   */
   getEdgeIntersection: (targetX: number, targetY: number) => AnchorPoint;
+  /**
+   * Définit la position d'ancrage par défaut pour le noeud.
+   * @param position - Nouvelle position d'ancrage par défaut
+   */
   setDefaultAnchor: (position: AnchorPosition) => void;
 }
 
+/**
+ * Trait permettant de gérer les points d'ancrage d'un noeud pour les connexions.
+ *
+ * Ce trait calcule automatiquement les points d'ancrage sur les bords et coins du noeud,
+ * et fournit des méthodes pour déterminer les meilleurs points de connexion.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et handlers pour la gestion des ancrages
+ *
+ * @example
+ * ```typescript
+ * const { anchors, getEdgeIntersection } = useAnchorable({ nodeId: ref('node-123') });
+ * const intersection = getEdgeIntersection(targetX, targetY);
+ * ```
+ */
 export function useAnchorable(options: AnchorableOptions): AnchorableState & AnchorableHandlers {
   const graphStore = useGraphStore();
 

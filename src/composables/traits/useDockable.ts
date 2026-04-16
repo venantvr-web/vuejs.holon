@@ -4,7 +4,9 @@ import { useGraphStore } from '../../stores/graph';
 import { useGeometry } from '../useGeometry';
 import type { Node } from '../../types';
 
-// Règles de containment par défaut selon les types Archimate
+/**
+ * Règles de containment par défaut selon les types Archimate et génériques.
+ */
 export const DEFAULT_CONTAINMENT_RULES: Record<string, ContainmentRule> = {
   // Containers génériques
   'container': {
@@ -51,43 +53,150 @@ export const DEFAULT_CONTAINMENT_RULES: Record<string, ContainmentRule> = {
   },
 };
 
+/**
+ * Règle de containment définissant les contraintes parent-enfant pour un type de noeud.
+ */
 export interface ContainmentRule {
-  canContain?: boolean;              // Peut avoir des enfants
-  canBeContained?: boolean;          // Peut être mis dans un container
-  allowedParentTypes?: string[];     // Types de parents autorisés (si vide = tous)
-  allowedChildTypes?: string[];      // Types d'enfants autorisés (si vide = tous)
-  forbiddenParentTypes?: string[];   // Types de parents interdits
-  forbiddenChildTypes?: string[];    // Types d'enfants interdits
-  maxChildren?: number;              // Nombre max d'enfants
-  maxDepth?: number;                 // Profondeur max de nesting
+  /**
+   * Indique si le noeud peut contenir des enfants.
+   */
+  canContain?: boolean;
+  /**
+   * Indique si le noeud peut être contenu dans un parent.
+   */
+  canBeContained?: boolean;
+  /**
+   * Types de parents autorisés (vide = tous autorisés).
+   */
+  allowedParentTypes?: string[];
+  /**
+   * Types d'enfants autorisés (vide = tous autorisés).
+   */
+  allowedChildTypes?: string[];
+  /**
+   * Types de parents interdits.
+   */
+  forbiddenParentTypes?: string[];
+  /**
+   * Types d'enfants interdits.
+   */
+  forbiddenChildTypes?: string[];
+  /**
+   * Nombre maximum d'enfants autorisés.
+   */
+  maxChildren?: number;
+  /**
+   * Profondeur maximale de nesting autorisée.
+   */
+  maxDepth?: number;
 }
 
+/**
+ * Options de configuration pour le trait Dockable.
+ */
 export interface DockableOptions {
+  /**
+   * Référence réactive vers l'ID du noeud concerné.
+   */
   nodeId: Ref<string>;
+  /**
+   * Référence réactive indiquant si le noeud est en cours de glissement.
+   */
   isDragging: Ref<boolean>;
-  // Règles de containment (optionnel - utilise les défauts si non fourni)
+  /**
+   * Règles de containment personnalisées (optionnel, utilise les défauts si non fourni).
+   */
   containmentRules?: ContainmentRule;
 }
 
+/**
+ * État réactif exposé par le trait Dockable.
+ */
 export interface DockableState {
+  /**
+   * ID du parent potentiel détecté pendant le glissement.
+   */
   potentialParent: Ref<string | null>;
+  /**
+   * Indique si ce noeud est une cible de dépôt valide.
+   */
   isDropTarget: Ref<boolean>;
+  /**
+   * Indique si ce noeud peut contenir des enfants.
+   */
   canContain: Ref<boolean>;
+  /**
+   * Indique si ce noeud peut être contenu dans un parent.
+   */
   canBeContained: Ref<boolean>;
+  /**
+   * Profondeur actuelle du noeud dans la hiérarchie.
+   */
   currentDepth: Ref<number>;
+  /**
+   * Nombre d'enfants directs du noeud.
+   */
   childCount: Ref<number>;
+  /**
+   * Message d'erreur si le docking n'est pas autorisé.
+   */
   dockingError: Ref<string | null>;
 }
 
+/**
+ * Handlers (actions) exposés par le trait Dockable.
+ */
 export interface DockableHandlers {
+  /**
+   * Met à jour le parent potentiel basé sur la position actuelle du noeud.
+   */
   updatePotentialParent: () => void;
+  /**
+   * Valide et applique le docking vers le parent potentiel.
+   */
   commitDocking: () => void;
+  /**
+   * Extrait le noeud de son parent actuel (vers la racine).
+   */
   undockFromParent: () => void;
+  /**
+   * Vérifie si ce noeud peut être docké dans un parent spécifique.
+   * @param parentId - ID du parent potentiel
+   * @returns Résultat de la vérification avec raison si refusé
+   */
   canDockInto: (parentId: string) => { allowed: boolean; reason?: string };
+  /**
+   * Vérifie si ce noeud peut accepter un enfant spécifique.
+   * @param childId - ID de l'enfant potentiel
+   * @returns Résultat de la vérification avec raison si refusé
+   */
   canAcceptChild: (childId: string) => { allowed: boolean; reason?: string };
+  /**
+   * Modifie dynamiquement les règles de containment du noeud.
+   * @param rules - Règles partielles à appliquer
+   */
   setContainmentRules: (rules: Partial<ContainmentRule>) => void;
 }
 
+/**
+ * Trait permettant de gérer le docking (insertion hiérarchique) de noeuds dans des containers.
+ *
+ * Implémente un système complet de règles de containment avec support ArchiMate,
+ * détection automatique de parents potentiels, et validation des contraintes.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et handlers pour la gestion du docking
+ *
+ * @example
+ * ```typescript
+ * const { potentialParent, canDockInto, commitDocking } = useDockable({
+ *   nodeId: ref('node-123'),
+ *   isDragging: ref(true)
+ * });
+ * // Pendant le drag, potentialParent est mis à jour automatiquement
+ * commitDocking(); // Applique le docking si autorisé
+ * ```
+ */
 export function useDockable(options: DockableOptions): DockableState & DockableHandlers {
   const graphStore = useGraphStore();
   const { getNodeAbsolutePosition, findContainerAtPoint, convertCoordinates } = useGeometry();

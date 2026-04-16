@@ -3,21 +3,39 @@ import { ref, computed, watch, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import type { Node, Edge } from '../../types';
 
+/**
+ * Options de configuration pour le trait Undoable.
+ */
 export interface UndoableOptions {
+  /** Nombre maximum d'états conservés dans l'historique (défaut: 50) */
   maxHistory?: number;
 }
 
+/**
+ * État réactif géré par le trait Undoable.
+ */
 export interface UndoableState {
+  /** Indique si une opération d'annulation est possible */
   canUndo: Ref<boolean>;
+  /** Indique si une opération de rétablissement est possible */
   canRedo: Ref<boolean>;
+  /** Nombre total d'états dans l'historique */
   historyLength: Ref<number>;
+  /** Index de l'état actuel dans l'historique */
   currentIndex: Ref<number>;
 }
 
+/**
+ * Gestionnaires d'actions fournis par le trait Undoable.
+ */
 export interface UndoableHandlers {
+  /** Annule la dernière modification en restaurant l'état précédent */
   undo: () => void;
+  /** Rétablit la modification annulée suivante */
   redo: () => void;
+  /** Efface tout l'historique et crée un snapshot initial */
   clearHistory: () => void;
+  /** Crée un snapshot de l'état actuel du graphe */
   snapshot: () => void;
 }
 
@@ -33,6 +51,16 @@ const currentIndex = ref(-1);
 const isUndoRedoAction = ref(false);
 const maxHistory = ref(50);
 
+/**
+ * Ajoute la capacité d'annulation et de rétablissement au graphe.
+ *
+ * Gère un historique global de snapshots du graphe complet (noeuds et arêtes)
+ * permettant d'annuler et de rétablir les modifications avec une limite
+ * configurable d'états conservés.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et gestionnaires pour l'undo/redo
+ */
 export function useUndoable(options: UndoableOptions = {}): UndoableState & UndoableHandlers {
   const graphStore = useGraphStore();
 

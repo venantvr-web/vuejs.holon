@@ -64,19 +64,35 @@ export const SHAPE_METADATA: Record<
   [NodeShape.ArchimateProcess]: { label: 'Processus', category: 'archimate' },
 };
 
+/**
+ * Options de configuration pour le trait Shapeable.
+ */
 export interface ShapeableOptions {
+  /** Identifiant réactif du noeud */
   nodeId: Ref<string>;
 }
 
+/**
+ * État réactif géré par le trait Shapeable.
+ */
 export interface ShapeableState {
+  /** Forme géométrique actuelle du noeud */
   shape: Ref<NodeShape>;
+  /** Path SVG généré pour la forme */
   shapePath: Ref<string>;
+  /** Libellé de la forme en toutes lettres */
   shapeLabel: Ref<string>;
+  /** Catégorie de la forme (basic, polygon, archimate, special) */
   shapeCategory: Ref<string>;
 }
 
+/**
+ * Gestionnaires d'actions fournis par le trait Shapeable.
+ */
 export interface ShapeableHandlers {
+  /** Définit la forme du noeud et ajuste automatiquement les proportions si nécessaire */
   setShape: (shape: NodeShape) => void;
+  /** Réinitialise la forme au rectangle par défaut */
   resetShape: () => void;
 }
 
@@ -251,6 +267,22 @@ export function generateShapePath(shape: NodeShape, width: number, height: numbe
   }
 }
 
+/**
+ * Ajoute la capacité de sélection de forme géométrique à un noeud.
+ *
+ * Gère 24 formes différentes incluant formes de base (rectangle, ellipse),
+ * polygones (hexagone, étoile), formes spéciales (nuage, acteur) et formes
+ * ArchiMate spécifiques. Génère automatiquement le path SVG adapté à la taille.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et gestionnaires pour la forme géométrique
+ *
+ * @example
+ * ```ts
+ * const { shape, setShape } = useShapeable({ nodeId });
+ * setShape(NodeShape.Circle); // Ajuste automatiquement pour un ratio 1:1
+ * ```
+ */
 export function useShapeable(options: ShapeableOptions): ShapeableState & ShapeableHandlers {
   const graphStore = useGraphStore();
 

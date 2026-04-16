@@ -3,16 +3,35 @@
 import { ref, computed, type Ref, type ComputedRef } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 
-// === MODES DE VISIBILITÉ ===
-
+/**
+ * Modes de visibilité disponibles pour les edges.
+ */
 export enum EdgeVisibilityMode {
-  All = 'all',                    // Tous les connecteurs visibles
-  Selected = 'selected',          // Seulement les connecteurs des noeuds sélectionnés
-  Hovered = 'hovered',            // Connecteurs visibles au survol des noeuds
-  Connected = 'connected',        // Connecteurs du noeud actif + ses voisins
-  None = 'none',                  // Aucun connecteur visible (mode clean)
+  /**
+   * Tous les connecteurs visibles.
+   */
+  All = 'all',
+  /**
+   * Seulement les connecteurs des noeuds sélectionnés.
+   */
+  Selected = 'selected',
+  /**
+   * Connecteurs visibles au survol des noeuds.
+   */
+  Hovered = 'hovered',
+  /**
+   * Connecteurs du noeud actif et ses voisins.
+   */
+  Connected = 'connected',
+  /**
+   * Aucun connecteur visible (mode clean).
+   */
+  None = 'none',
 }
 
+/**
+ * Labels affichables pour les modes de visibilité.
+ */
 export const VISIBILITY_MODE_LABELS: Record<EdgeVisibilityMode, string> = {
   [EdgeVisibilityMode.All]: 'Tous visibles',
   [EdgeVisibilityMode.Selected]: 'Sélection uniquement',
@@ -21,21 +40,38 @@ export const VISIBILITY_MODE_LABELS: Record<EdgeVisibilityMode, string> = {
   [EdgeVisibilityMode.None]: 'Masqués',
 };
 
-// === CONFIGURATION ===
-
+/**
+ * Configuration globale du layering et de la visibilité des edges.
+ */
 export interface EdgeLayeringConfig {
-  // Z-order
-  edgeLayerOffset: number;        // Offset de base pour les edges (au-dessus des noeuds)
-  selectedEdgeBoost: number;      // Boost z-index pour edge sélectionné
-  connectedNodeBoost: number;     // Boost z-index pour noeuds connectés à un edge sélectionné
-
-  // Visibilité
+  /**
+   * Offset de base pour les edges (au-dessus des noeuds).
+   */
+  edgeLayerOffset: number;
+  /**
+   * Boost z-index pour edge sélectionné.
+   */
+  selectedEdgeBoost: number;
+  /**
+   * Boost z-index pour noeuds connectés à un edge sélectionné.
+   */
+  connectedNodeBoost: number;
+  /**
+   * Mode de visibilité des edges.
+   */
   visibilityMode: EdgeVisibilityMode;
-  fadeInactiveEdges: boolean;     // Atténuer les edges non-pertinents
-  inactiveOpacity: number;        // Opacité des edges inactifs (0-1)
-
-  // Animation
-  transitionDuration: number;     // Durée des transitions CSS (ms)
+  /**
+   * Atténuer les edges non-pertinents.
+   */
+  fadeInactiveEdges: boolean;
+  /**
+   * Opacité des edges inactifs (0-1).
+   */
+  inactiveOpacity: number;
+  /**
+   * Durée des transitions CSS (ms).
+   */
+  transitionDuration: number;
 }
 
 export const DEFAULT_EDGE_LAYERING_CONFIG: EdgeLayeringConfig = {
@@ -58,44 +94,124 @@ const hoveredNodeId = ref<string | null>(null);
 // Configuration globale
 const globalConfig = ref<EdgeLayeringConfig>({ ...DEFAULT_EDGE_LAYERING_CONFIG });
 
-// === INTERFACES ===
-
+/**
+ * Options de configuration pour le trait EdgeLayering.
+ */
 export interface EdgeLayeringOptions {
+  /**
+   * Référence réactive vers l'ID de l'edge concerné.
+   */
   edgeId: Ref<string>;
-  // Références aux noeuds sélectionnés (depuis useSelectable)
+  /**
+   * Références aux noeuds sélectionnés (depuis useSelectable).
+   */
   selectedNodeIds?: Ref<Set<string>>;
 }
 
+/**
+ * État réactif exposé par le trait EdgeLayering.
+ */
 export interface EdgeLayeringState {
+  /**
+   * Indique si l'edge est sélectionné.
+   */
   isSelected: ComputedRef<boolean>;
+  /**
+   * Indique si l'edge a le focus.
+   */
   isFocused: ComputedRef<boolean>;
+  /**
+   * Indique si l'edge est visible selon le mode de visibilité.
+   */
   isVisible: ComputedRef<boolean>;
+  /**
+   * Opacité calculée de l'edge.
+   */
   opacity: ComputedRef<number>;
+  /**
+   * Z-index calculé de l'edge.
+   */
   zIndex: ComputedRef<number>;
+  /**
+   * IDs des noeuds connectés par cet edge.
+   */
   connectedNodeIds: ComputedRef<string[]>;
-  // Style calculé pour le SVG
+  /**
+   * Style calculé complet pour le rendu SVG.
+   */
   computedStyle: ComputedRef<EdgeComputedStyle>;
 }
 
+/**
+ * Style calculé pour un edge incluant visibilité et layering.
+ */
 export interface EdgeComputedStyle {
+  /**
+   * Opacité finale de l'edge.
+   */
   opacity: number;
+  /**
+   * Visibilité CSS de l'edge.
+   */
   visibility: 'visible' | 'hidden';
+  /**
+   * Z-index final de l'edge.
+   */
   zIndex: number;
+  /**
+   * Transitions CSS appliquées.
+   */
   transition: string;
-  // Pour les noeuds connectés
+  /**
+   * Boost z-index pour le noeud source.
+   */
   sourceNodeBoost: number;
+  /**
+   * Boost z-index pour le noeud cible.
+   */
   targetNodeBoost: number;
 }
 
+/**
+ * Handlers (actions) exposés par le trait EdgeLayering.
+ */
 export interface EdgeLayeringHandlers {
+  /**
+   * Sélectionne l'edge.
+   * @param addToSelection - Si true, ajoute à la sélection actuelle
+   */
   select: (addToSelection?: boolean) => void;
+  /**
+   * Désélectionne l'edge.
+   */
   deselect: () => void;
+  /**
+   * Donne le focus à l'edge.
+   */
   focus: () => void;
+  /**
+   * Retire le focus de l'edge.
+   */
   blur: () => void;
 }
 
-// === COMPOSABLE POUR UN EDGE ===
-
+/**
+ * Trait permettant de gérer le z-order et la visibilité d'un edge individuel.
+ *
+ * Calcule automatiquement la visibilité, l'opacité et le z-index selon le mode
+ * de visibilité global et l'état de sélection.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et handlers pour le layering de l'edge
+ *
+ * @example
+ * ```typescript
+ * const { isVisible, computedStyle, select } = useEdgeLayering({
+ *   edgeId: ref('edge-123'),
+ *   selectedNodeIds: ref(new Set(['node-1']))
+ * });
+ * ```
+ */
 export function useEdgeLayering(options: EdgeLayeringOptions): EdgeLayeringState & EdgeLayeringHandlers {
   const graphStore = useGraphStore();
 
@@ -266,39 +382,104 @@ export function useEdgeLayering(options: EdgeLayeringOptions): EdgeLayeringState
   };
 }
 
-// === ÉTAT GLOBAL (CANVAS) ===
-
+/**
+ * État global partagé pour le layering des edges au niveau canvas.
+ */
 export interface EdgeLayeringGlobalState {
+  /**
+   * Set des IDs des edges sélectionnés.
+   */
   selectedEdgeIds: Ref<Set<string>>;
+  /**
+   * ID de l'edge ayant le focus (peut être null).
+   */
   focusedEdgeId: Ref<string | null>;
+  /**
+   * ID du noeud actuellement survolé (peut être null).
+   */
   hoveredNodeId: Ref<string | null>;
+  /**
+   * Configuration globale du layering.
+   */
   config: Ref<EdgeLayeringConfig>;
 }
 
+/**
+ * Handlers globaux pour la gestion du layering des edges.
+ */
 export interface EdgeLayeringGlobalHandlers {
-  // Sélection
+  /**
+   * Vide la sélection d'edges.
+   */
   clearEdgeSelection: () => void;
+  /**
+   * Sélectionne un edge.
+   * @param edgeId - ID de l'edge à sélectionner
+   * @param addToSelection - Si true, ajoute à la sélection actuelle
+   */
   selectEdge: (edgeId: string, addToSelection?: boolean) => void;
+  /**
+   * Désélectionne un edge.
+   * @param edgeId - ID de l'edge à désélectionner
+   */
   deselectEdge: (edgeId: string) => void;
+  /**
+   * Sélectionne tous les edges du graphe.
+   */
   selectAllEdges: () => void;
+  /**
+   * Sélectionne tous les edges connectés aux noeuds spécifiés.
+   * @param nodeIds - IDs des noeuds
+   */
   selectEdgesOfNodes: (nodeIds: string[]) => void;
-
-  // Hover
+  /**
+   * Définit le noeud actuellement survolé.
+   * @param nodeId - ID du noeud survolé (null si aucun)
+   */
   setHoveredNode: (nodeId: string | null) => void;
-
-  // Configuration
+  /**
+   * Change le mode de visibilité global des edges.
+   * @param mode - Nouveau mode de visibilité
+   */
   setVisibilityMode: (mode: EdgeVisibilityMode) => void;
+  /**
+   * Met à jour la configuration globale.
+   * @param config - Configuration partielle à appliquer
+   */
   setConfig: (config: Partial<EdgeLayeringConfig>) => void;
-
-  // Utilitaires
+  /**
+   * Récupère tous les edges connectés à un noeud.
+   * @param nodeId - ID du noeud
+   * @returns IDs des edges connectés
+   */
   getEdgesOfNode: (nodeId: string) => string[];
+  /**
+   * Récupère les noeuds connectés par un edge.
+   * @param edgeId - ID de l'edge
+   * @returns IDs des noeuds source et cible
+   */
   getConnectedNodes: (edgeId: string) => string[];
+  /**
+   * Calcule le boost de z-index d'un noeud si connecté à un edge sélectionné.
+   * @param nodeId - ID du noeud
+   * @returns Valeur du boost
+   */
   getNodeZIndexBoost: (nodeId: string) => number;
-
-  // Tri des edges par z-index
+  /**
+   * Trie les edges par z-index effectif.
+   * @param edges - Liste d'edges à trier
+   * @returns Liste triée
+   */
   sortEdgesByZIndex: <T extends { id: string; data?: { zIndex?: number } }>(edges: T[]) => T[];
 }
 
+/**
+ * Composable fournissant l'état global et les handlers pour la gestion du layering des edges.
+ *
+ * Gère la sélection globale, le mode de visibilité et le calcul des z-index.
+ *
+ * @returns État global et handlers pour le layering des edges
+ */
 export function useEdgeLayeringState(): EdgeLayeringGlobalState & EdgeLayeringGlobalHandlers {
   const graphStore = useGraphStore();
 

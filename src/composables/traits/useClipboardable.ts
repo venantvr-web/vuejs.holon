@@ -5,18 +5,59 @@ import { useSelectionState } from './useSelectable';
 import { nanoid } from 'nanoid';
 import type { Node, Edge } from '../../types';
 
+/**
+ * Structure de données du presse-papiers interne.
+ */
 export interface ClipboardData {
+  /**
+   * Noeuds copiés dans le presse-papiers.
+   */
   nodes: Node[];
+  /**
+   * Edges copiés dans le presse-papiers.
+   */
   edges: Edge[];
+  /**
+   * Horodatage de l'opération de copie.
+   */
   timestamp: number;
 }
 
+/**
+ * Handlers (actions) exposés par le trait Clipboardable.
+ */
 export interface ClipboardableHandlers {
+  /**
+   * Copie les noeuds spécifiés dans le presse-papiers interne.
+   * @param nodeIds - IDs des noeuds à copier (par défaut: noeuds sélectionnés)
+   */
   copy: (nodeIds?: string[]) => void;
+  /**
+   * Coupe les noeuds spécifiés (copie puis supprime).
+   * @param nodeIds - IDs des noeuds à couper (par défaut: noeuds sélectionnés)
+   */
   cut: (nodeIds?: string[]) => void;
+  /**
+   * Colle le contenu du presse-papiers avec un décalage optionnel.
+   * @param offsetX - Décalage horizontal en pixels (par défaut: 20)
+   * @param offsetY - Décalage vertical en pixels (par défaut: 20)
+   * @returns IDs des nouveaux noeuds créés
+   */
   paste: (offsetX?: number, offsetY?: number) => Promise<string[]>;
+  /**
+   * Duplique les noeuds spécifiés sans affecter le presse-papiers.
+   * @param nodeIds - IDs des noeuds à dupliquer (par défaut: noeuds sélectionnés)
+   * @returns IDs des nouveaux noeuds créés
+   */
   duplicate: (nodeIds?: string[]) => Promise<string[]>;
+  /**
+   * Vérifie si le presse-papiers contient des éléments à coller.
+   * @returns true si le presse-papiers contient des noeuds
+   */
   canPaste: () => boolean;
+  /**
+   * Vide le contenu du presse-papiers.
+   */
   clearClipboard: () => void;
 }
 
@@ -24,6 +65,21 @@ export interface ClipboardableHandlers {
 const clipboard = ref<ClipboardData | null>(null);
 const PASTE_OFFSET = 20;
 
+/**
+ * Trait permettant de gérer les opérations de copier/coller/couper/dupliquer pour les noeuds.
+ *
+ * Inclut la gestion des hiérarchies (enfants) et des edges entre les noeuds copiés.
+ * Le presse-papiers interne préserve la structure complète des noeuds.
+ *
+ * @returns Handlers pour les opérations de presse-papiers
+ *
+ * @example
+ * ```typescript
+ * const { copy, paste, duplicate } = useClipboardable();
+ * copy(); // Copie les noeuds sélectionnés
+ * const newIds = await paste(30, 30); // Colle avec décalage
+ * ```
+ */
 export function useClipboardable(): ClipboardableHandlers {
   const graphStore = useGraphStore();
   const { selectedNodeIds, clearSelection } = useSelectionState();

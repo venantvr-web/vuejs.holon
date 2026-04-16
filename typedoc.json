@@ -1,0 +1,66 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "src/composables/traits/index.ts",
+    "src/types/index.ts",
+    "src/stores/graph.ts",
+    "src/composables/useGeometry.ts"
+  ],
+  "entryPointStrategy": "expand",
+  "exclude": [
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/test-utils.ts",
+    "src/main.ts",
+    "src/App.vue"
+  ],
+  "out": "docs/api",
+  "plugin": [],
+  "name": "Holon - API des Traits",
+  "includeVersion": true,
+  "readme": "README.md",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "skipErrorChecking": true,
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "strict": false
+  },
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true
+  },
+  "categorizeByGroup": true,
+  "categoryOrder": [
+    "Traits",
+    "Types",
+    "Stores",
+    "Utilities",
+    "*"
+  ],
+  "sort": ["source-order"],
+  "kindSortOrder": [
+    "Function",
+    "Interface",
+    "TypeAlias",
+    "Enum",
+    "Class"
+  ],
+  "searchInComments": true,
+  "visibilityFilters": {
+    "protected": false,
+    "private": false,
+    "inherited": true,
+    "external": false
+  },
+  "hideGenerator": false,
+  "githubPages": false,
+  "treatWarningsAsErrors": false,
+  "validation": {
+    "notExported": true,
+    "invalidLink": true,
+    "notDocumented": false
+  }
+}

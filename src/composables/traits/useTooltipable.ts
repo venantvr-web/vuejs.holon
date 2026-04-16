@@ -2,29 +2,61 @@
 import { ref, computed, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 
+/**
+ * Options de configuration pour le trait Tooltipable.
+ */
 export interface TooltipableOptions {
+  /** Identifiant réactif du noeud */
   nodeId: Ref<string>;
-  field?: string; // Champ pour le commentaire dans data (défaut: 'comment')
-  delay?: number; // Délai avant affichage (ms)
+  /** Champ pour le commentaire dans data (défaut: 'comment') */
+  field?: string;
+  /** Délai avant affichage du tooltip en millisecondes (défaut: 300ms) */
+  delay?: number;
 }
 
+/**
+ * État réactif géré par le trait Tooltipable.
+ */
 export interface TooltipableState {
+  /** Indique si le tooltip est actuellement visible */
   isTooltipVisible: Ref<boolean>;
+  /** Contenu textuel du tooltip */
   tooltipContent: Ref<string>;
+  /** Indique si le noeud possède un commentaire */
   hasComment: Ref<boolean>;
+  /** Indique si le mode édition du commentaire est actif */
   isEditingComment: Ref<boolean>;
+  /** Valeur temporaire du commentaire en cours d'édition */
   editCommentValue: Ref<string>;
 }
 
+/**
+ * Gestionnaires d'actions fournis par le trait Tooltipable.
+ */
 export interface TooltipableHandlers {
+  /** Affiche le tooltip après le délai configuré */
   showTooltip: () => void;
+  /** Masque immédiatement le tooltip */
   hideTooltip: () => void;
+  /** Active le mode édition du commentaire */
   startEditComment: () => void;
+  /** Valide et enregistre les modifications du commentaire */
   commitComment: () => void;
+  /** Annule l'édition en cours sans enregistrer */
   cancelEditComment: () => void;
+  /** Supprime définitivement le commentaire */
   deleteComment: () => void;
 }
 
+/**
+ * Ajoute la capacité d'affichage de tooltip et d'édition de commentaire à un noeud.
+ *
+ * Gère l'affichage différé d'un tooltip au survol et permet l'édition
+ * du commentaire associé au noeud avec validation ou annulation.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et gestionnaires pour le tooltip et les commentaires
+ */
 export function useTooltipable(options: TooltipableOptions): TooltipableState & TooltipableHandlers {
   const graphStore = useGraphStore();
   const field = options.field ?? 'comment';

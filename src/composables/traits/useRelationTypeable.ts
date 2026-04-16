@@ -367,30 +367,72 @@ const LAYER_HIERARCHY: ArchimateLayer[] = [
   'implementation',
 ];
 
+/**
+ * Options de configuration pour le trait RelationTypeable.
+ */
 export interface RelationTypeableOptions {
+  /** Identifiant réactif de l'arête */
   edgeId: Ref<string>;
 }
 
+/**
+ * État réactif géré par le trait RelationTypeable.
+ */
 export interface RelationTypeableState {
+  /** Type de relation ArchiMate actuel */
   relationType: Ref<RelationType>;
+  /** Configuration complète de la relation (style, validation, etc.) */
   relationConfig: Ref<RelationConfig>;
+  /** Catégorie de la relation (structural, dependency, dynamic, other) */
   relationCategory: Ref<RelationCategory>;
+  /** Type d'accès pour les relations Access (read, write, readwrite) */
   accessType: Ref<AccessType | null>;
+  /** Force d'influence pour les relations Influence (+, ++, -, --, ?, 0) */
   influenceStrength: Ref<InfluenceStrength | null>;
+  /** Type de flux pour les relations Flow (information, material, money, energy) */
   flowType: Ref<FlowType | null>;
+  /** Indique si la relation est valide selon les règles ArchiMate */
   isValid: Ref<boolean>;
+  /** Message d'erreur de validation si invalide */
   validationError: Ref<string | null>;
 }
 
+/**
+ * Gestionnaires d'actions fournis par le trait RelationTypeable.
+ */
 export interface RelationTypeableHandlers {
+  /** Définit le type de relation ArchiMate */
   setRelationType: (type: RelationType) => void;
+  /** Définit le type d'accès (pour relations Access uniquement) */
   setAccessType: (type: AccessType) => void;
+  /** Définit la force d'influence (pour relations Influence uniquement) */
   setInfluenceStrength: (strength: InfluenceStrength) => void;
+  /** Définit le type de flux (pour relations Flow uniquement) */
   setFlowType: (type: FlowType) => void;
+  /** Valide la relation selon les règles ArchiMate et retourne le résultat */
   validateRelation: () => { valid: boolean; error?: string };
+  /** Retourne les types de relations autorisés entre deux types de noeuds */
   getAvailableRelationTypes: (sourceType: string, targetType: string) => RelationType[];
 }
 
+/**
+ * Ajoute la capacité de typage et validation des relations ArchiMate à une arête.
+ *
+ * Gère 13 types de relations ArchiMate répartis en 4 catégories (structural,
+ * dependency, dynamic, other) avec validation automatique selon les règles
+ * ArchiMate (couches autorisées, directions cross-layer, etc.). Configure
+ * automatiquement le style visuel (marqueurs, couleur, tirets).
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et gestionnaires pour le typage de relation
+ *
+ * @example
+ * ```ts
+ * const { setRelationType, validateRelation } = useRelationTypeable({ edgeId });
+ * setRelationType(RelationType.Composition);
+ * const { valid, error } = validateRelation();
+ * ```
+ */
 export function useRelationTypeable(options: RelationTypeableOptions): RelationTypeableState & RelationTypeableHandlers {
   const graphStore = useGraphStore();
 

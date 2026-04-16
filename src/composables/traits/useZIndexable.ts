@@ -2,25 +2,51 @@
 import { ref, computed, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 
+/**
+ * Options de configuration pour le trait ZIndexable.
+ */
 export interface ZIndexableOptions {
+  /** Identifiant réactif du noeud */
   nodeId: Ref<string>;
 }
 
+/**
+ * État réactif géré par le trait ZIndexable.
+ */
 export interface ZIndexableState {
+  /** Indice z actuel du noeud (ordre d'empilement) */
   zIndex: Ref<number>;
 }
 
+/**
+ * Gestionnaires d'actions fournis par le trait ZIndexable.
+ */
 export interface ZIndexableHandlers {
+  /** Place le noeud au premier plan parmi ses frères */
   bringToFront: () => void;
+  /** Place le noeud à l'arrière-plan parmi ses frères */
   sendToBack: () => void;
+  /** Avance le noeud d'un niveau en échangeant avec le noeud au-dessus */
   bringForward: () => void;
+  /** Recule le noeud d'un niveau en échangeant avec le noeud en-dessous */
   sendBackward: () => void;
+  /** Définit explicitement l'indice z du noeud */
   setZIndex: (z: number) => void;
 }
 
 // État global pour le z-index max
 const globalMaxZIndex = ref(0);
 
+/**
+ * Ajoute la capacité de gestion de l'ordre d'empilement à un noeud.
+ *
+ * Gère le z-index des noeuds au sein du même parent pour contrôler
+ * l'ordre d'affichage avec des opérations de premier plan, arrière-plan
+ * et déplacement incrémental.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et gestionnaires pour le z-index
+ */
 export function useZIndexable(options: ZIndexableOptions): ZIndexableState & ZIndexableHandlers {
   const graphStore = useGraphStore();
 

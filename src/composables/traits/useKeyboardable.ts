@@ -4,32 +4,98 @@ import { useGraphStore } from '../../stores/graph';
 import { useSelectionState } from './useSelectable';
 import { useUndoable } from './useUndoable';
 
+/**
+ * Définition d'un raccourci clavier.
+ */
 export interface KeyboardShortcut {
+  /**
+   * Touche principale du raccourci.
+   */
   key: string;
+  /**
+   * Nécessite la touche Ctrl (ou Cmd sur Mac).
+   */
   ctrl?: boolean;
+  /**
+   * Nécessite la touche Shift.
+   */
   shift?: boolean;
+  /**
+   * Nécessite la touche Alt.
+   */
   alt?: boolean;
+  /**
+   * Nécessite la touche Meta (Cmd sur Mac).
+   */
   meta?: boolean;
+  /**
+   * Action à exécuter quand le raccourci est activé.
+   */
   action: () => void;
+  /**
+   * Description lisible du raccourci.
+   */
   description: string;
+  /**
+   * Catégorie pour organisation (Édition, Sélection, etc.).
+   */
   category: string;
 }
 
+/**
+ * Options de configuration pour le trait Keyboardable.
+ */
 export interface KeyboardableOptions {
+  /**
+   * État d'activation des raccourcis (défaut: true).
+   */
   enabled?: Ref<boolean>;
+  /**
+   * Raccourcis personnalisés à ajouter.
+   */
   customShortcuts?: KeyboardShortcut[];
 }
 
+/**
+ * État réactif exposé par le trait Keyboardable.
+ */
 export interface KeyboardableState {
+  /**
+   * Indique si les raccourcis sont activés.
+   */
   isEnabled: Ref<boolean>;
+  /**
+   * Liste de tous les raccourcis enregistrés.
+   */
   shortcuts: Ref<KeyboardShortcut[]>;
 }
 
+/**
+ * Handlers (actions) exposés par le trait Keyboardable.
+ */
 export interface KeyboardableHandlers {
+  /**
+   * Active les raccourcis clavier.
+   */
   enable: () => void;
+  /**
+   * Désactive les raccourcis clavier.
+   */
   disable: () => void;
+  /**
+   * Ajoute ou met à jour un raccourci clavier.
+   * @param shortcut - Raccourci à ajouter
+   */
   addShortcut: (shortcut: KeyboardShortcut) => void;
+  /**
+   * Retire un raccourci clavier.
+   * @param key - Touche du raccourci à retirer
+   */
   removeShortcut: (key: string) => void;
+  /**
+   * Récupère les raccourcis groupés par catégorie.
+   * @returns Raccourcis organisés par catégorie
+   */
   getShortcutsByCategory: () => Record<string, KeyboardShortcut[]>;
 }
 
@@ -37,6 +103,29 @@ export interface KeyboardableHandlers {
 const globalShortcuts = ref<KeyboardShortcut[]>([]);
 const isGlobalEnabled = ref(true);
 
+/**
+ * Trait permettant de gérer les raccourcis clavier globaux de l'application.
+ *
+ * Fournit des raccourcis par défaut (Ctrl+Z, Delete, Ctrl+A, etc.) et permet
+ * l'ajout de raccourcis personnalisés. Ignore automatiquement les événements
+ * dans les champs de saisie.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et handlers pour les raccourcis clavier
+ *
+ * @example
+ * ```typescript
+ * const { addShortcut, shortcuts } = useKeyboardable({
+ *   customShortcuts: [{
+ *     key: 'g',
+ *     ctrl: true,
+ *     action: () => console.log('Custom shortcut'),
+ *     description: 'Mon raccourci',
+ *     category: 'Personnalisé'
+ *   }]
+ * });
+ * ```
+ */
 export function useKeyboardable(options: KeyboardableOptions = {}): KeyboardableState & KeyboardableHandlers {
   const graphStore = useGraphStore();
   const { selectedNodeIds, clearSelection, deleteSelected } = useSelectionState();

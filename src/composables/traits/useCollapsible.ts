@@ -2,24 +2,73 @@
 import { ref, computed, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 
+/**
+ * Options de configuration pour le trait Collapsible.
+ */
 export interface CollapsibleOptions {
+  /**
+   * Référence réactive vers l'ID du noeud concerné.
+   */
   nodeId: Ref<string>;
 }
 
+/**
+ * État réactif exposé par le trait Collapsible.
+ */
 export interface CollapsibleState {
+  /**
+   * Indique si le noeud est actuellement replié.
+   */
   isCollapsed: Ref<boolean>;
+  /**
+   * Indique si le noeud peut être replié (doit être un container avec enfants).
+   */
   canCollapse: Ref<boolean>;
+  /**
+   * Nombre d'enfants directs du noeud.
+   */
   childCount: Ref<number>;
 }
 
+/**
+ * Handlers (actions) exposés par le trait Collapsible.
+ */
 export interface CollapsibleHandlers {
+  /**
+   * Replie le noeud pour masquer ses enfants.
+   */
   collapse: () => void;
+  /**
+   * Déplie le noeud pour afficher ses enfants.
+   */
   expand: () => void;
+  /**
+   * Bascule entre l'état replié et déplié.
+   */
   toggle: () => void;
+  /**
+   * Replie récursivement le noeud et tous ses descendants containers.
+   */
   collapseAll: () => void;
+  /**
+   * Déplie récursivement le noeud et tous ses descendants containers.
+   */
   expandAll: () => void;
 }
 
+/**
+ * Trait permettant de replier/déplier les noeuds containers pour masquer/afficher leurs enfants.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et handlers pour le repliage/dépliage
+ *
+ * @example
+ * ```typescript
+ * const { isCollapsed, toggle, collapseAll } = useCollapsible({ nodeId: ref('container-123') });
+ * toggle(); // Bascule l'état
+ * collapseAll(); // Replie tout récursivement
+ * ```
+ */
 export function useCollapsible(options: CollapsibleOptions): CollapsibleState & CollapsibleHandlers {
   const graphStore = useGraphStore();
 

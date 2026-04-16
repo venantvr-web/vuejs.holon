@@ -2,25 +2,80 @@
 import { ref, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 
+/**
+ * Options de configuration pour le trait Draggable.
+ */
 export interface DraggableOptions {
+  /**
+   * Référence réactive vers l'ID du noeud concerné.
+   */
   nodeId: Ref<string>;
+  /**
+   * Niveau de zoom actuel pour ajuster les déplacements.
+   */
   zoomLevel?: Ref<number>;
+  /**
+   * Callback appelé au début du glissement.
+   */
   onDragStart?: () => void;
+  /**
+   * Callback appelé pendant le glissement.
+   * @param dx - Déplacement horizontal
+   * @param dy - Déplacement vertical
+   */
   onDragMove?: (dx: number, dy: number) => void;
+  /**
+   * Callback appelé à la fin du glissement.
+   */
   onDragEnd?: () => void;
-  /** Si true, notifie le parent pour qu'il recalcule son autosize */
+  /**
+   * Si true, notifie le parent pour qu'il recalcule son autosize.
+   */
   notifyParentOnMove?: boolean;
 }
 
+/**
+ * État réactif exposé par le trait Draggable.
+ */
 export interface DraggableState {
+  /**
+   * Indique si le noeud est actuellement en cours de glissement.
+   */
   isDragging: Ref<boolean>;
+  /**
+   * Delta de déplacement depuis le début du glissement.
+   */
   dragDelta: Ref<{ x: number; y: number }>;
 }
 
+/**
+ * Handlers (actions) exposés par le trait Draggable.
+ */
 export interface DraggableHandlers {
+  /**
+   * Démarre le glissement du noeud.
+   * @param event - Événement de souris déclencheur
+   */
   handleDragStart: (event: MouseEvent) => void;
 }
 
+/**
+ * Trait permettant de rendre un noeud déplaçable par glisser-déposer.
+ *
+ * Gère automatiquement le zoom, les callbacks, et la notification du parent
+ * pour les recalculs d'autosize des containers.
+ *
+ * @param options - Configuration du trait
+ * @returns État réactif et handlers pour le glissement
+ *
+ * @example
+ * ```typescript
+ * const { isDragging, handleDragStart } = useDraggable({
+ *   nodeId: ref('node-123'),
+ *   zoomLevel: ref(1.5)
+ * });
+ * ```
+ */
 export function useDraggable(options: DraggableOptions): DraggableState & DraggableHandlers {
   const graphStore = useGraphStore();
 
