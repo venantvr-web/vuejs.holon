@@ -327,3 +327,31 @@ export {
   type LayoutableState,
   type LayoutableHandlers
 } from './useLayoutable';
+
+// === Validation et Qualité (Sprint 7) ===
+
+// Validation Archimate
+export {
+  useValidatable,
+  type ValidationSeverity,
+  type ValidationCategory,
+  type ValidationIssue,
+  type ValidationResult,
+  type ValidationRule,
+  type ValidatableState,
+  type ValidatableHandlers
+} from './useValidatable';
+
+// Contraintes architecturales
+export {
+  useConstrainable,
+  type ConstraintType,
+  type ConstraintSeverity,
+  type GraphPattern,
+  type ArchitecturalConstraint,
+  type ConstraintViolation,
+  type ConstraintAnalysisResult,
+  type ArchitecturalMetric,
+  type ConstrainableState,
+  type ConstrainableHandlers
+} from './useConstrainable';
