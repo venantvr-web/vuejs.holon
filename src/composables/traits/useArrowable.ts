@@ -269,29 +269,35 @@ export function useArrowable(options: ArrowableOptions): ArrowableState & Arrowa
   const startArrow = computed((): ArrowType => {
     const e = edge.value;
     // Par défaut : petit point discret pour marquer le départ
-    return ((e as any)?.startArrow as ArrowType) ?? ArrowType.Dot;
+    return (e?.startArrow as ArrowType) ?? ArrowType.Dot;
   });
 
   const endArrow = computed((): ArrowType => {
     const e = edge.value;
-    return ((e as any)?.endArrow as ArrowType) ?? ArrowType.Arrow;
+    return (e?.endArrow as ArrowType) ?? ArrowType.Arrow;
   });
 
   const arrowSize = computed((): number => {
     const e = edge.value;
-    return ((e as any)?.arrowSize as number) ?? 10;
+    return e?.arrowSize ?? 10;
   });
 
   function setStartArrow(type: ArrowType) {
-    // TODO: Implémenter la mise à jour de l'edge dans le store
+    if (edge.value) {
+      graphStore.updateEdge(options.edgeId.value, { startArrow: type });
+    }
   }
 
   function setEndArrow(type: ArrowType) {
-    // TODO: Implémenter la mise à jour de l'edge dans le store
+    if (edge.value) {
+      graphStore.updateEdge(options.edgeId.value, { endArrow: type });
+    }
   }
 
   function setArrowSize(size: number) {
-    // TODO: Implémenter la mise à jour de l'edge dans le store
+    if (edge.value) {
+      graphStore.updateEdge(options.edgeId.value, { arrowSize: size });
+    }
   }
 
   function getArrowMarkerDef(type: ArrowType, position: 'start' | 'end', color: string): string {

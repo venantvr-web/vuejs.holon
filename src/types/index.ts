@@ -67,6 +67,31 @@ export interface Node {
 export type EdgeRouting = 'straight' | 'orthogonal';
 
 /**
+ * Types de flèches pour les marqueurs d'edges.
+ */
+export type ArrowType =
+  | 'none'
+  | 'dot'
+  | 'small-dot'
+  | 'arrow'
+  | 'filled-arrow'
+  | 'diamond'
+  | 'filled-diamond'
+  | 'circle'
+  | 'filled-circle'
+  | 'square'
+  | 'filled-square'
+  | 'archi-composition'
+  | 'archi-aggregation'
+  | 'archi-assignment'
+  | 'archi-realization'
+  | 'archi-serving'
+  | 'archi-access'
+  | 'archi-influence'
+  | 'archi-trigger'
+  | 'archi-flow';
+
+/**
  * Un lien (arête) entre deux noeuds, identifiés par leur ID.
  * Les liens existent indépendamment de la hiérarchie des noeuds.
  */
@@ -75,4 +100,16 @@ export interface Edge {
   sourceId: string;
   targetId: string;
   routing: EdgeRouting;
+  /**
+   * Type de flèche au départ de l'edge (optionnel, défaut: 'dot').
+   */
+  startArrow?: ArrowType;
+  /**
+   * Type de flèche à l'arrivée de l'edge (optionnel, défaut: 'arrow').
+   */
+  endArrow?: ArrowType;
+  /**
+   * Taille des marqueurs de flèche (optionnel, défaut: 10).
+   */
+  arrowSize?: number;
 }
