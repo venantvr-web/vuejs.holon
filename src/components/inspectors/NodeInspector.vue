@@ -1,17 +1,14 @@
-
 <!-- src/components/inspectors/NodeInspector.vue -->
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import NameSection from './sections/NameSection.vue';
+import StyleSection from './sections/StyleSection.vue';
 import TagsSection from './sections/TagsSection.vue';
 import PropertiesSection from './sections/PropertiesSection.vue';
 import ConfidenceSection from './sections/ConfidenceSection.vue';
 
-interface NodeInspectorProps {
-  nodeId: string;
-}
-
+interface NodeInspectorProps { nodeId: string; }
 const props = defineProps<NodeInspectorProps>();
 const graphStore = useGraphStore();
 
@@ -21,14 +18,15 @@ const typeLabel = computed(() => node.value?.type ?? '');
 
 <template>
   <div v-if="node" class="node-inspector">
-    <div class="px-3 py-2 border-b bg-gray-50">
-      <h2 class="text-sm font-bold text-gray-800">Propriétés du noeud</h2>
-      <p class="text-xs text-gray-500 mt-0.5">
+    <header class="px-3 py-3 border-b app-surface-2 app-border">
+      <h2 class="text-sm font-bold app-fg">Propriétés du noeud</h2>
+      <p class="text-xs app-subtle mt-0.5 font-mono">
         {{ typeLabel }} · {{ nodeId.substring(0, 8) }}…
       </p>
-    </div>
+    </header>
 
     <NameSection :node-id="nodeId" />
+    <StyleSection :node-id="nodeId" />
     <TagsSection :node-id="nodeId" />
     <ConfidenceSection :node-id="nodeId" />
     <PropertiesSection :node-id="nodeId" />

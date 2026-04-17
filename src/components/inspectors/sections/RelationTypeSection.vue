@@ -64,18 +64,18 @@ const FLOW_VALUES: Array<{ value: 'information' | 'material' | 'money' | 'energy
 
 <template>
   <section class="p-3 border-b">
-    <h3 class="text-sm font-semibold mb-2 text-gray-700">Type de relation</h3>
+    <h3 class="text-sm font-semibold mb-2 app-fg">Type de relation</h3>
 
     <!-- Résumé -->
-    <div class="text-xs text-gray-600 mb-2">
+    <div class="text-xs app-muted mb-2">
       <span class="font-medium">{{ relationConfig.name }}</span>
-      <span class="text-gray-400"> · {{ CATEGORY_LABELS[relationConfig.category] }}</span>
+      <span class="app-subtle"> · {{ CATEGORY_LABELS[relationConfig.category] }}</span>
     </div>
 
     <!-- Sélecteur groupé par catégorie -->
     <div class="space-y-2 mb-3">
       <div v-for="(items, category) in grouped" :key="category">
-        <div class="text-xs font-semibold text-gray-500 uppercase mb-1">{{ CATEGORY_LABELS[category as RelationCategory] }}</div>
+        <div class="text-xs font-semibold app-subtle uppercase mb-1">{{ CATEGORY_LABELS[category as RelationCategory] }}</div>
         <div class="grid grid-cols-2 gap-1">
           <button
             v-for="item in items"
@@ -93,7 +93,7 @@ const FLOW_VALUES: Array<{ value: 'information' | 'material' | 'money' | 'energy
 
     <!-- Sous-propriétés selon le type -->
     <div v-if="accessType" class="mb-2">
-      <label class="block text-xs text-gray-600 mb-1">Type d'accès</label>
+      <label class="block text-xs app-muted mb-1">Type d'accès</label>
       <div class="flex gap-1">
         <button
           v-for="v in ACCESS_VALUES"
@@ -108,7 +108,7 @@ const FLOW_VALUES: Array<{ value: 'information' | 'material' | 'money' | 'energy
     </div>
 
     <div v-if="influenceStrength" class="mb-2">
-      <label class="block text-xs text-gray-600 mb-1">Force d'influence</label>
+      <label class="block text-xs app-muted mb-1">Force d'influence</label>
       <div class="grid grid-cols-6 gap-0.5">
         <button
           v-for="v in INFLUENCE_VALUES"
@@ -123,7 +123,7 @@ const FLOW_VALUES: Array<{ value: 'information' | 'material' | 'money' | 'energy
     </div>
 
     <div v-if="flowType" class="mb-2">
-      <label class="block text-xs text-gray-600 mb-1">Type de flux</label>
+      <label class="block text-xs app-muted mb-1">Type de flux</label>
       <div class="grid grid-cols-2 gap-1">
         <button
           v-for="v in FLOW_VALUES"

@@ -68,19 +68,19 @@ onBeforeUnmount(() => {
 <template>
   <div
     ref="root"
-    class="context-menu fixed z-50 bg-white border border-gray-300 rounded-md shadow-lg py-1 min-w-[200px] text-sm"
+    class="context-menu fixed z-50 app-surface border app-border rounded-md shadow-lg py-1 min-w-[200px] text-sm"
     :style="{ left: adjustedX + 'px', top: adjustedY + 'px' }"
     @contextmenu.prevent
   >
     <template v-for="(item, i) in items" :key="i">
       <div
         v-if="item.separator"
-        class="my-1 border-t border-gray-200"
+        class="my-1 border-t app-border"
       />
       <button
         v-else
         :disabled="item.disabled"
-        class="w-full flex items-center justify-between px-3 py-1.5 text-left hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+        class="w-full flex items-center justify-between px-3 py-1.5 text-left app-hover disabled:opacity-40 disabled:cursor-not-allowed"
         :class="{ 'text-red-600 hover:bg-red-50': item.danger }"
         @click="handleItemClick(item)"
       >
@@ -88,7 +88,7 @@ onBeforeUnmount(() => {
           <span v-if="item.icon" class="w-4 inline-block text-center">{{ item.icon }}</span>
           <span>{{ item.label }}</span>
         </span>
-        <span v-if="item.shortcut" class="text-xs text-gray-400 ml-4">{{ item.shortcut }}</span>
+        <span v-if="item.shortcut" class="text-xs app-subtle ml-4">{{ item.shortcut }}</span>
       </button>
     </template>
   </div>

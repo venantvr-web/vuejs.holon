@@ -55,7 +55,7 @@ function formatDate(ts: number): string {
   <div class="versions-panel relative">
     <button
       @click="isOpen = !isOpen"
-      class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+      class="px-3 py-1.5 text-sm app-btn rounded transition-colors"
       title="Versions du modèle"
     >
       🕒 Versions ({{ snapshots.length }})
@@ -63,7 +63,7 @@ function formatDate(ts: number): string {
 
     <div
       v-if="isOpen"
-      class="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg w-80 max-h-[400px] overflow-y-auto z-40"
+      class="absolute top-full right-0 mt-1 app-surface border app-border rounded shadow-lg w-80 max-h-[400px] overflow-y-auto z-40"
       @mousedown.stop
     >
       <div class="p-2 border-b flex items-center justify-between">
@@ -77,12 +77,12 @@ function formatDate(ts: number): string {
         </button>
       </div>
 
-      <ul v-if="snapshots.length > 0" class="divide-y divide-gray-100">
+      <ul v-if="snapshots.length > 0" class="divide-y divide-[var(--border)]">
         <li
           v-for="snap in snapshots"
           :key="snap.id"
-          class="group px-3 py-2 hover:bg-gray-50 cursor-pointer"
-          :class="{ 'bg-blue-50': currentSnapshot?.id === snap.id }"
+          class="group px-3 py-2 app-hover cursor-pointer"
+          :class="{ 'app-selected': currentSnapshot?.id === snap.id }"
           @click="handleRestore(snap.id)"
         >
           <div class="flex items-start justify-between">
@@ -93,8 +93,8 @@ function formatDate(ts: number): string {
                   {{ snap.tag }}
                 </span>
               </div>
-              <div v-if="snap.description" class="text-xs text-gray-500 truncate">{{ snap.description }}</div>
-              <div class="text-xs text-gray-400 font-mono mt-0.5">
+              <div v-if="snap.description" class="text-xs app-subtle truncate">{{ snap.description }}</div>
+              <div class="text-xs app-subtle font-mono mt-0.5">
                 {{ formatDate(snap.timestamp) }} ·
                 {{ Object.keys(snap.state.nodes).length }} noeuds ·
                 {{ Object.keys(snap.state.edges).length }} arêtes
@@ -110,7 +110,7 @@ function formatDate(ts: number): string {
           </div>
         </li>
       </ul>
-      <div v-else class="p-3 text-xs text-gray-400 text-center">
+      <div v-else class="p-3 text-xs app-subtle text-center">
         Aucune version sauvegardée.
       </div>
     </div>

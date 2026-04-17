@@ -55,7 +55,7 @@ const count = computed(() => activeSuggestions.value.length);
     <button
       @click="handleGenerate"
       :disabled="isGenerating"
-      class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors flex items-center gap-1 disabled:opacity-40"
+      class="px-3 py-1.5 text-sm app-btn rounded transition-colors flex items-center gap-1 disabled:opacity-40"
       title="Générer des suggestions contextuelles"
     >
       <span>💡 Suggérer</span>
@@ -69,23 +69,23 @@ const count = computed(() => activeSuggestions.value.length);
 
     <div
       v-if="isOpen && count > 0"
-      class="fixed bottom-3 left-[260px] right-[330px] max-h-[40vh] bg-white border border-purple-300 rounded-lg shadow-xl z-30 flex flex-col"
+      class="fixed bottom-3 left-[260px] right-[330px] max-h-[40vh] app-surface border border-purple-300 rounded-lg shadow-xl z-30 flex flex-col"
       @mousedown.stop
     >
-      <div class="flex items-center justify-between px-3 py-2 border-b bg-purple-50">
+      <div class="flex items-center justify-between px-3 py-2 border-b border-purple-300 app-surface-2">
         <div class="flex items-center gap-2">
-          <h3 class="text-sm font-semibold text-gray-800">💡 Suggestions</h3>
-          <span class="text-xs text-gray-500">{{ count }} proposition{{ count > 1 ? 's' : '' }}</span>
+          <h3 class="text-sm font-semibold app-fg">💡 Suggestions</h3>
+          <span class="text-xs app-subtle">{{ count }} proposition{{ count > 1 ? 's' : '' }}</span>
         </div>
         <div class="flex items-center gap-2">
           <button
-            class="text-xs text-gray-500 hover:text-gray-700 hover:underline"
+            class="text-xs app-subtle hover:app-fg hover:underline"
             @click="clearSuggestions"
           >
             Tout effacer
           </button>
           <button
-            class="text-gray-400 hover:text-gray-600 px-1"
+            class="app-subtle hover:app-muted px-1"
             @click="isOpen = false"
           >
             ✕
@@ -93,11 +93,11 @@ const count = computed(() => activeSuggestions.value.length);
         </div>
       </div>
 
-      <ul class="overflow-y-auto divide-y divide-gray-100">
+      <ul class="overflow-y-auto divide-y divide-[var(--border)]">
         <li
           v-for="s in activeSuggestions"
           :key="s.id"
-          class="px-3 py-2 hover:bg-gray-50"
+          class="px-3 py-2 app-hover"
         >
           <div class="flex items-start gap-2">
             <span class="text-lg mt-0.5">{{ TYPE_ICON[s.type] ?? '◆' }}</span>
@@ -109,12 +109,12 @@ const count = computed(() => activeSuggestions.value.length);
                 >
                   {{ PRIORITY_LABEL[s.priority] }}
                 </span>
-                <span class="text-xs text-gray-400 font-mono">
+                <span class="text-xs app-subtle font-mono">
                   {{ Math.round(s.confidence * 100) }} %
                 </span>
               </div>
-              <div class="text-sm text-gray-800">{{ s.description }}</div>
-              <div v-if="s.reasoning" class="text-xs text-gray-500 mt-0.5">{{ s.reasoning }}</div>
+              <div class="text-sm app-fg">{{ s.description }}</div>
+              <div v-if="s.reasoning" class="text-xs app-subtle mt-0.5">{{ s.reasoning }}</div>
             </div>
             <div class="flex-shrink-0 flex items-center gap-1">
               <button
@@ -133,7 +133,7 @@ const count = computed(() => activeSuggestions.value.length);
                 Appliquer
               </button>
               <button
-                class="text-xs text-gray-400 hover:text-gray-600 px-1"
+                class="text-xs app-subtle hover:app-muted px-1"
                 title="Ignorer"
                 @click="dismissSuggestion(s.id)"
               >

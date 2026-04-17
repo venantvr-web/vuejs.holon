@@ -87,15 +87,15 @@ function typeBadge(node: Node): string {
 </script>
 
 <template>
-  <div class="outline-panel h-full flex flex-col">
+  <div class="outline-panel h-full flex flex-col app-fg">
     <div class="flex-shrink-0 flex items-center gap-2 mb-2">
       <input
         v-model="filter"
         type="text"
         placeholder="Filtrer…"
-        class="flex-1 px-2 py-1 text-xs border border-gray-300 rounded outline-none focus:border-blue-500"
+        class="flex-1 px-2 py-1 text-xs app-surface border app-border rounded outline-none focus:border-blue-500"
       />
-      <span class="text-xs text-gray-400">{{ Object.keys(graphStore.nodes).length }}</span>
+      <span class="text-xs app-subtle">{{ Object.keys(graphStore.nodes).length }}</span>
     </div>
 
     <ul v-if="outline.length > 0" class="flex-1 overflow-y-auto text-xs">
@@ -103,8 +103,8 @@ function typeBadge(node: Node): string {
         v-for="item in outline"
         :key="item.node.id"
         :class="[
-          'flex items-center gap-1 px-1 py-0.5 cursor-pointer rounded hover:bg-gray-200',
-          selectedNodeIds.has(item.node.id) ? 'bg-blue-100' : ''
+          'flex items-center gap-1 px-1 py-0.5 cursor-pointer rounded app-hover',
+          selectedNodeIds.has(item.node.id) ? 'app-selected' : ''
         ]"
         :style="{ paddingLeft: (item.depth * 12 + 4) + 'px' }"
         @click="handleClick(item.node, $event)"
@@ -112,18 +112,18 @@ function typeBadge(node: Node): string {
       >
         <button
           v-if="item.hasChildren"
-          class="text-gray-400 hover:text-gray-600 w-3"
+          class="app-subtle hover:app-muted w-3"
           @click="toggleCollapse(item.node.id, $event)"
         >
           {{ collapsed.has(item.node.id) ? '▸' : '▾' }}
         </button>
         <span v-else class="w-3"></span>
 
-        <span class="text-gray-400">{{ typeBadge(item.node) }}</span>
+        <span class="app-subtle">{{ typeBadge(item.node) }}</span>
         <span class="truncate flex-1">{{ getName(item.node) }}</span>
       </li>
     </ul>
-    <div v-else class="text-xs text-gray-400 italic">
+    <div v-else class="text-xs app-subtle italic">
       {{ filter ? 'Aucun résultat.' : 'Aucun noeud.' }}
     </div>
   </div>

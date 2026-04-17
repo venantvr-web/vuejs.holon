@@ -30,7 +30,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full">
+  <div class="flex flex-col h-full app-surface">
     <!-- Skip link pour lecteurs d'écran (WCAG 2.4.1) -->
     <a
       href="#main-canvas"

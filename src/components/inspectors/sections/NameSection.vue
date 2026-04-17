@@ -23,8 +23,8 @@ const name = computed({
 
 <template>
   <section class="p-3 border-b">
-    <h3 class="text-sm font-semibold mb-2 text-gray-700">Identité</h3>
-    <label class="block text-xs text-gray-600 mb-1" for="node-name">Nom</label>
+    <h3 class="text-sm font-semibold mb-2 app-fg">Identité</h3>
+    <label class="block text-xs app-muted mb-1" for="node-name">Nom</label>
     <input
       id="node-name"
       v-model="name"

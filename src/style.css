@@ -2,7 +2,126 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =========================================================================
+   THEMING — UN SEUL POINT D'ENTRÉE
+   Toutes les couleurs de l'UI utilisent ces variables CSS.
+   Le toggle Jour/Nuit bascule simplement la classe `.dark` sur <html>,
+   qui remappe les variables. Aucun composant ne doit utiliser de variant
+   `dark:` Tailwind ; tout passe par ces vars.
+   ========================================================================= */
+
+:root {
+  --bg:          #ffffff;   /* fond principal app */
+  --surface:     #ffffff;   /* surfaces neutres (inspecteur, panneaux) */
+  --surface-2:   #f3f4f6;   /* en-têtes, barres, boutons neutres */
+  --surface-3:   #e5e7eb;   /* hover des boutons neutres */
+  --fg:          #111827;   /* texte principal */
+  --fg-muted:    #4b5563;   /* labels, sous-titres */
+  --fg-subtle:   #6b7280;   /* meta, hints */
+  --border:      #e5e7eb;
+  --input-bg:    #ffffff;
+  --input-fg:    #111827;
+  --grid:        #e5e7eb;   /* lignes de grille du canvas */
+  --accent:      #3b82f6;   /* bleu sélection, liens */
+}
+
+.dark {
+  --bg:          #0f172a;
+  --surface:     #1f2937;
+  --surface-2:   #111827;
+  --surface-3:   #374151;
+  --fg:          #f3f4f6;
+  --fg-muted:    #d1d5db;
+  --fg-subtle:   #9ca3af;
+  --border:      #374151;
+  --input-bg:    #374151;
+  --input-fg:    #f3f4f6;
+  --grid:        #374151;
+  --accent:      #60a5fa;
+}
+
 html, body, #app {
   height: 100%;
   margin: 0;
+  background-color: var(--bg);
+  color: var(--fg);
+}
+
+/* Surfaces nommées — utilisées par Toolbar, Sidebar, PropertyInspector, etc. */
+.app-surface     { background-color: var(--surface);   color: var(--fg); border-color: var(--border); }
+.app-surface-2   { background-color: var(--surface-2); color: var(--fg); border-color: var(--border); }
+.app-surface-3   { background-color: var(--surface-3); color: var(--fg); }
+.app-fg          { color: var(--fg); }
+.app-muted       { color: var(--fg-muted); }
+.app-subtle      { color: var(--fg-subtle); }
+.app-border      { border-color: var(--border); }
+
+/* Bouton neutre : fond surface-2, hover surface-3, désactivable.
+   Usage : <button class="app-btn px-3 py-1.5 rounded text-sm"> */
+.app-btn {
+  background-color: var(--surface-2);
+  color: var(--fg);
+  transition: background-color 0.15s ease-out;
+}
+.app-btn:hover:not(:disabled) {
+  background-color: var(--surface-3);
+}
+.app-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Survol d'élément de liste ou d'item cliquable (ex. items de sidebar,
+   lignes d'outline, entrées de dropdown). */
+.app-hover:hover {
+  background-color: var(--surface-2);
+}
+
+/* Sélection active d'une ligne (outline, liste de résultats, etc.) : teinte
+   bleue avec transparence pour rester lisible en jour comme en nuit. */
+.app-selected {
+  background-color: rgba(59, 130, 246, 0.18);
+}
+.dark .app-selected {
+  background-color: rgba(96, 165, 250, 0.22);
+}
+
+/* Inputs et selects : un seul style pour les deux modes. */
+input[type="text"],
+input[type="number"],
+input[type="url"],
+input[type="email"],
+input[type="date"],
+input[type="password"],
+input[type="search"],
+input:not([type]),
+textarea,
+select {
+  background-color: var(--input-bg);
+  color: var(--input-fg);
+  border-color: var(--border);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--fg-subtle);
+}
+
+/* Ombre portée légère sur les noeuds. */
+g.holon-node > rect:first-of-type,
+g.holon-node > path:first-of-type {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.10));
+  transition: filter 0.15s ease-out;
+}
+g.holon-node:hover > rect:first-of-type,
+g.holon-node:hover > path:first-of-type {
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.18));
+}
+.dark g.holon-node > rect:first-of-type,
+.dark g.holon-node > path:first-of-type {
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.55));
+}
+.dark g.holon-node:hover > rect:first-of-type,
+.dark g.holon-node:hover > path:first-of-type {
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.75));
 }

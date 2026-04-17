@@ -45,7 +45,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey));
   <div>
     <button
       @click="isOpen = true"
-      class="px-2 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+      class="px-2 py-1.5 text-sm app-btn rounded transition-colors"
       title="Aide — raccourcis clavier (F1)"
     >
       ?
@@ -56,12 +56,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey));
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       @click.self="isOpen = false"
     >
-      <div class="bg-white border border-gray-300 rounded-lg shadow-xl w-[640px] max-h-[80vh] flex flex-col">
+      <div class="app-surface border app-border rounded-lg shadow-xl w-[640px] max-h-[80vh] flex flex-col">
         <div class="flex items-center justify-between px-4 py-3 border-b">
           <h2 class="text-base font-semibold">Raccourcis clavier</h2>
           <button
             @click="isOpen = false"
-            class="text-gray-400 hover:text-gray-600"
+            class="app-subtle hover:app-muted"
             aria-label="Fermer l'aide"
           >
             ✕
@@ -71,15 +71,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey));
         <div class="overflow-y-auto p-4 space-y-4">
           <!-- Extras -->
           <div v-for="(items, category) in EXTRA_SHORTCUTS" :key="category">
-            <h3 class="text-sm font-semibold text-gray-700 mb-2">{{ category }}</h3>
+            <h3 class="text-sm font-semibold app-fg mb-2">{{ category }}</h3>
             <ul class="space-y-1">
               <li
                 v-for="item in items"
                 :key="item.keys"
                 class="flex items-center justify-between text-sm gap-4"
               >
-                <span class="text-gray-600">{{ item.description }}</span>
-                <kbd class="px-2 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded">
+                <span class="app-muted">{{ item.description }}</span>
+                <kbd class="px-2 py-0.5 text-xs font-mono app-surface-2 border app-border rounded">
                   {{ item.keys }}
                 </kbd>
               </li>
@@ -88,15 +88,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey));
 
           <!-- Raccourcis enregistrés dans useKeyboardable -->
           <div v-for="(items, category) in grouped" :key="category">
-            <h3 class="text-sm font-semibold text-gray-700 mb-2">{{ category }}</h3>
+            <h3 class="text-sm font-semibold app-fg mb-2">{{ category }}</h3>
             <ul class="space-y-1">
               <li
                 v-for="s in items"
                 :key="formatShortcut(s)"
                 class="flex items-center justify-between text-sm gap-4"
               >
-                <span class="text-gray-600">{{ s.description }}</span>
-                <kbd class="px-2 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded">
+                <span class="app-muted">{{ s.description }}</span>
+                <kbd class="px-2 py-0.5 text-xs font-mono app-surface-2 border app-border rounded">
                   {{ formatShortcut(s) }}
                 </kbd>
               </li>
@@ -104,7 +104,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey));
           </div>
         </div>
 
-        <div class="px-4 py-2 border-t bg-gray-50 text-xs text-gray-500 flex justify-between">
+        <div class="px-4 py-2 border-t app-surface-2 text-xs app-subtle flex justify-between">
           <span>Appuyez sur F1 pour ouvrir/fermer · Échap pour fermer</span>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import { useGeometry } from '../../composables/useGeometry';
 import { useSelectionState, useGroupState, useClipboardable, useSnapState } from '../../composables/traits';
+import { useThemeable } from '../../composables/traits/useThemeable';
 import { useLibraryStore } from '../../stores/library';
 import { useViewport } from '../../composables/useViewport';
 import NodeRenderer from './NodeRenderer.vue';
@@ -11,7 +12,6 @@ import EdgeLayer from './EdgeLayer.vue';
 import Minimap from './Minimap.vue';
 import Breadcrumb from './Breadcrumb.vue';
 import SearchPanel from './SearchPanel.vue';
-import ViewsPanel from './ViewsPanel.vue';
 import ContextMenu, { type ContextMenuItem } from '../ui/ContextMenu.vue';
 
 const graphStore = useGraphStore();
@@ -21,7 +21,15 @@ const { selectedNodeIds, clearSelection } = useSelectionState();
 const { groups, createGroupFromSelection, dissolveGroup } = useGroupState();
 const { copy, cut, paste, duplicate, canPaste } = useClipboardable();
 const { pan, zoomLevel, zoomAroundScreenPoint } = useViewport();
+// Facteur inverse du zoom pour les textes d'étiquette (halos de groupe, etc.)
+// qui doivent garder une taille écran constante.
+const fontMul = computed(() => 1 / zoomLevel.value);
 const { config: snapConfig, activeGuides: snapGuides } = useSnapState();
+const { isDarkMode } = useThemeable();
+
+// Couleur de la grille adaptée au thème.
+// Un peu plus contrastée en clair (gray-300) pour rester visible sur fond blanc.
+const gridStroke = computed(() => (isDarkMode.value ? '#374151' : '#d1d5db'));
 
 // État du menu contextuel
 const contextMenu = ref<{ x: number; y: number; items: ContextMenuItem[] } | null>(null);
@@ -519,7 +527,7 @@ defineExpose({ svgRoot, pan, zoomLevel });
 <template>
   <div
     ref="container"
-    class="graph-canvas-container flex-grow h-full bg-gray-50 overflow-hidden relative"
+    class="graph-canvas-container flex-grow h-full app-surface overflow-hidden relative"
     @drop="handleDrop"
     @dragover="handleDragOver"
   >
@@ -543,7 +551,7 @@ defineExpose({ svgRoot, pan, zoomLevel });
       @contextmenu="handleSvgContextMenu"
       :class="['graph-canvas', { 'cursor-grab': !isPanning, 'cursor-grabbing': isPanning }]"
     >
-      <!-- Définition de la grille (pattern SVG) -->
+      <!-- Définition de la grille (pattern SVG) et marqueur d'aperçu de connexion -->
       <defs>
         <pattern
           id="canvas-grid"
@@ -554,11 +562,23 @@ defineExpose({ svgRoot, pan, zoomLevel });
           <path
             :d="`M ${snapConfig.gridSize} 0 L 0 0 0 ${snapConfig.gridSize}`"
             fill="none"
-            stroke="#e5e7eb"
+            :stroke="gridStroke"
             stroke-width="1"
             vector-effect="non-scaling-stroke"
           />
         </pattern>
+        <!-- Flèche de l'aperçu de connexion en cours -->
+        <marker
+          id="connection-preview-arrow"
+          markerWidth="12"
+          markerHeight="12"
+          refX="10"
+          refY="6"
+          orient="auto"
+          markerUnits="userSpaceOnUse"
+        >
+          <path d="M 0 0 L 10 6 L 0 12 Z" fill="#3b82f6" />
+        </marker>
       </defs>
 
       <g :transform="transform" class="canvas-root">
@@ -605,31 +625,16 @@ defineExpose({ svgRoot, pan, zoomLevel });
               vector-effect="non-scaling-stroke"
             />
             <text
-              :x="halo.x + 6"
-              :y="halo.y - 4"
+              :x="halo.x + 6 * fontMul"
+              :y="halo.y - 4 * fontMul"
               :fill="halo.color"
-              font-size="11"
+              :font-size="11 * fontMul"
               font-weight="600"
             >
               {{ halo.name }}
             </text>
           </g>
         </g>
-
-        <!-- Calque des arêtes (en dessous des noeuds) -->
-        <EdgeLayer />
-
-        <!-- Aperçu de la connexion en cours -->
-        <line
-          v-if="connectionMode && connectionSource && connectionPreview"
-          :x1="connectionSourceCenter.x"
-          :y1="connectionSourceCenter.y"
-          :x2="connectionPreview.x"
-          :y2="connectionPreview.y"
-          stroke="#3b82f6"
-          stroke-width="2"
-          stroke-dasharray="5,5"
-        />
 
         <!-- Rendu récursif des noeuds racines -->
         <NodeRenderer
@@ -642,6 +647,51 @@ defineExpose({ svgRoot, pan, zoomLevel });
           @finish-connection="finishConnection"
           @context-menu="openNodeContextMenu"
         />
+
+        <!-- Calque des arêtes (au-dessus des noeuds pour que les flèches
+             restent visibles même quand elles passent sur un bloc). -->
+        <EdgeLayer />
+
+        <!-- Aperçu de la connexion en cours (au-dessus de tout) -->
+        <g v-if="connectionMode && connectionSource && connectionPreview" class="pointer-events-none">
+          <line
+            :x1="connectionSourceCenter.x"
+            :y1="connectionSourceCenter.y"
+            :x2="connectionPreview.x"
+            :y2="connectionPreview.y"
+            stroke="#3b82f6"
+            stroke-width="3"
+            stroke-dasharray="6,4"
+            vector-effect="non-scaling-stroke"
+            marker-end="url(#connection-preview-arrow)"
+          >
+            <animate
+              attributeName="stroke-dashoffset"
+              from="0"
+              to="20"
+              dur="0.6s"
+              repeatCount="indefinite"
+            />
+          </line>
+          <!-- Point pulsant à l'extrémité suivant le curseur -->
+          <circle
+            :cx="connectionPreview.x"
+            :cy="connectionPreview.y"
+            r="6"
+            fill="#3b82f6"
+            fill-opacity="0.3"
+            stroke="#3b82f6"
+            stroke-width="2"
+            vector-effect="non-scaling-stroke"
+          >
+            <animate
+              attributeName="r"
+              values="4;8;4"
+              dur="1s"
+              repeatCount="indefinite"
+            />
+          </circle>
+        </g>
 
         <!-- Rectangle de sélection (marquee) -->
         <rect
@@ -666,9 +716,6 @@ defineExpose({ svgRoot, pan, zoomLevel });
       :canvas-width="containerSize.w"
       :canvas-height="containerSize.h"
     />
-
-    <!-- Gestionnaire de vues sauvegardées (coin supérieur droit) -->
-    <ViewsPanel />
 
     <!-- Panneau de recherche (Ctrl+F) -->
     <SearchPanel

@@ -42,7 +42,7 @@ defineExpose({ open: () => { isOpen.value = true; }, handleValidate });
   <div class="validation-wrapper">
     <button
       @click="handleValidate"
-      class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors flex items-center gap-1"
+      class="px-3 py-1.5 text-sm app-btn rounded transition-colors flex items-center gap-1"
       title="Valider le graphe et afficher les problèmes"
     >
       <span>Valider</span>
@@ -63,13 +63,13 @@ defineExpose({ open: () => { isOpen.value = true; }, handleValidate });
     <!-- Panneau flottant -->
     <div
       v-if="isOpen"
-      class="fixed bottom-3 left-[260px] right-[330px] max-h-[40vh] bg-white border border-gray-300 rounded-lg shadow-xl z-30 flex flex-col"
+      class="fixed bottom-3 left-[260px] right-[330px] max-h-[40vh] app-surface border app-border rounded-lg shadow-xl z-30 flex flex-col"
       @mousedown.stop
     >
-      <div class="flex items-center justify-between px-3 py-2 border-b bg-gray-50">
+      <div class="flex items-center justify-between px-3 py-2 border-b app-surface-2">
         <div class="flex items-center gap-2">
-          <h3 class="text-sm font-semibold text-gray-800">Résultats de validation</h3>
-          <span class="text-xs text-gray-500">
+          <h3 class="text-sm font-semibold app-fg">Résultats de validation</h3>
+          <span class="text-xs app-subtle">
             {{ errorCount }} erreur{{ errorCount > 1 ? 's' : '' }} ·
             {{ warningCount }} attention{{ warningCount > 1 ? 's' : '' }}
           </span>
@@ -82,7 +82,7 @@ defineExpose({ open: () => { isOpen.value = true; }, handleValidate });
             Revalider
           </button>
           <button
-            class="text-gray-400 hover:text-gray-600 px-1"
+            class="app-subtle hover:app-muted px-1"
             @click="isOpen = false"
           >
             ✕
@@ -93,11 +93,11 @@ defineExpose({ open: () => { isOpen.value = true; }, handleValidate });
       <div v-if="issues.length === 0" class="p-4 text-sm text-green-700 text-center">
         ✓ Aucun problème détecté — le graphe est valide.
       </div>
-      <ul v-else class="overflow-y-auto divide-y divide-gray-100">
+      <ul v-else class="overflow-y-auto divide-y divide-[var(--border)]">
         <li
           v-for="(issue, i) in issues"
           :key="i"
-          class="px-3 py-2 hover:bg-gray-50 cursor-pointer"
+          class="px-3 py-2 app-hover cursor-pointer"
           @click="focusIssue(issue)"
         >
           <div class="flex items-start gap-2">
@@ -108,11 +108,11 @@ defineExpose({ open: () => { isOpen.value = true; }, handleValidate });
               {{ severityBadge[issue.severity].label }}
             </span>
             <div class="flex-1 min-w-0">
-              <div class="text-sm text-gray-800">{{ issue.message }}</div>
-              <div v-if="issue.suggestion" class="text-xs text-gray-500 mt-0.5">
+              <div class="text-sm app-fg">{{ issue.message }}</div>
+              <div v-if="issue.suggestion" class="text-xs app-subtle mt-0.5">
                 💡 {{ issue.suggestion }}
               </div>
-              <div class="text-xs text-gray-400 font-mono mt-0.5">{{ issue.ruleId }} · {{ issue.category }}</div>
+              <div class="text-xs app-subtle font-mono mt-0.5">{{ issue.ruleId }} · {{ issue.category }}</div>
             </div>
           </div>
         </li>

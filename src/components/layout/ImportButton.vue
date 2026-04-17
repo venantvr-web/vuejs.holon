@@ -81,7 +81,7 @@ function cancelDialog() {
     <button
       @click="openPicker"
       :disabled="isBusy"
-      class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors disabled:opacity-40"
+      class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40"
       title="Importer un fichier JSON versionné"
     >
       Importer
@@ -93,14 +93,14 @@ function cancelDialog() {
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
       @click.self="cancelDialog"
     >
-      <div class="bg-white border border-gray-300 rounded-lg shadow-xl w-[420px] p-4">
+      <div class="app-surface border app-border rounded-lg shadow-xl w-[420px] p-4">
         <h3 class="text-base font-semibold mb-3">Importer « {{ pendingFilename }} »</h3>
 
         <div class="mb-3">
-          <label class="block text-xs font-medium text-gray-600 mb-1">Stratégie de fusion</label>
+          <label class="block text-xs font-medium app-muted mb-1">Stratégie de fusion</label>
           <select
             v-model="mergeStrategy"
-            class="w-full px-2 py-1 text-sm border border-gray-300 rounded outline-none focus:border-blue-500"
+            class="w-full px-2 py-1 text-sm border app-border rounded outline-none focus:border-blue-500"
           >
             <option value="append">Ajouter au graphe existant</option>
             <option value="replace">Remplacer tout le graphe</option>
@@ -109,10 +109,10 @@ function cancelDialog() {
         </div>
 
         <div class="mb-3">
-          <label class="block text-xs font-medium text-gray-600 mb-1">En cas de conflit d'ID</label>
+          <label class="block text-xs font-medium app-muted mb-1">En cas de conflit d'ID</label>
           <select
             v-model="conflictStrategy"
-            class="w-full px-2 py-1 text-sm border border-gray-300 rounded outline-none focus:border-blue-500"
+            class="w-full px-2 py-1 text-sm border app-border rounded outline-none focus:border-blue-500"
           >
             <option value="rename">Renommer (sûr, recommandé)</option>
             <option value="skip">Ignorer les éléments en conflit</option>
@@ -120,14 +120,14 @@ function cancelDialog() {
           </select>
         </div>
 
-        <div class="text-xs text-gray-500 mb-3">
+        <div class="text-xs app-subtle mb-3">
           Astuce : l'import est annulable via Ctrl+Z si vous vous trompez.
         </div>
 
         <div class="flex justify-end gap-2">
           <button
             @click="cancelDialog"
-            class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded"
+            class="px-3 py-1.5 text-sm app-muted app-hover rounded"
           >
             Annuler
           </button>

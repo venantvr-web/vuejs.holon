@@ -107,11 +107,11 @@ onBeforeUnmount(() => {
 
 <template>
   <div
-    class="search-panel absolute top-3 left-1/2 -translate-x-1/2 z-30 bg-white border border-gray-300 rounded-lg shadow-lg w-[400px]"
+    class="search-panel absolute top-3 left-1/2 -translate-x-1/2 z-30 app-surface border app-border rounded-lg shadow-lg w-[400px]"
     @mousedown.stop
   >
     <div class="p-2 border-b flex items-center gap-2">
-      <span class="text-gray-400">🔍</span>
+      <span class="app-subtle">🔍</span>
       <input
         ref="inputRef"
         v-model="query"
@@ -121,7 +121,7 @@ onBeforeUnmount(() => {
         @keydown="handleKey"
       />
       <button
-        class="text-gray-400 hover:text-gray-600 px-1"
+        class="app-subtle hover:app-muted px-1"
         title="Fermer (Échap)"
         @click="emit('close')"
       >
@@ -131,7 +131,7 @@ onBeforeUnmount(() => {
 
     <div
       v-if="query && items.length === 0"
-      class="p-3 text-sm text-gray-500 text-center"
+      class="p-3 text-sm app-subtle text-center"
     >
       Aucun résultat
     </div>
@@ -144,7 +144,7 @@ onBeforeUnmount(() => {
         v-for="item in items"
         :key="item.index"
         class="px-3 py-1.5 cursor-pointer flex items-center justify-between"
-        :class="{ 'bg-blue-50': item.index === activeIndex, 'hover:bg-gray-100': item.index !== activeIndex }"
+        :class="{ 'app-selected': item.index === activeIndex, 'app-hover': item.index !== activeIndex }"
         @mouseenter="activeIndex = item.index"
         @click="focusItem(item.id, item.type)"
       >
@@ -157,11 +157,11 @@ onBeforeUnmount(() => {
           </span>
           <span class="truncate">{{ item.name }}</span>
         </div>
-        <span class="text-xs text-gray-400 font-mono ml-2">{{ Math.round((1 - item.score) * 100) }}%</span>
+        <span class="text-xs app-subtle font-mono ml-2">{{ Math.round((1 - item.score) * 100) }}%</span>
       </li>
     </ul>
 
-    <div class="px-3 py-1.5 border-t text-xs text-gray-400 flex justify-between">
+    <div class="px-3 py-1.5 border-t text-xs app-subtle flex justify-between">
       <span>↑↓ naviguer · Entrée centrer</span>
       <span>{{ items.length }} résultat{{ items.length > 1 ? 's' : '' }}</span>
     </div>
