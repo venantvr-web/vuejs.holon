@@ -119,6 +119,17 @@ export const useGraphStore = defineStore('graph', () => {
   }
 
   /**
+   * Met à jour une arête existante.
+   */
+  async function updateEdge(id: string, updates: Partial<Edge>) {
+    if (edges.value[id]) {
+      const updatedEdge = { ...edges.value[id], ...updates };
+      edges.value[id] = updatedEdge;
+      await db.edges.update(id, updates);
+    }
+  }
+
+  /**
    * Supprime une arête.
    */
   async function deleteEdge(id: string) {
@@ -163,6 +174,7 @@ export const useGraphStore = defineStore('graph', () => {
     updateNode,
     deleteNode,
     createEdge,
+    updateEdge,
     deleteEdge,
     reparentNode,
     clearAll,

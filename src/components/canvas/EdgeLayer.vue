@@ -8,6 +8,7 @@ import {
   calculateArrowAngle,
   RoutingType,
   ArrowType,
+  ARROW_MARKERS,
 } from '../../composables/traits';
 import type { Edge } from '../../types';
 
@@ -219,60 +220,114 @@ const pendingEdge = computed(() => {
   };
 });
 
-// Génère le marker SVG pour les flèches
-const arrowSize = 10;
+// Helper pour obtenir les propriétés de flèche d'un edge
+function getEdgeArrowProps(edge: Edge) {
+  return {
+    startArrow: (edge.startArrow as ArrowType) ?? ArrowType.Dot,
+    endArrow: (edge.endArrow as ArrowType) ?? ArrowType.Arrow,
+    size: edge.arrowSize ?? 10,
+  };
+}
+
+// Helper pour générer le SVG d'un marker
+function generateMarkerSVG(type: ArrowType, size: number, color: string, position: 'start' | 'end'): string {
+  if (type === ArrowType.None) return '';
+
+  const markerGenerator = ARROW_MARKERS[type];
+  if (!markerGenerator) return '';
+
+  const isFilled = type.includes('filled');
+  return markerGenerator(size, isFilled);
+}
+
+// Helper pour calculer refX/refY selon le type
+function getMarkerRefPoint(type: ArrowType, position: 'start' | 'end', size: number): { refX: number; refY: number } {
+  const center = size / 2;
+
+  const centeredTypes = [ArrowType.Dot, ArrowType.SmallDot, ArrowType.Circle, ArrowType.FilledCircle];
+  const diamondTypes = [ArrowType.Diamond, ArrowType.FilledDiamond, ArrowType.ArchiComposition, ArrowType.ArchiAggregation];
+  const squareTypes = [ArrowType.Square, ArrowType.FilledSquare];
+
+  if (centeredTypes.includes(type) || diamondTypes.includes(type) || squareTypes.includes(type)) {
+    return { refX: center, refY: center };
+  }
+
+  if (position === 'end') {
+    return { refX: size, refY: center };
+  } else {
+    return { refX: 0, refY: center };
+  }
+}
+
+// Génère tous les markers uniques nécessaires
+const allMarkers = computed(() => {
+  const markers: Array<{ id: string; svg: string; refX: number; refY: number; orient: string; size: number }> = [];
+  const seen = new Set<string>();
+
+  // Fonction helper pour ajouter un marker
+  const addMarker = (type: ArrowType, color: string, position: 'start' | 'end', size: number) => {
+    if (type === ArrowType.None) return;
+
+    const id = `arrow-${type}-${position}-${color.replace('#', '')}`;
+    if (seen.has(id)) return;
+    seen.add(id);
+
+    const svg = generateMarkerSVG(type, size, color, position);
+    const { refX, refY } = getMarkerRefPoint(type, position, size);
+    const orient = position === 'end' ? 'auto' : 'auto-start-reverse';
+
+    markers.push({ id, svg, refX, refY, orient, size });
+  };
+
+  // Parcourir tous les edges pour collecter les types de flèches utilisés
+  Object.values(graphStore.edges).forEach(edge => {
+    const { startArrow, endArrow, size } = getEdgeArrowProps(edge);
+
+    // Markers normaux (gris foncé)
+    addMarker(startArrow, '#333', 'start', size);
+    addMarker(endArrow, '#333', 'end', size);
+
+    // Markers sélectionnés (bleu)
+    addMarker(startArrow, '#3b82f6', 'start', size);
+    addMarker(endArrow, '#3b82f6', 'end', size);
+  });
+
+  // Toujours ajouter les markers par défaut pour la connexion en cours
+  addMarker(ArrowType.Dot, '#3b82f6', 'start', 10);
+  addMarker(ArrowType.Arrow, '#3b82f6', 'end', 10);
+
+  return markers;
+});
+
+// Helper pour obtenir l'URL du marker pour un edge
+function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean): string {
+  const { startArrow, endArrow } = getEdgeArrowProps(edge);
+  const type = position === 'start' ? startArrow : endArrow;
+
+  if (type === ArrowType.None) return '';
+
+  const color = isSelected ? '#3b82f6' : '#333';
+  const id = `arrow-${type}-${position}-${color.replace('#', '')}`;
+  return `url(#${id})`;
+}
 </script>
 
 <template>
   <g class="edge-layer">
-    <!-- Définition des markers -->
+    <!-- Définition des markers dynamiques -->
     <defs>
-      <!-- Marker de départ: petit point -->
       <marker
-        id="start-dot"
-        markerWidth="10"
-        markerHeight="10"
-        refX="5"
-        refY="5"
-        orient="auto"
+        v-for="marker in allMarkers"
+        :key="marker.id"
+        :id="marker.id"
+        :markerWidth="marker.size"
+        :markerHeight="marker.size"
+        :refX="marker.refX"
+        :refY="marker.refY"
+        :orient="marker.orient"
         markerUnits="userSpaceOnUse"
-      >
-        <circle cx="5" cy="5" r="2.5" fill="#333" />
-      </marker>
-      <marker
-        id="start-dot-blue"
-        markerWidth="10"
-        markerHeight="10"
-        refX="5"
-        refY="5"
-        orient="auto"
-        markerUnits="userSpaceOnUse"
-      >
-        <circle cx="5" cy="5" r="2.5" fill="#3b82f6" />
-      </marker>
-      <!-- Marker d'arrivée: flèche -->
-      <marker
-        id="arrowhead"
-        markerWidth="10"
-        markerHeight="7"
-        refX="9"
-        refY="3.5"
-        orient="auto"
-        markerUnits="userSpaceOnUse"
-      >
-        <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
-      </marker>
-      <marker
-        id="arrowhead-blue"
-        markerWidth="10"
-        markerHeight="7"
-        refX="9"
-        refY="3.5"
-        orient="auto"
-        markerUnits="userSpaceOnUse"
-      >
-        <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" />
-      </marker>
+        v-html="marker.svg"
+      />
     </defs>
 
     <!-- Arêtes existantes -->
@@ -307,8 +362,8 @@ const arrowSize = 10;
         fill="none"
         :stroke="selectedEdgeId === edge.id ? '#3b82f6' : '#333'"
         stroke-width="2"
-        :marker-start="selectedEdgeId === edge.id ? 'url(#start-dot-blue)' : 'url(#start-dot)'"
-        :marker-end="selectedEdgeId === edge.id ? 'url(#arrowhead-blue)' : 'url(#arrowhead)'"
+        :marker-start="getMarkerUrl(graphStore.edges[edge.id], 'start', selectedEdgeId === edge.id)"
+        :marker-end="getMarkerUrl(graphStore.edges[edge.id], 'end', selectedEdgeId === edge.id)"
         class="edge-line"
       />
     </g>
