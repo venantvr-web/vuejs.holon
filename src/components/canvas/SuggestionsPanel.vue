@@ -20,9 +20,9 @@ function handleGenerate() {
 }
 
 const PRIORITY_CLS: Record<SuggestionPriority, string> = {
-  high: 'bg-red-100 text-red-700 border-red-300',
-  medium: 'bg-amber-100 text-amber-700 border-amber-300',
-  low: 'bg-blue-100 text-blue-700 border-blue-300',
+  high: 'app-badge app-badge-danger',
+  medium: 'app-badge app-badge-warning',
+  low: 'app-badge app-badge-info',
 };
 
 const PRIORITY_LABEL: Record<SuggestionPriority, string> = {
@@ -103,10 +103,7 @@ const count = computed(() => activeSuggestions.value.length);
             <span class="text-lg mt-0.5">{{ TYPE_ICON[s.type] ?? '◆' }}</span>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1">
-                <span
-                  class="text-xs px-1.5 py-0.5 rounded border"
-                  :class="PRIORITY_CLS[s.priority]"
-                >
+                <span :class="PRIORITY_CLS[s.priority]">
                   {{ PRIORITY_LABEL[s.priority] }}
                 </span>
                 <span class="text-xs app-subtle font-mono">
@@ -119,7 +116,7 @@ const count = computed(() => activeSuggestions.value.length);
             <div class="flex-shrink-0 flex items-center gap-1">
               <button
                 v-if="s.nodeIds && s.nodeIds.length > 0"
-                class="text-xs text-blue-600 hover:text-blue-800 hover:underline px-1"
+                class="text-xs app-link px-1"
                 title="Centrer sur les éléments concernés"
                 @click="focusSuggestion(s)"
               >

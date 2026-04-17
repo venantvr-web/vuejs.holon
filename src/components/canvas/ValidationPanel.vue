@@ -20,9 +20,9 @@ function handleValidate() {
 const issues = computed(() => lastValidationResult.value?.issues ?? []);
 
 const severityBadge: Record<ValidationSeverity, { label: string; cls: string }> = {
-  error: { label: 'Erreur', cls: 'bg-red-100 text-red-700 border-red-300' },
-  warning: { label: 'Attention', cls: 'bg-amber-100 text-amber-700 border-amber-300' },
-  info: { label: 'Info', cls: 'bg-blue-100 text-blue-700 border-blue-300' },
+  error: { label: 'Erreur', cls: 'app-badge app-badge-danger' },
+  warning: { label: 'Attention', cls: 'app-badge app-badge-warning' },
+  info: { label: 'Info', cls: 'app-badge app-badge-info' },
 };
 
 function focusIssue(issue: ValidationIssue) {
@@ -76,7 +76,7 @@ defineExpose({ open: () => { isOpen.value = true; }, handleValidate });
         </div>
         <div class="flex items-center gap-2">
           <button
-            class="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+            class="text-xs app-link"
             @click="handleValidate"
           >
             Revalider
@@ -102,7 +102,7 @@ defineExpose({ open: () => { isOpen.value = true; }, handleValidate });
         >
           <div class="flex items-start gap-2">
             <span
-              class="text-xs px-1.5 py-0.5 rounded border flex-shrink-0"
+              class="flex-shrink-0"
               :class="severityBadge[issue.severity].cls"
             >
               {{ severityBadge[issue.severity].label }}

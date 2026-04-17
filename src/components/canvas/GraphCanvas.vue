@@ -4,7 +4,6 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import { useGeometry } from '../../composables/useGeometry';
 import { useSelectionState, useGroupState, useClipboardable, useSnapState } from '../../composables/traits';
-import { useThemeable } from '../../composables/traits/useThemeable';
 import { useLibraryStore } from '../../stores/library';
 import { useViewport } from '../../composables/useViewport';
 import NodeRenderer from './NodeRenderer.vue';
@@ -25,11 +24,6 @@ const { pan, zoomLevel, zoomAroundScreenPoint } = useViewport();
 // qui doivent garder une taille écran constante.
 const fontMul = computed(() => 1 / zoomLevel.value);
 const { config: snapConfig, activeGuides: snapGuides } = useSnapState();
-const { isDarkMode } = useThemeable();
-
-// Couleur de la grille adaptée au thème.
-// Un peu plus contrastée en clair (gray-300) pour rester visible sur fond blanc.
-const gridStroke = computed(() => (isDarkMode.value ? '#374151' : '#d1d5db'));
 
 // État du menu contextuel
 const contextMenu = ref<{ x: number; y: number; items: ContextMenuItem[] } | null>(null);
@@ -562,7 +556,7 @@ defineExpose({ svgRoot, pan, zoomLevel });
           <path
             :d="`M ${snapConfig.gridSize} 0 L 0 0 0 ${snapConfig.gridSize}`"
             fill="none"
-            :stroke="gridStroke"
+            stroke="var(--grid)"
             stroke-width="1"
             vector-effect="non-scaling-stroke"
           />
@@ -577,7 +571,7 @@ defineExpose({ svgRoot, pan, zoomLevel });
           orient="auto"
           markerUnits="userSpaceOnUse"
         >
-          <path d="M 0 0 L 10 6 L 0 12 Z" fill="#3b82f6" />
+          <path d="M 0 0 L 10 6 L 0 12 Z" fill="var(--accent-selected)" />
         </marker>
       </defs>
 
@@ -601,7 +595,7 @@ defineExpose({ svgRoot, pan, zoomLevel });
             :y1="guide.type === 'horizontal' ? guide.position : -10000"
             :x2="guide.type === 'vertical' ? guide.position : 10000"
             :y2="guide.type === 'horizontal' ? guide.position : 10000"
-            stroke="#ec4899"
+            stroke="var(--accent-guide)"
             stroke-width="1"
             stroke-dasharray="4,3"
             vector-effect="non-scaling-stroke"
@@ -659,7 +653,7 @@ defineExpose({ svgRoot, pan, zoomLevel });
             :y1="connectionSourceCenter.y"
             :x2="connectionPreview.x"
             :y2="connectionPreview.y"
-            stroke="#3b82f6"
+            stroke="var(--accent-selected)"
             stroke-width="3"
             stroke-dasharray="6,4"
             vector-effect="non-scaling-stroke"
@@ -678,9 +672,9 @@ defineExpose({ svgRoot, pan, zoomLevel });
             :cx="connectionPreview.x"
             :cy="connectionPreview.y"
             r="6"
-            fill="#3b82f6"
+            fill="var(--accent-selected)"
             fill-opacity="0.3"
-            stroke="#3b82f6"
+            stroke="var(--accent-selected)"
             stroke-width="2"
             vector-effect="non-scaling-stroke"
           >
@@ -700,9 +694,9 @@ defineExpose({ svgRoot, pan, zoomLevel });
           :y="marqueeRect.y"
           :width="marqueeRect.w"
           :height="marqueeRect.h"
-          fill="#3b82f6"
+          fill="var(--accent-selected)"
           fill-opacity="0.1"
-          stroke="#3b82f6"
+          stroke="var(--accent-selected)"
           stroke-width="1"
           stroke-dasharray="4,3"
           vector-effect="non-scaling-stroke"

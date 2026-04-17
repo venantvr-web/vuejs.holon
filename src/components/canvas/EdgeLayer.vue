@@ -19,9 +19,10 @@ const { zoomLevel } = useViewport();
 const { isDarkMode } = useThemeable();
 // Facteur inverse du zoom pour conserver la taille d'écran des libellés.
 const fontMul = computed(() => 1 / zoomLevel.value);
-// Couleur neutre des arêtes et marqueurs adaptée au thème.
-const edgeColor = computed(() => (isDarkMode.value ? '#d1d5db' : '#333'));
-const edgeColorHex = computed(() => edgeColor.value.replace('#', ''));
+// Couleur neutre des arêtes et marqueurs. Doit correspondre à --edge-stroke
+// dans style.css. Nécessaire en JS car les marqueurs SVG sont générés avec
+// une couleur concrète pour construire leur ID unique dans <defs>.
+const edgeColor = computed(() => (isDarkMode.value ? '#d1d5db' : '#333333'));
 
 const props = defineProps<{
   pendingConnection?: {
@@ -413,7 +414,7 @@ function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean
         v-if="selectedEdgeId === edge.id"
         :d="edge.path"
         fill="none"
-        stroke="#3b82f6"
+        stroke="var(--accent-selected)"
         stroke-width="6"
         stroke-opacity="0.3"
         vector-effect="non-scaling-stroke"
@@ -473,7 +474,7 @@ function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean
           :width="48 * fontMul"
           :height="18 * fontMul"
           fill="#ffffff"
-          stroke="#3b82f6"
+          stroke="var(--accent-selected)"
           stroke-width="1"
           stroke-dasharray="3,2"
           :rx="3 * fontMul"
@@ -518,7 +519,7 @@ function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean
       v-if="pendingEdge"
       :d="pendingEdge.path"
       fill="none"
-      stroke="#3b82f6"
+      stroke="var(--accent-selected)"
       stroke-width="2"
       stroke-dasharray="5,5"
       vector-effect="non-scaling-stroke"

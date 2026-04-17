@@ -342,7 +342,7 @@ async function addToLibrary() {
       x="-4"
       y="-4"
       fill="none"
-      stroke="#22c55e"
+      stroke="var(--accent-valid)"
       stroke-width="2"
       stroke-dasharray="4,4"
       rx="6"
@@ -554,7 +554,7 @@ async function addToLibrary() {
       :cx="node.geometry.w"
       :cy="node.geometry.h / 2"
       :r="6 * fontMul"
-      fill="#3b82f6"
+      fill="var(--accent-selected)"
       class="cursor-crosshair hover:r-8 transition-all"
       @mousedown.stop.prevent="$emit('start-connection', nodeId)"
     />

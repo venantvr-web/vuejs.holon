@@ -73,7 +73,7 @@ function inputTypeFor(type: PropertyType): string {
     <div class="flex items-center justify-between mb-2">
       <h3 class="text-sm font-semibold app-fg">Propriétés personnalisées</h3>
       <button
-        class="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+        class="text-xs app-link"
         @click="adderOpen = !adderOpen"
       >
         {{ adderOpen ? 'Fermer' : '+ Ajouter' }}
@@ -132,7 +132,7 @@ function inputTypeFor(type: PropertyType): string {
       <button
         v-for="tpl in templates"
         :key="tpl.name"
-        class="ml-1 text-blue-600 hover:text-blue-800 hover:underline"
+        class="ml-1 app-link"
         :title="tpl.description"
         @click="applyTemplate(tpl.name)"
       >

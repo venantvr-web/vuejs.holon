@@ -72,7 +72,7 @@ function focusCrumb(crumb: Crumb) {
     <template v-for="(crumb, i) in crumbs" :key="crumb.id ?? 'root'">
       <span v-if="i > 0" class="app-subtle">›</span>
       <button
-        class="truncate max-w-[160px] hover:text-blue-600 hover:underline"
+        class="truncate max-w-[160px] hover:app-link"
         :class="{ 'font-semibold app-fg': i === crumbs.length - 1, 'app-muted': i !== crumbs.length - 1 }"
         :title="crumb.label"
         @click="focusCrumb(crumb)"

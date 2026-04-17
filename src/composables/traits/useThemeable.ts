@@ -41,28 +41,6 @@ export interface ColorPalette {
 }
 
 /**
- * Couleurs spécifiques aux couches ArchiMate.
- */
-export interface ArchimateLayerColors {
-  /** Couleur de la couche Business */
-  business: string;
-  /** Couleur de la couche Application */
-  application: string;
-  /** Couleur de la couche Technology */
-  technology: string;
-  /** Couleur de la couche Motivation */
-  motivation: string;
-  /** Couleur de la couche Strategy */
-  strategy: string;
-  /** Couleur de la couche Implementation */
-  implementation: string;
-  /** Couleur de la couche Physical */
-  physical: string;
-  /** Couleur pour les éléments génériques */
-  generic: string;
-}
-
-/**
  * Définition complète d'un thème visuel.
  */
 export interface Theme {
@@ -76,22 +54,6 @@ export interface Theme {
   isDark: boolean;
   /** Palette de couleurs */
   colors: ColorPalette;
-  /** Couleurs des couches ArchiMate */
-  archimate: ArchimateLayerColors;
-  /** Styles par défaut pour les noeuds */
-  nodeDefaults: {
-    fill: string;
-    stroke: string;
-    strokeWidth: number;
-    opacity: number;
-    borderRadius: number;
-  };
-  /** Styles par défaut pour les arêtes */
-  edgeDefaults: {
-    stroke: string;
-    strokeWidth: number;
-    arrowColor: string;
-  };
   /** Date de création (timestamp) */
   createdAt?: number;
   /** Date de dernière modification (timestamp) */
@@ -124,28 +86,6 @@ export const PRESET_THEMES: Record<string, Theme> = {
       hover: '#f1f5f9',
       focus: '#dbeafe',
     },
-    archimate: {
-      business: '#FFFFB5',
-      application: '#B5FFFF',
-      technology: '#C9E7B7',
-      motivation: '#CCCCFF',
-      strategy: '#F5DEAA',
-      implementation: '#FFE0E0',
-      physical: '#C9E7B7',
-      generic: '#E0E0E0',
-    },
-    nodeDefaults: {
-      fill: '#ffffff',
-      stroke: '#333333',
-      strokeWidth: 1,
-      opacity: 1,
-      borderRadius: 4,
-    },
-    edgeDefaults: {
-      stroke: '#333333',
-      strokeWidth: 2,
-      arrowColor: '#333333',
-    },
   },
 
   dark: {
@@ -169,28 +109,6 @@ export const PRESET_THEMES: Record<string, Theme> = {
       selection: '#60a5fa',
       hover: '#334155',
       focus: '#1e3a5f',
-    },
-    archimate: {
-      business: '#8B8B00',
-      application: '#008B8B',
-      technology: '#4A7A3A',
-      motivation: '#6666AA',
-      strategy: '#A08040',
-      implementation: '#AA6060',
-      physical: '#4A7A3A',
-      generic: '#606060',
-    },
-    nodeDefaults: {
-      fill: '#1e293b',
-      stroke: '#94a3b8',
-      strokeWidth: 1,
-      opacity: 1,
-      borderRadius: 4,
-    },
-    edgeDefaults: {
-      stroke: '#94a3b8',
-      strokeWidth: 2,
-      arrowColor: '#94a3b8',
     },
   },
 };
@@ -219,9 +137,6 @@ function applyThemeToDocument(themeId: string) {
   const root = document.documentElement;
   for (const [key, value] of Object.entries(theme.colors)) {
     root.style.setProperty(`--color-${key}`, value);
-  }
-  for (const [key, value] of Object.entries(theme.archimate)) {
-    root.style.setProperty(`--archimate-${key}`, value);
   }
   if (theme.isDark) root.classList.add('dark');
   else root.classList.remove('dark');
@@ -262,10 +177,6 @@ export interface ThemeableHandlers {
   importTheme: (json: string) => string | null;
   /** Récupère une couleur de la palette du thème actuel */
   getColor: (key: keyof ColorPalette) => string;
-  /** Récupère la couleur d'une couche ArchiMate */
-  getArchimateColor: (layer: keyof ArchimateLayerColors) => string;
-  /** Applique les styles par défaut du thème à un noeud */
-  applyThemeToNode: (nodeId: string) => void;
   /** Bascule entre thème clair et sombre */
   toggleDarkMode: () => void;
 }
@@ -273,21 +184,20 @@ export interface ThemeableHandlers {
 /**
  * Ajoute la capacité de gestion de thèmes visuels à l'application.
  *
- * Gère 5 thèmes prédéfinis (light, dark, archimate, blueprint, highContrast)
- * et permet la création, modification et persistance de thèmes personnalisés.
- * Applique automatiquement les variables CSS et gère le mode sombre.
+ * Gère 2 thèmes prédéfinis (light/dark, alias Jour/Nuit) et permet la
+ * création et la persistance de thèmes personnalisés. Bascule la classe
+ * `.dark` sur `<html>` que tous les composants observent via les variables
+ * CSS définies dans `style.css`.
  *
  * @returns État réactif et gestionnaires pour la gestion des thèmes
  *
  * @example
  * ```ts
- * const { setTheme, createTheme, getArchimateColor } = useThemeable();
- * setTheme('dark');
- * const businessColor = getArchimateColor('business');
+ * const { setTheme, toggleDarkMode, isDarkMode } = useThemeable();
+ * toggleDarkMode();
  * ```
  */
 export function useThemeable(): ThemeableState & ThemeableHandlers {
-  const graphStore = useGraphStore();
 
   const currentTheme = computed((): Theme => {
     const custom = customThemes.value.get(currentThemeId.value);
@@ -376,7 +286,7 @@ export function useThemeable(): ThemeableState & ThemeableHandlers {
     try {
       const theme = JSON.parse(json) as Theme;
       // Valider la structure minimale
-      if (!theme.name || !theme.colors || !theme.archimate) {
+      if (!theme.name || !theme.colors) {
         return null;
       }
       return createTheme(theme);
@@ -387,27 +297,6 @@ export function useThemeable(): ThemeableState & ThemeableHandlers {
 
   function getColor(key: keyof ColorPalette): string {
     return currentTheme.value.colors[key];
-  }
-
-  function getArchimateColor(layer: keyof ArchimateLayerColors): string {
-    return currentTheme.value.archimate[layer];
-  }
-
-  function applyThemeToNode(nodeId: string) {
-    const node = graphStore.nodes[nodeId];
-    if (!node) return;
-
-    const defaults = currentTheme.value.nodeDefaults;
-
-    graphStore.updateNode(nodeId, {
-      styling: {
-        ...node.styling,
-        fill: defaults.fill,
-        stroke: defaults.stroke,
-        strokeWidth: defaults.strokeWidth,
-        opacity: defaults.opacity,
-      },
-    });
   }
 
   function toggleDarkMode() {
@@ -423,14 +312,10 @@ export function useThemeable(): ThemeableState & ThemeableHandlers {
     const theme = currentTheme.value;
     const root = document.documentElement;
 
-    // Couleurs de base
+    // Couleurs de base (héritage legacy — à terme tout passe par les
+    // vars --bg/--surface/etc. définies dans style.css).
     for (const [key, value] of Object.entries(theme.colors)) {
       root.style.setProperty(`--color-${key}`, value);
-    }
-
-    // Couleurs Archimate
-    for (const [key, value] of Object.entries(theme.archimate)) {
-      root.style.setProperty(`--archimate-${key}`, value);
     }
 
     // Classe dark mode
@@ -457,8 +342,6 @@ export function useThemeable(): ThemeableState & ThemeableHandlers {
     exportTheme,
     importTheme,
     getColor,
-    getArchimateColor,
-    applyThemeToNode,
     toggleDarkMode,
   };
 }

@@ -70,7 +70,7 @@ function formatDate(ts: number): string {
         <span class="text-sm font-semibold">Historique des versions</span>
         <button
           @click="handleSave"
-          class="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+          class="text-xs app-link"
           title="Capturer l'état courant"
         >
           + Sauver
