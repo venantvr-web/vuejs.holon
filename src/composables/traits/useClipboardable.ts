@@ -159,64 +159,65 @@ export function useClipboardable(): ClipboardableHandlers {
     const { nodes, edges } = clipboard.value;
     const idMapping = new Map<string, string>();
     const newNodeIds: string[] = [];
+    const clipboardNodeIds = new Set(nodes.map(n => n.id));
 
-    // Calculer le bounding box pour centrer le paste (réservé pour future utilisation)
-    const _minX = Math.min(...nodes.map(n => n.geometry.x));
-    const _minY = Math.min(...nodes.map(n => n.geometry.y));
-
-    // Créer les nouveaux noeuds avec de nouveaux IDs
+    // Générer les nouveaux IDs d'abord pour pouvoir résoudre les références
+    // parentId entre noeuds du clipboard.
     for (const node of nodes) {
-      const newId = nanoid();
-      idMapping.set(node.id, newId);
+      idMapping.set(node.id, nanoid());
+    }
 
-      // Déterminer le nouveau parentId
-      let newParentId = node.parentId;
+    // Créer les nouveaux noeuds en préservant la hiérarchie et en décalant
+    // uniquement les racines du clipboard (les enfants ont des coordonnées
+    // relatives à leur parent, elles restent inchangées).
+    for (const node of nodes) {
+      const newId = idMapping.get(node.id)!;
+
+      let newParentId: string | null = node.parentId;
       if (newParentId && idMapping.has(newParentId)) {
+        // Parent aussi copié : remapper vers son nouveau ID
         newParentId = idMapping.get(newParentId)!;
-      } else if (newParentId && !nodes.find(n => n.id === newParentId)) {
-        // Le parent original n'est pas dans le clipboard, mettre à null
+      } else if (newParentId && !clipboardNodeIds.has(newParentId)) {
+        // Parent pas copié : coller à la racine
         newParentId = null;
       }
 
+      const isRoot = !clipboardNodeIds.has(node.parentId ?? '');
+      const newGeometry = isRoot
+        ? { ...node.geometry, x: node.geometry.x + offsetX, y: node.geometry.y + offsetY }
+        : { ...node.geometry };
+
       const newNode: Node = {
-        ...node,
+        ...JSON.parse(JSON.stringify(node)),
         id: newId,
         parentId: newParentId,
-        geometry: {
-          ...node.geometry,
-          x: node.geometry.x + offsetX,
-          y: node.geometry.y + offsetY,
-        },
+        geometry: newGeometry,
       };
 
-      await graphStore.createNode(
-        {
-          type: newNode.type,
-          geometry: newNode.geometry,
-          styling: newNode.styling,
-          data: newNode.data,
-        },
-        newNode.parentId
-      );
-
-      // On doit mettre à jour l'ID car createNode génère un nouvel ID
-      // Donc on utilise updateNode pour corriger
+      await graphStore.importNode(newNode);
       newNodeIds.push(newId);
     }
 
-    // Créer les nouvelles edges
+    // Créer les nouvelles arêtes avec les IDs remappés
     for (const edge of edges) {
       const newSourceId = idMapping.get(edge.sourceId);
       const newTargetId = idMapping.get(edge.targetId);
+      if (!newSourceId || !newTargetId) continue;
 
-      if (newSourceId && newTargetId) {
-        await graphStore.createEdge(newSourceId, newTargetId, edge.routing);
-      }
+      const newEdge: Edge = {
+        ...JSON.parse(JSON.stringify(edge)),
+        id: nanoid(),
+        sourceId: newSourceId,
+        targetId: newTargetId,
+      };
+      await graphStore.importEdge(newEdge);
     }
 
-    // Sélectionner les nouveaux noeuds (seulement les racines)
-    const rootNodes = nodes.filter(n => !n.parentId || !idMapping.has(n.parentId));
-    selectedNodeIds.value = new Set(rootNodes.map(n => idMapping.get(n.id)!));
+    // Sélectionner les nouveaux noeuds racines
+    const newRootIds = nodes
+      .filter(n => !n.parentId || !clipboardNodeIds.has(n.parentId))
+      .map(n => idMapping.get(n.id)!);
+    selectedNodeIds.value = new Set(newRootIds);
 
     return newNodeIds;
   }

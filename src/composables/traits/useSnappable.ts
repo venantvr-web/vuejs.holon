@@ -80,6 +80,9 @@ const globalConfig = ref<SnapConfig>({
 // Guides personnalisés (globaux)
 const customGuides = ref<SnapGuide[]>([]);
 
+// Guides actifs globaux (partagés entre toutes les instances pour rendu au canvas)
+const globalActiveGuides = ref<SnapGuide[]>([]);
+
 /**
  * Ajoute la capacité de magnétisme sur grille, noeuds et guides à un noeud.
  *
@@ -232,6 +235,9 @@ export function useSnappable(options: SnappableOptions): SnappableState & Snappa
 
     activeGuides.value = guides;
     isSnapping.value = guides.length > 0;
+    // Miroir global pour permettre aux composants hors du noeud (GraphCanvas)
+    // de rendre les guides actifs sans connaître l'instance qui les a produits.
+    globalActiveGuides.value = guides;
 
     return { x: snappedX, y: snappedY, guides };
   }
@@ -278,6 +284,8 @@ export function useSnapState() {
   return {
     config: globalConfig,
     customGuides,
+    activeGuides: globalActiveGuides,
+    clearActiveGuides: () => { globalActiveGuides.value = []; },
     addGuide: (guide: SnapGuide) => {
       customGuides.value.push(guide);
     },

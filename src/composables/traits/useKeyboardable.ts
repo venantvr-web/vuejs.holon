@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import { useSelectionState } from './useSelectable';
 import { useUndoable } from './useUndoable';
+import { useClipboardable } from './useClipboardable';
 
 /**
  * Définition d'un raccourci clavier.
@@ -130,6 +131,7 @@ export function useKeyboardable(options: KeyboardableOptions = {}): Keyboardable
   const graphStore = useGraphStore();
   const { selectedNodeIds, clearSelection, deleteSelected } = useSelectionState();
   const { undo, redo, canUndo, canRedo } = useUndoable();
+  const { copy, cut, paste, duplicate, canPaste } = useClipboardable();
 
   const isEnabled = options.enabled ?? ref(true);
 
@@ -190,13 +192,12 @@ export function useKeyboardable(options: KeyboardableOptions = {}): Keyboardable
       category: 'Sélection',
     },
 
-    // Clipboard (placeholders - à implémenter avec useClipboardable)
+    // Presse-papier (branché sur useClipboardable)
     {
       key: 'c',
       ctrl: true,
       action: () => {
-        // TODO: Implémenter avec useClipboardable
-        console.log('Copy:', Array.from(selectedNodeIds.value));
+        if (selectedNodeIds.value.size > 0) copy();
       },
       description: 'Copier',
       category: 'Presse-papier',
@@ -205,8 +206,7 @@ export function useKeyboardable(options: KeyboardableOptions = {}): Keyboardable
       key: 'v',
       ctrl: true,
       action: () => {
-        // TODO: Implémenter avec useClipboardable
-        console.log('Paste');
+        if (canPaste()) void paste();
       },
       description: 'Coller',
       category: 'Presse-papier',
@@ -215,8 +215,7 @@ export function useKeyboardable(options: KeyboardableOptions = {}): Keyboardable
       key: 'x',
       ctrl: true,
       action: () => {
-        // TODO: Implémenter avec useClipboardable
-        console.log('Cut:', Array.from(selectedNodeIds.value));
+        if (selectedNodeIds.value.size > 0) cut();
       },
       description: 'Couper',
       category: 'Presse-papier',
@@ -225,9 +224,7 @@ export function useKeyboardable(options: KeyboardableOptions = {}): Keyboardable
       key: 'd',
       ctrl: true,
       action: () => {
-        // Dupliquer la sélection
-        // TODO: Implémenter duplication
-        console.log('Duplicate:', Array.from(selectedNodeIds.value));
+        if (selectedNodeIds.value.size > 0) void duplicate();
       },
       description: 'Dupliquer',
       category: 'Presse-papier',

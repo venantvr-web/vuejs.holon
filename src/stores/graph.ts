@@ -159,6 +159,40 @@ export const useGraphStore = defineStore('graph', () => {
     await db.edges.clear();
   }
 
+  /**
+   * Insère un noeud complet (ID inclus) dans le graphe.
+   * Utilisé pour la restauration d'undo et le collage qui doivent préserver
+   * les identifiants afin de maintenir la cohérence des arêtes et des parents.
+   */
+  async function importNode(node: Node) {
+    nodes.value[node.id] = { ...node };
+    await db.nodes.put({ ...node });
+  }
+
+  /**
+   * Insère une arête complète (ID inclus) dans le graphe.
+   */
+  async function importEdge(edge: Edge) {
+    edges.value[edge.id] = { ...edge };
+    await db.edges.put({ ...edge });
+  }
+
+  /**
+   * Remplace atomiquement tout le contenu du graphe par un snapshot.
+   * Utilisé par l'undo/redo pour restaurer un état antérieur sans passer
+   * par des créations/suppressions individuelles.
+   */
+  async function replaceAll(newNodes: Record<string, Node>, newEdges: Record<string, Edge>) {
+    nodes.value = { ...newNodes };
+    edges.value = { ...newEdges };
+    await db.transaction('rw', db.nodes, db.edges, async () => {
+      await db.nodes.clear();
+      await db.edges.clear();
+      await db.nodes.bulkPut(Object.values(newNodes));
+      await db.edges.bulkPut(Object.values(newEdges));
+    });
+  }
+
   return {
     // State
     nodes: readonly(nodes),
@@ -178,5 +212,8 @@ export const useGraphStore = defineStore('graph', () => {
     deleteEdge,
     reparentNode,
     clearAll,
+    importNode,
+    importEdge,
+    replaceAll,
   };
 });

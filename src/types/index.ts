@@ -92,6 +92,18 @@ export type ArrowType =
   | 'archi-flow';
 
 /**
+ * Élément de la bibliothèque de blocs réutilisables.
+ * Sert de modèle pour instancier de nouveaux noeuds sur le canevas.
+ */
+export interface LibraryItem {
+  id: string;
+  name: string;
+  isBuiltIn: boolean;
+  createdAt: number;
+  template: Omit<Node, 'id' | 'parentId'>;
+}
+
+/**
  * Un lien (arête) entre deux noeuds, identifiés par leur ID.
  * Les liens existent indépendamment de la hiérarchie des noeuds.
  */
@@ -112,4 +124,12 @@ export interface Edge {
    * Taille des marqueurs de flèche (optionnel, défaut: 10).
    */
   arrowSize?: number;
+  /**
+   * Données libres de l'arête : nom affiché, commentaire, type de relation,
+   * labels avancés, métadonnées applicatives.
+   *
+   * Champs usuels : `name` (string), `comment` (string), `relationType` (RelationType),
+   * `labels` (EdgeLabel[]).
+   */
+  data?: Record<string, any>;
 }

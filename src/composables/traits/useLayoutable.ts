@@ -131,12 +131,13 @@ export interface LayoutableHandlers {
  * });
  * ```
  */
+// État global (partagé entre toutes les instances).
+const isLayouting = ref(false);
+const currentAlgorithm = ref<LayoutAlgorithm | null>(null);
+let simulation: any = null;
+
 export function useLayoutable(): LayoutableState & LayoutableHandlers {
   const graphStore = useGraphStore();
-
-  const isLayouting = ref(false);
-  const currentAlgorithm = ref<LayoutAlgorithm | null>(null);
-  let simulation: any = null;
 
   /**
    * Layout force-directed avec d3-force.

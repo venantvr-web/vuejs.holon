@@ -1,6 +1,27 @@
 // src/composables/traits/useViewable.ts
-import { ref, type Ref } from 'vue';
+import { ref, watch, type Ref } from 'vue';
 import { nanoid } from 'nanoid';
+
+const STORAGE_KEY = 'holon.savedViews';
+
+function loadFromStorage(): SavedView[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveToStorage(views: SavedView[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(views));
+  } catch {
+    // localStorage indisponible ou quota dépassé — ignorer silencieusement
+  }
+}
 
 /**
  * Vue sauvegardée avec état complet de visualisation.
@@ -136,10 +157,14 @@ export interface ViewableHandlers {
  * restoreView(viewId, true); // avec animation
  * ```
  */
+// État global des vues sauvegardées (partagé entre toutes les instances).
+const savedViews = ref<SavedView[]>(loadFromStorage());
+const activeView = ref<SavedView | null>(null);
+
+// Persiste automatiquement les vues en localStorage à chaque modification.
+watch(savedViews, (views) => saveToStorage(views), { deep: true });
+
 export function useViewable(): ViewableState & ViewableHandlers {
-  // État global des vues sauvegardées
-  const savedViews = ref<SavedView[]>([]);
-  const activeView = ref<SavedView | null>(null);
 
   /**
    * Sauvegarde la vue actuelle.

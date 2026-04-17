@@ -14,6 +14,11 @@ export const DEFAULT_CONTAINMENT_RULES: Record<string, ContainmentRule> = {
     canBeContained: true,
     maxDepth: 10,
   },
+  'shape': {
+    canContain: true,
+    canBeContained: true,
+    maxDepth: 10,
+  },
   'node': {
     canContain: false,
     canBeContained: true,

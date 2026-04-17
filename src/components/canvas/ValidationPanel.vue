@@ -1,0 +1,122 @@
+
+<!-- src/components/canvas/ValidationPanel.vue -->
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import { useValidatable, useSelectionState } from '../../composables/traits';
+import { useEdgeSelectionState } from '../../composables/useEdgeSelection';
+import type { ValidationIssue, ValidationSeverity } from '../../composables/traits/useValidatable';
+
+const { lastValidationResult, validateGraph, errorCount, warningCount } = useValidatable();
+const { selectedNodeIds, focusedNodeId } = useSelectionState();
+const { selectedEdgeId } = useEdgeSelectionState();
+
+const isOpen = ref(false);
+
+function handleValidate() {
+  validateGraph();
+  isOpen.value = true;
+}
+
+const issues = computed(() => lastValidationResult.value?.issues ?? []);
+
+const severityBadge: Record<ValidationSeverity, { label: string; cls: string }> = {
+  error: { label: 'Erreur', cls: 'bg-red-100 text-red-700 border-red-300' },
+  warning: { label: 'Attention', cls: 'bg-amber-100 text-amber-700 border-amber-300' },
+  info: { label: 'Info', cls: 'bg-blue-100 text-blue-700 border-blue-300' },
+};
+
+function focusIssue(issue: ValidationIssue) {
+  if (issue.nodeIds && issue.nodeIds.length > 0) {
+    selectedNodeIds.value = new Set(issue.nodeIds);
+    focusedNodeId.value = issue.nodeIds[0];
+  }
+  if (issue.edgeIds && issue.edgeIds.length > 0) {
+    selectedEdgeId.value = issue.edgeIds[0];
+  }
+}
+
+defineExpose({ open: () => { isOpen.value = true; }, handleValidate });
+</script>
+
+<template>
+  <div class="validation-wrapper">
+    <button
+      @click="handleValidate"
+      class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors flex items-center gap-1"
+      title="Valider le graphe et afficher les problèmes"
+    >
+      <span>Valider</span>
+      <span
+        v-if="errorCount > 0"
+        class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs rounded-full bg-red-500 text-white"
+      >
+        {{ errorCount }}
+      </span>
+      <span
+        v-else-if="warningCount > 0"
+        class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs rounded-full bg-amber-500 text-white"
+      >
+        {{ warningCount }}
+      </span>
+    </button>
+
+    <!-- Panneau flottant -->
+    <div
+      v-if="isOpen"
+      class="fixed bottom-3 left-[260px] right-[330px] max-h-[40vh] bg-white border border-gray-300 rounded-lg shadow-xl z-30 flex flex-col"
+      @mousedown.stop
+    >
+      <div class="flex items-center justify-between px-3 py-2 border-b bg-gray-50">
+        <div class="flex items-center gap-2">
+          <h3 class="text-sm font-semibold text-gray-800">Résultats de validation</h3>
+          <span class="text-xs text-gray-500">
+            {{ errorCount }} erreur{{ errorCount > 1 ? 's' : '' }} ·
+            {{ warningCount }} attention{{ warningCount > 1 ? 's' : '' }}
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            class="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+            @click="handleValidate"
+          >
+            Revalider
+          </button>
+          <button
+            class="text-gray-400 hover:text-gray-600 px-1"
+            @click="isOpen = false"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <div v-if="issues.length === 0" class="p-4 text-sm text-green-700 text-center">
+        ✓ Aucun problème détecté — le graphe est valide.
+      </div>
+      <ul v-else class="overflow-y-auto divide-y divide-gray-100">
+        <li
+          v-for="(issue, i) in issues"
+          :key="i"
+          class="px-3 py-2 hover:bg-gray-50 cursor-pointer"
+          @click="focusIssue(issue)"
+        >
+          <div class="flex items-start gap-2">
+            <span
+              class="text-xs px-1.5 py-0.5 rounded border flex-shrink-0"
+              :class="severityBadge[issue.severity].cls"
+            >
+              {{ severityBadge[issue.severity].label }}
+            </span>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm text-gray-800">{{ issue.message }}</div>
+              <div v-if="issue.suggestion" class="text-xs text-gray-500 mt-0.5">
+                💡 {{ issue.suggestion }}
+              </div>
+              <div class="text-xs text-gray-400 font-mono mt-0.5">{{ issue.ruleId }} · {{ issue.category }}</div>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</template>
