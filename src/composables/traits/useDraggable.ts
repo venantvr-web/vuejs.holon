@@ -1,6 +1,9 @@
 // src/composables/traits/useDraggable.ts
 import { ref, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
+import { useSelectionState } from './useSelectable';
+import { useSnappable, useSnapState } from './useSnappable';
+import { isAncestorOf } from './utils/trait-helpers';
 
 /**
  * Options de configuration pour le trait Draggable.
@@ -78,11 +81,18 @@ export interface DraggableHandlers {
  */
 export function useDraggable(options: DraggableOptions): DraggableState & DraggableHandlers {
   const graphStore = useGraphStore();
+  const { selectedNodeIds } = useSelectionState();
+  const snap = useSnappable({ nodeId: options.nodeId });
+  // Permet de désactiver le magnétisme temporairement (maintenir Alt pendant le drag).
+  const snapDisabledForThisDrag = ref(false);
 
   const isDragging = ref(false);
   const dragStart = ref({ x: 0, y: 0 });
   const initialPos = ref({ x: 0, y: 0 });
   const dragDelta = ref({ x: 0, y: 0 });
+  // Positions initiales des compagnons de drag (multi-sélection).
+  // Stockés uniquement si le noeud est dans une sélection multiple au début du drag.
+  const companionsInitial = ref<Map<string, { x: number; y: number }>>(new Map());
 
   function handleDragStart(event: MouseEvent) {
     if (event.button !== 0) return;
@@ -96,6 +106,27 @@ export function useDraggable(options: DraggableOptions): DraggableState & Dragga
     initialPos.value = { x: node.geometry.x, y: node.geometry.y };
     dragDelta.value = { x: 0, y: 0 };
 
+    // Préparer le déplacement synchronisé si ce noeud fait partie d'une sélection multiple.
+    companionsInitial.value = new Map();
+    const selection = selectedNodeIds.value;
+    if (selection.has(options.nodeId.value) && selection.size > 1) {
+      const selected = Array.from(selection);
+      for (const id of selected) {
+        if (id === options.nodeId.value) continue;
+        // Exclure les descendants d'un autre noeud sélectionné : ils suivront
+        // automatiquement leur parent via la hiérarchie des transforms.
+        const hasSelectedAncestor = selected.some(
+          other => other !== id && isAncestorOf(other, id)
+        );
+        if (hasSelectedAncestor) continue;
+
+        const companion = graphStore.nodes[id];
+        if (companion) {
+          companionsInitial.value.set(id, { x: companion.geometry.x, y: companion.geometry.y });
+        }
+      }
+    }
+
     options.onDragStart?.();
 
     window.addEventListener('mousemove', handleDragMove);
@@ -105,28 +136,67 @@ export function useDraggable(options: DraggableOptions): DraggableState & Dragga
   function handleDragMove(event: MouseEvent) {
     if (!isDragging.value) return;
 
-    const zoom = options.zoomLevel?.value ?? 1;
-    const dx = (event.clientX - dragStart.value.x) / zoom;
-    const dy = (event.clientY - dragStart.value.y) / zoom;
+    // Alt pendant le drag désactive le magnétisme pour ce déplacement.
+    snapDisabledForThisDrag.value = event.altKey;
 
-    dragDelta.value = { x: dx, y: dy };
+    const zoom = options.zoomLevel?.value ?? 1;
+    const rawDx = (event.clientX - dragStart.value.x) / zoom;
+    const rawDy = (event.clientY - dragStart.value.y) / zoom;
 
     const node = graphStore.nodes[options.nodeId.value];
     if (!node) return;
 
+    // Appliquer le magnétisme au noeud principal (sauf si compagnons présents
+    // : dans ce cas, le snap complique le déplacement synchronisé et on le
+    // désactive pour préserver la cohérence du groupe traîné).
+    let effectiveDx = rawDx;
+    let effectiveDy = rawDy;
+    if (companionsInitial.value.size === 0 && !snapDisabledForThisDrag.value) {
+      const targetX = initialPos.value.x + rawDx;
+      const targetY = initialPos.value.y + rawDy;
+      const snapped = snap.snapPosition(targetX, targetY);
+      effectiveDx = snapped.x - initialPos.value.x;
+      effectiveDy = snapped.y - initialPos.value.y;
+    } else {
+      // Pas de snap : vider les guides actifs
+      snap.activeGuides.value = [];
+      snap.isSnapping.value = false;
+    }
+
+    dragDelta.value = { x: effectiveDx, y: effectiveDy };
+
     graphStore.updateNode(options.nodeId.value, {
       geometry: {
         ...node.geometry,
-        x: initialPos.value.x + dx,
-        y: initialPos.value.y + dy,
+        x: initialPos.value.x + effectiveDx,
+        y: initialPos.value.y + effectiveDy,
       },
     });
 
-    options.onDragMove?.(dx, dy);
+    // Déplacer les compagnons (multi-sélection) avec le même delta.
+    for (const [id, start] of companionsInitial.value) {
+      const companion = graphStore.nodes[id];
+      if (!companion) continue;
+      graphStore.updateNode(id, {
+        geometry: {
+          ...companion.geometry,
+          x: start.x + effectiveDx,
+          y: start.y + effectiveDy,
+        },
+      });
+    }
+
+    options.onDragMove?.(effectiveDx, effectiveDy);
   }
 
   function handleDragEnd() {
     isDragging.value = false;
+    companionsInitial.value.clear();
+    // Effacer les guides de snap (locaux et globaux)
+    snap.activeGuides.value = [];
+    snap.isSnapping.value = false;
+    const { clearActiveGuides } = useSnapState();
+    clearActiveGuides();
 
     // Notifier le parent pour recalculer l'autosize
     if (options.notifyParentOnMove !== false) {

@@ -809,15 +809,17 @@ const VALIDATION_RULES: ValidationRule[] = [
  * disableRule('NAME-003');
  * ```
  */
+// État global partagé entre toutes les instances (permet au bouton Toolbar
+// et au panneau Validation d'observer le même résultat).
+const lastValidationResult = ref<ValidationResult | null>(null);
+const isValidating = ref(false);
+const activeRules = ref<ValidationRule[]>([...VALIDATION_RULES]);
+
+const errorCount = computed(() => lastValidationResult.value?.stats.errors ?? 0);
+const warningCount = computed(() => lastValidationResult.value?.stats.warnings ?? 0);
+
 export function useValidatable(): ValidatableState & ValidatableHandlers {
   const graphStore = useGraphStore();
-
-  const lastValidationResult = ref<ValidationResult | null>(null);
-  const isValidating = ref(false);
-  const activeRules = ref<ValidationRule[]>([...VALIDATION_RULES]);
-
-  const errorCount = computed(() => lastValidationResult.value?.stats.errors ?? 0);
-  const warningCount = computed(() => lastValidationResult.value?.stats.warnings ?? 0);
 
   /**
    * Valide le graphe complet.

@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useGraphStore } from '../../stores/graph';
+import { useEdgeSelectionState } from '../../composables/useEdgeSelection';
 import {
   calculateEdgeIntersection,
   getNodeCenter,
@@ -22,16 +23,12 @@ const props = defineProps<{
 
 const graphStore = useGraphStore();
 
-// État de sélection des edges
-const selectedEdgeId = ref<string | null>(null);
+// État de sélection des edges (état global partagé avec PropertyInspector)
+const { selectedEdgeId, selectEdge: selectEdgeGlobal, deselectEdge } = useEdgeSelectionState();
 
 function selectEdge(edgeId: string, event: MouseEvent) {
   event.stopPropagation();
-  selectedEdgeId.value = edgeId;
-}
-
-function deselectEdge() {
-  selectedEdgeId.value = null;
+  selectEdgeGlobal(edgeId);
 }
 
 function deleteSelectedEdge() {
@@ -81,6 +78,44 @@ onUnmounted(() => {
 // Type de routage par défaut
 const defaultRouting = ref<RoutingType>(RoutingType.Straight);
 
+// Édition inline du libellé d'une arête (double-clic sur le libellé).
+const editingEdgeId = ref<string | null>(null);
+const editingValue = ref('');
+
+function startEditingLabel(edgeId: string, event: MouseEvent) {
+  event.stopPropagation();
+  const edge = graphStore.edges[edgeId];
+  if (!edge) return;
+  editingEdgeId.value = edgeId;
+  editingValue.value = (edge.data?.name as string) ?? '';
+}
+
+function commitEditingLabel() {
+  const id = editingEdgeId.value;
+  if (!id) return;
+  const edge = graphStore.edges[id];
+  if (edge) {
+    graphStore.updateEdge(id, {
+      data: { ...(edge.data ?? {}), name: editingValue.value },
+    });
+  }
+  editingEdgeId.value = null;
+}
+
+function cancelEditingLabel() {
+  editingEdgeId.value = null;
+}
+
+function handleLabelKeydown(event: KeyboardEvent) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    commitEditingLabel();
+  } else if (event.key === 'Escape') {
+    event.preventDefault();
+    cancelEditingLabel();
+  }
+}
+
 interface RenderedEdge {
   id: string;
   sourceX: number;
@@ -89,6 +124,10 @@ interface RenderedEdge {
   targetY: number;
   path: string;
   arrowAngle: number;
+  midX: number;
+  midY: number;
+  label: string;
+  strokeDasharray: string;
 }
 
 // Calcule le path SVG selon le type de routage
@@ -184,6 +223,13 @@ const renderedEdges = computed((): RenderedEdge[] => {
       targetPoint.y
     );
 
+    // Dasharray dérivé du lineStyle du type de relation
+    const lineStyle = edge.data?.lineStyle as string | undefined;
+    const strokeDasharray =
+      lineStyle === 'dashed' ? '8,4' :
+      lineStyle === 'dotted' ? '2,3' :
+      'none';
+
     return {
       id: edge.id,
       sourceX: sourcePoint.x,
@@ -192,6 +238,10 @@ const renderedEdges = computed((): RenderedEdge[] => {
       targetY: targetPoint.y,
       path,
       arrowAngle,
+      midX: (sourcePoint.x + targetPoint.x) / 2,
+      midY: (sourcePoint.y + targetPoint.y) / 2,
+      label: (edge.data?.name as string) ?? '',
+      strokeDasharray,
     };
   }).filter((e): e is RenderedEdge => e !== null);
 });
@@ -344,7 +394,9 @@ function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean
         fill="none"
         stroke="transparent"
         stroke-width="12"
+        vector-effect="non-scaling-stroke"
         class="edge-hitbox cursor-pointer"
+        @dblclick="startEditingLabel(edge.id, $event)"
       />
       <!-- Halo de sélection -->
       <path
@@ -354,6 +406,7 @@ function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean
         stroke="#3b82f6"
         stroke-width="6"
         stroke-opacity="0.3"
+        vector-effect="non-scaling-stroke"
         class="edge-selection-halo"
       />
       <!-- Trait visible -->
@@ -362,10 +415,92 @@ function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean
         fill="none"
         :stroke="selectedEdgeId === edge.id ? '#3b82f6' : '#333'"
         stroke-width="2"
+        :stroke-dasharray="edge.strokeDasharray"
+        vector-effect="non-scaling-stroke"
         :marker-start="getMarkerUrl(graphStore.edges[edge.id], 'start', selectedEdgeId === edge.id)"
         :marker-end="getMarkerUrl(graphStore.edges[edge.id], 'end', selectedEdgeId === edge.id)"
         class="edge-line"
       />
+
+      <!-- Libellé (affichage) -->
+      <g
+        v-if="edge.label && editingEdgeId !== edge.id"
+        class="edge-label cursor-text"
+        @dblclick="startEditingLabel(edge.id, $event)"
+      >
+        <rect
+          :x="edge.midX - (edge.label.length * 3.5) - 4"
+          :y="edge.midY - 10"
+          :width="edge.label.length * 7 + 8"
+          height="18"
+          fill="#ffffff"
+          :stroke="selectedEdgeId === edge.id ? '#3b82f6' : '#d1d5db'"
+          stroke-width="1"
+          rx="3"
+          vector-effect="non-scaling-stroke"
+        />
+        <text
+          :x="edge.midX"
+          :y="edge.midY + 4"
+          text-anchor="middle"
+          font-size="12"
+          :fill="selectedEdgeId === edge.id ? '#1e40af' : '#333'"
+          class="select-none pointer-events-none"
+        >
+          {{ edge.label }}
+        </text>
+      </g>
+
+      <!-- Libellé vide cliquable (visible uniquement quand l'edge est sélectionnée) -->
+      <g
+        v-if="!edge.label && editingEdgeId !== edge.id && selectedEdgeId === edge.id"
+        class="edge-label-placeholder cursor-text"
+        @dblclick="startEditingLabel(edge.id, $event)"
+      >
+        <rect
+          :x="edge.midX - 24"
+          :y="edge.midY - 10"
+          width="48"
+          height="18"
+          fill="#ffffff"
+          stroke="#3b82f6"
+          stroke-width="1"
+          stroke-dasharray="3,2"
+          rx="3"
+          vector-effect="non-scaling-stroke"
+        />
+        <text
+          :x="edge.midX"
+          :y="edge.midY + 4"
+          text-anchor="middle"
+          font-size="11"
+          fill="#9ca3af"
+          font-style="italic"
+          class="select-none pointer-events-none"
+        >
+          + nom
+        </text>
+      </g>
+
+      <!-- Libellé (édition inline) -->
+      <foreignObject
+        v-if="editingEdgeId === edge.id"
+        :x="edge.midX - 80"
+        :y="edge.midY - 12"
+        width="160"
+        height="24"
+        @mousedown.stop
+        @click.stop
+      >
+        <input
+          v-model="editingValue"
+          @keydown="handleLabelKeydown"
+          @blur="commitEditingLabel"
+          class="w-full h-full px-1 text-xs border border-blue-500 rounded outline-none text-center"
+          autofocus
+          placeholder="Nom de la relation…"
+        />
+      </foreignObject>
     </g>
 
     <!-- Connexion en cours (preview) -->
@@ -376,6 +511,7 @@ function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean
       stroke="#3b82f6"
       stroke-width="2"
       stroke-dasharray="5,5"
+      vector-effect="non-scaling-stroke"
       marker-start="url(#start-dot-blue)"
       marker-end="url(#arrowhead-blue)"
       class="edge-pending"

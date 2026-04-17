@@ -292,9 +292,10 @@ export function useImportable(): ImportableHandlers {
       }
 
       // Extraire nodes et edges
-      let { nodes, edges } = data;
+      let { nodes, edges } = data as { nodes: Node[]; edges: Edge[] };
 
-      // Résoudre les conflits d'IDs
+      // Résoudre les conflits d'IDs (stratégie 'rename' remappe aussi les
+      // références source/target des arêtes).
       const resolved = resolveIDConflicts(nodes, edges, onConflict);
       nodes = resolved.nodes;
       edges = resolved.edges;
@@ -302,32 +303,19 @@ export function useImportable(): ImportableHandlers {
 
       // Appliquer la stratégie de merge
       if (mergeStrategy === 'replace') {
-        // Effacer le graphe existant
-        await graphStore.clearGraph();
+        await graphStore.clearAll();
       }
 
-      // Importer les noeuds
+      // Importer les noeuds en préservant leurs IDs (importNode utilise
+      // IndexedDB.put directement sans générer de nouvel identifiant).
       for (const node of nodes) {
-        await graphStore.createNode(
-          {
-            type: node.type,
-            geometry: node.geometry,
-            styling: node.styling,
-            data: node.data,
-          },
-          node.parentId
-        );
+        await graphStore.importNode(node);
         result.nodesImported++;
       }
 
-      // Importer les arêtes
+      // Importer les arêtes en préservant leurs IDs.
       for (const edge of edges) {
-        await graphStore.createEdge(
-          edge.sourceId,
-          edge.targetId,
-          edge.routing,
-          edge.data
-        );
+        await graphStore.importEdge(edge);
         result.edgesImported++;
       }
 

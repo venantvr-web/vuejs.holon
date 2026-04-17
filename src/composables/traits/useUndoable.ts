@@ -97,30 +97,17 @@ export function useUndoable(options: UndoableOptions = {}): UndoableState & Undo
     currentIndex.value = history.value.length - 1;
   }
 
-  // Restaure un snapshot
+  // Restaure un snapshot en préservant les IDs (crucial pour la cohérence
+  // des références source/target des arêtes et des parentId).
   async function restoreSnapshot(snap: GraphSnapshot) {
     isUndoRedoAction.value = true;
 
     try {
-      // Effacer tout et recréer
-      await graphStore.clearAll();
-
-      // Recréer les noeuds
-      for (const node of Object.values(snap.nodes)) {
-        const { id, ...nodeData } = node;
-        // Utiliser directement l'API DB pour éviter les watchers
-        await graphStore.createNode(nodeData as Omit<Node, 'id'>, node.parentId);
-      }
-
-      // Recréer les edges
-      for (const edge of Object.values(snap.edges)) {
-        await graphStore.createEdge(edge.sourceId, edge.targetId, edge.routing);
-      }
-
-      // Recharger depuis la DB pour synchroniser
-      await graphStore.loadFromDB();
+      await graphStore.replaceAll(snap.nodes, snap.edges);
     } finally {
-      isUndoRedoAction.value = false;
+      // Laisser passer le cycle de watch avant de réactiver l'auto-snapshot,
+      // sinon replaceAll déclencherait un nouveau snapshot parasite.
+      setTimeout(() => { isUndoRedoAction.value = false; }, 0);
     }
   }
 

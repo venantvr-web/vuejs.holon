@@ -439,40 +439,30 @@ export function useRelationTypeable(options: RelationTypeableOptions): RelationT
   // État local
   const validationError = ref<string | null>(null);
 
-  // Type de relation actuel
+  // Type de relation actuel (stocké dans edge.data pour cohérence avec
+  // useValidatable, useExportable, useImportable qui lisent tous edge.data.*).
   const relationType = computed((): RelationType => {
     const edge = graphStore.edges[options.edgeId.value];
     if (!edge) return RelationType.Association;
-    return (edge as any).relationType ?? RelationType.Association;
+    return (edge.data?.relationType as RelationType) ?? RelationType.Association;
   });
 
-  // Configuration de la relation
-  const relationConfig = computed((): RelationConfig => {
-    return RELATION_CONFIGS[relationType.value];
-  });
+  const relationConfig = computed((): RelationConfig => RELATION_CONFIGS[relationType.value]);
+  const relationCategory = computed((): RelationCategory => relationConfig.value.category);
 
-  // Catégorie de la relation
-  const relationCategory = computed((): RelationCategory => {
-    return relationConfig.value.category;
-  });
-
-  // Propriétés spécifiques
   const accessType = computed((): AccessType | null => {
     if (relationType.value !== RelationType.Access) return null;
-    const edge = graphStore.edges[options.edgeId.value];
-    return (edge as any)?.accessType ?? 'readwrite';
+    return (graphStore.edges[options.edgeId.value]?.data?.accessType as AccessType) ?? 'readwrite';
   });
 
   const influenceStrength = computed((): InfluenceStrength | null => {
     if (relationType.value !== RelationType.Influence) return null;
-    const edge = graphStore.edges[options.edgeId.value];
-    return (edge as any)?.influenceStrength ?? '+';
+    return (graphStore.edges[options.edgeId.value]?.data?.influenceStrength as InfluenceStrength) ?? '+';
   });
 
   const flowType = computed((): FlowType | null => {
     if (relationType.value !== RelationType.Flow) return null;
-    const edge = graphStore.edges[options.edgeId.value];
-    return (edge as any)?.flowType ?? 'information';
+    return (graphStore.edges[options.edgeId.value]?.data?.flowType as FlowType) ?? 'information';
   });
 
   // Validation
@@ -585,47 +575,44 @@ export function useRelationTypeable(options: RelationTypeableOptions): RelationT
     return { valid: true };
   }
 
-  // Définit le type de relation
-  function setRelationType(type: RelationType) {
+  function updateEdgeData(patch: Record<string, unknown>) {
     const edge = graphStore.edges[options.edgeId.value];
     if (!edge) return;
+    graphStore.updateEdge(options.edgeId.value, {
+      data: { ...(edge.data ?? {}), ...patch },
+    });
+  }
 
+  // Définit le type de relation et ses métadonnées visuelles associées
+  function setRelationType(type: RelationType) {
     const config = RELATION_CONFIGS[type];
-
-    // Mise à jour de l'edge avec le type et le style
-    // Note: nécessite d'étendre le type Edge pour supporter ces propriétés
-    (graphStore as any).updateEdge?.(options.edgeId.value, {
+    updateEdgeData({
       relationType: type,
-      routing: edge.routing,
-      // Style basé sur la config
       lineStyle: config.lineStyle,
       sourceMarker: config.sourceMarker,
       targetMarker: config.targetMarker,
     });
+    // Les marqueurs d'arêtes vivent aussi dans les champs startArrow/endArrow
+    // lus par EdgeLayer ; synchroniser pour cohérence visuelle.
+    graphStore.updateEdge(options.edgeId.value, {
+      startArrow: config.sourceMarker,
+      endArrow: config.targetMarker,
+    });
   }
 
-  // Définit le type d'accès
   function setAccessType(type: AccessType) {
     if (relationType.value !== RelationType.Access) return;
-    (graphStore as any).updateEdge?.(options.edgeId.value, {
-      accessType: type,
-    });
+    updateEdgeData({ accessType: type });
   }
 
-  // Définit la force d'influence
   function setInfluenceStrength(strength: InfluenceStrength) {
     if (relationType.value !== RelationType.Influence) return;
-    (graphStore as any).updateEdge?.(options.edgeId.value, {
-      influenceStrength: strength,
-    });
+    updateEdgeData({ influenceStrength: strength });
   }
 
-  // Définit le type de flux
   function setFlowType(type: FlowType) {
     if (relationType.value !== RelationType.Flow) return;
-    (graphStore as any).updateEdge?.(options.edgeId.value, {
-      flowType: type,
-    });
+    updateEdgeData({ flowType: type });
   }
 
   // Retourne les types de relations disponibles pour une paire source/target

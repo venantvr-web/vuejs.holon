@@ -333,29 +333,28 @@ const CONNECTION_COMPATIBILITY: Record<
  * }
  * ```
  */
+// État global partagé.
+const activeSuggestions = ref<Suggestion[]>([]);
+const dismissedSuggestions = ref<Set<string>>(new Set());
+const isGenerating = ref(false);
+
+const suggestionCounts = computed(() => {
+  const counts: Record<SuggestionType, number> = {
+    connection: 0,
+    pattern: 0,
+    refactoring: 0,
+    naming: 0,
+    completion: 0,
+    optimization: 0,
+  };
+  for (const suggestion of activeSuggestions.value) {
+    counts[suggestion.type]++;
+  }
+  return counts;
+});
+
 export function useSuggestable(): SuggestableState & SuggestableHandlers {
   const graphStore = useGraphStore();
-
-  const activeSuggestions = ref<Suggestion[]>([]);
-  const dismissedSuggestions = ref<Set<string>>(new Set());
-  const isGenerating = ref(false);
-
-  const suggestionCounts = computed(() => {
-    const counts: Record<SuggestionType, number> = {
-      connection: 0,
-      pattern: 0,
-      refactoring: 0,
-      naming: 0,
-      completion: 0,
-      optimization: 0,
-    };
-
-    for (const suggestion of activeSuggestions.value) {
-      counts[suggestion.type]++;
-    }
-
-    return counts;
-  });
 
   /**
    * Génère un ID unique pour une suggestion.

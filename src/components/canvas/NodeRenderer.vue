@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, ref, toRef } from 'vue';
 import { useGraphStore } from '../../stores/graph';
+import { useLibraryStore } from '../../stores/library';
 import {
   useDraggable,
   useResizable,
@@ -32,9 +33,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'start-connection', nodeId: string): void;
   (e: 'finish-connection', nodeId: string): void;
+  (e: 'context-menu', payload: { nodeId: string; x: number; y: number }): void;
 }>();
 
 const graphStore = useGraphStore();
+const libraryStore = useLibraryStore();
 const nodeIdRef = toRef(props, 'nodeId');
 const zoomLevelRef = computed(() => props.zoomLevel ?? 1);
 
@@ -103,7 +106,7 @@ const node = computed(() => graphStore.nodes[props.nodeId]);
 const ChildNodeRenderer = defineAsyncComponent(() => import('./NodeRenderer.vue'));
 
 const children = computed(() => {
-  if (node.value?.type !== 'container') return [];
+  if (node.value?.type !== 'container' && node.value?.type !== 'shape') return [];
   if (collapsible.isCollapsed.value) return []; // Ne pas afficher les enfants si collapsed
   return Object.values(graphStore.nodes)
     .filter(n => n.parentId === props.nodeId)
@@ -209,7 +212,12 @@ function handleKeyDown(event: KeyboardEvent) {
 function handleContextMenu(event: MouseEvent) {
   event.preventDefault();
   event.stopPropagation();
-  toggleStylePanel();
+  // Sélectionner le noeud si ce n'est pas déjà le cas, pour que le menu
+  // contextuel agisse sur une sélection cohérente.
+  if (!isSelected.value) {
+    select(event.ctrlKey || event.metaKey);
+  }
+  emit('context-menu', { nodeId: props.nodeId, x: event.clientX, y: event.clientY });
 }
 
 function handleMouseEnter() {
@@ -245,6 +253,14 @@ function handleResizeStartIfNotLocked(event: MouseEvent) {
   if (lockable.isSizeLocked.value) return;
   handleResizeStart(event);
 }
+
+async function addToLibrary() {
+  if (!node.value) return;
+  const defaultName = (node.value.data?.name as string) ?? 'Mon bloc';
+  const name = window.prompt('Nom du bloc dans la bibliothèque :', defaultName);
+  if (!name) return;
+  await libraryStore.addFromNode(node.value, name);
+}
 </script>
 
 <template>
@@ -258,8 +274,11 @@ function handleResizeStartIfNotLocked(event: MouseEvent) {
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
     tabindex="0"
+    role="button"
+    :aria-label="`${typeable.typeLabel.value || node.type} ${displayValue}`"
+    :aria-selected="isSelected"
     :class="[
-      'focus:outline-none',
+      'holon-node focus:outline-none',
       lockable.isPositionLocked.value ? 'cursor-not-allowed' : 'cursor-move'
     ]"
   >
@@ -272,6 +291,7 @@ function handleResizeStartIfNotLocked(event: MouseEvent) {
       :stroke-width="connectionMode || isDropTarget || isSelected ? 3 : currentStyle.strokeWidth"
       :stroke-dasharray="isDropTarget ? '5,5' : 'none'"
       :opacity="currentStyle.opacity"
+      vector-effect="non-scaling-stroke"
     />
     <!-- Rectangle standard -->
     <rect
@@ -284,6 +304,7 @@ function handleResizeStartIfNotLocked(event: MouseEvent) {
       :stroke-dasharray="isDropTarget ? '5,5' : 'none'"
       :opacity="currentStyle.opacity"
       :rx="shapeable.shape.value === NodeShape.RoundedRectangle ? 8 : 4"
+      vector-effect="non-scaling-stroke"
     />
 
     <!-- Indicateur collapsed -->
@@ -320,11 +341,12 @@ function handleResizeStartIfNotLocked(event: MouseEvent) {
       stroke-width="2"
       stroke-dasharray="4,4"
       rx="6"
+      vector-effect="non-scaling-stroke"
       class="pointer-events-none"
     />
 
     <!-- Enfants récursifs (si pas collapsed) -->
-    <template v-if="node.type === 'container' && !collapsible.isCollapsed.value && children.length">
+    <template v-if="(node.type === 'container' || node.type === 'shape') && !collapsible.isCollapsed.value && children.length">
       <ChildNodeRenderer
         v-for="child in children"
         :key="child.id"
@@ -333,6 +355,7 @@ function handleResizeStartIfNotLocked(event: MouseEvent) {
         :zoom-level="zoomLevel"
         @start-connection="$emit('start-connection', $event)"
         @finish-connection="$emit('finish-connection', $event)"
+        @context-menu="$emit('context-menu', $event)"
       />
     </template>
 
@@ -684,6 +707,13 @@ function handleResizeStartIfNotLocked(event: MouseEvent) {
             >
               ↓ Derrière
             </button>
+            <button
+              @click="addToLibrary"
+              class="px-2 py-1 text-xs border rounded hover:bg-gray-100"
+              title="Sauvegarder ce bloc comme modèle réutilisable"
+            >
+              📚 Bibliothèque
+            </button>
           </div>
         </div>
       </div>
@@ -692,9 +722,11 @@ function handleResizeStartIfNotLocked(event: MouseEvent) {
 </template>
 
 <style scoped>
-g:focus > rect:first-of-type,
-g:focus > path:first-of-type {
-  stroke: #3b82f6;
-  stroke-width: 2;
+/* Anneau de focus visible pour accessibilité clavier (WCAG 2.4.7). */
+g.holon-node:focus-visible > rect:first-of-type,
+g.holon-node:focus-visible > path:first-of-type {
+  stroke: #2563eb;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 4px rgba(37, 99, 235, 0.6));
 }
 </style>

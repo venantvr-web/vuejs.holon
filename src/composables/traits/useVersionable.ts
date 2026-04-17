@@ -292,21 +292,34 @@ export interface VersionableHandlers {
  * createBranch('experimental', 'Tests de nouvelles idées');
  * ```
  */
+// État global des versions (partagé entre le bouton Toolbar et le panneau).
+// Restauration automatique depuis localStorage au chargement du module.
+function loadSnapshotsFromStorage(): GraphSnapshot[] {
+  try {
+    const raw = localStorage.getItem('graph-snapshots');
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+const snapshots = ref<GraphSnapshot[]>(loadSnapshotsFromStorage());
+const currentSnapshot = ref<GraphSnapshot | null>(null);
+const branches = ref<VersionBranch[]>([
+  {
+    name: 'main',
+    currentSnapshotId: '',
+    description: 'Branche principale',
+    createdAt: Date.now(),
+  },
+]);
+const currentBranch = ref('main');
+const activeDiff = ref<GraphDiff | null>(null);
+
 export function useVersionable(): VersionableState & VersionableHandlers {
   const graphStore = useGraphStore();
-
-  const snapshots = ref<GraphSnapshot[]>([]);
-  const currentSnapshot = ref<GraphSnapshot | null>(null);
-  const branches = ref<VersionBranch[]>([
-    {
-      name: 'main',
-      currentSnapshotId: '',
-      description: 'Branche principale',
-      createdAt: Date.now(),
-    },
-  ]);
-  const currentBranch = ref('main');
-  const activeDiff = ref<GraphDiff | null>(null);
 
   /**
    * Crée un snapshot du graphe actuel.
@@ -353,18 +366,17 @@ export function useVersionable(): VersionableState & VersionableHandlers {
 
   /**
    * Restaure un snapshot.
+   * Utilise graphStore.replaceAll pour préserver les IDs et synchroniser
+   * la base IndexedDB (sinon la reactivité serait cassée par assignation
+   * directe à des refs readonly).
    */
-  function restoreSnapshot(snapshotId: string): void {
+  async function restoreSnapshot(snapshotId: string): Promise<void> {
     const snapshot = snapshots.value.find((s) => s.id === snapshotId);
     if (!snapshot) {
       console.error(`Snapshot ${snapshotId} non trouvé`);
       return;
     }
-
-    // Restaurer l'état du graphe
-    graphStore.nodes = { ...snapshot.state.nodes };
-    graphStore.edges = { ...snapshot.state.edges };
-
+    await graphStore.replaceAll(snapshot.state.nodes, snapshot.state.edges);
     currentSnapshot.value = snapshot;
   }
 

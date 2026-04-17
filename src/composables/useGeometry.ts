@@ -80,7 +80,7 @@ export function useGeometry() {
     excludeNodeId: string | null = null
   ): string | null {
     const containers = Object.values(graphStore.nodes).filter(
-      n => n.type === 'container' && n.id !== excludeNodeId
+      n => (n.type === 'container' || n.type === 'shape') && n.id !== excludeNodeId
     );
 
     // Trier par profondeur (les plus profonds d'abord)

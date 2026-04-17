@@ -3,19 +3,45 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import { useGeometry } from '../../composables/useGeometry';
+import { useSelectionState, useGroupState, useClipboardable, useSnapState } from '../../composables/traits';
+import { useLibraryStore } from '../../stores/library';
+import { useViewport } from '../../composables/useViewport';
 import NodeRenderer from './NodeRenderer.vue';
 import EdgeLayer from './EdgeLayer.vue';
+import Minimap from './Minimap.vue';
+import Breadcrumb from './Breadcrumb.vue';
+import SearchPanel from './SearchPanel.vue';
+import ViewsPanel from './ViewsPanel.vue';
+import ContextMenu, { type ContextMenuItem } from '../ui/ContextMenu.vue';
 
 const graphStore = useGraphStore();
+const libraryStore = useLibraryStore();
 const { screenToLocalCoordinates, getNodeAbsolutePosition } = useGeometry();
+const { selectedNodeIds, clearSelection } = useSelectionState();
+const { groups, createGroupFromSelection, dissolveGroup } = useGroupState();
+const { copy, cut, paste, duplicate, canPaste } = useClipboardable();
+const { pan, zoomLevel, zoomAroundScreenPoint } = useViewport();
+const { config: snapConfig, activeGuides: snapGuides } = useSnapState();
+
+// État du menu contextuel
+const contextMenu = ref<{ x: number; y: number; items: ContextMenuItem[] } | null>(null);
+
+function closeContextMenu() {
+  contextMenu.value = null;
+}
+
+// Panneau de recherche (Ctrl+F).
+const searchOpen = ref(false);
 
 const svgRoot = ref<SVGSVGElement | null>(null);
-const zoomLevel = ref(1);
-const pan = ref({ x: 0, y: 0 });
 
 // État pour le pan avec la souris
 const isPanning = ref(false);
 const lastMousePos = ref({ x: 0, y: 0 });
+
+// État pour la sélection rectangle (marquee / rubber-band).
+// Coordonnées en espace monde (après pan/zoom).
+const marquee = ref<{ startX: number; startY: number; endX: number; endY: number } | null>(null);
 
 // État pour le mode connexion
 const connectionMode = ref(false);
@@ -74,26 +100,16 @@ function handleDragOver(event: DragEvent) {
 // --- Zoom avec la molette ---
 function handleWheel(event: WheelEvent) {
   event.preventDefault();
-
-  // Molette = zoom centré sur la souris
   const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
-  const newZoom = Math.max(0.1, Math.min(5, zoomLevel.value * zoomFactor));
-
-  if (svgRoot.value) {
-    const rect = svgRoot.value.getBoundingClientRect();
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
-
-    // Zoom centré sur la souris
-    const zoomRatio = newZoom / zoomLevel.value;
-    pan.value.x = mouseX - (mouseX - pan.value.x) * zoomRatio;
-    pan.value.y = mouseY - (mouseY - pan.value.y) * zoomRatio;
+  if (!svgRoot.value) {
+    zoomAroundScreenPoint(zoomFactor, 0, 0);
+    return;
   }
-
-  zoomLevel.value = newZoom;
+  const rect = svgRoot.value.getBoundingClientRect();
+  zoomAroundScreenPoint(zoomFactor, event.clientX - rect.left, event.clientY - rect.top);
 }
 
-// --- Pan avec clic milieu, clic gauche sur fond, ou espace + clic ---
+// --- Pan, marquee de sélection, et clic sur fond ---
 function handleMouseDown(event: MouseEvent) {
   // Clic milieu pour pan
   if (event.button === 1) {
@@ -103,17 +119,27 @@ function handleMouseDown(event: MouseEvent) {
     return;
   }
 
-  // Clic gauche sur le fond pour pan
+  // Clic gauche sur le fond
   if (event.button === 0) {
     const target = event.target as Element;
-    // Vérifier si on clique sur le SVG, le groupe principal, ou le fond transparent
     const isCanvasClick =
       target.tagName === 'svg' ||
       target.classList.contains('canvas-root') ||
       target.classList.contains('canvas-background');
 
-    if (isCanvasClick) {
-      event.preventDefault();
+    if (!isCanvasClick) return;
+    event.preventDefault();
+
+    // Shift+drag = sélection rectangle (marquee).
+    // Sinon = pan classique.
+    if (event.shiftKey && svgRoot.value) {
+      const { x: worldX, y: worldY } = screenToWorld(event.clientX, event.clientY);
+      marquee.value = { startX: worldX, startY: worldY, endX: worldX, endY: worldY };
+    } else {
+      // Désélectionner si clic simple sur le fond sans modificateur
+      if (!event.ctrlKey && !event.metaKey) {
+        clearSelection();
+      }
       isPanning.value = true;
       lastMousePos.value = { x: event.clientX, y: event.clientY };
     }
@@ -129,6 +155,12 @@ function handleMouseMove(event: MouseEvent) {
     lastMousePos.value = { x: event.clientX, y: event.clientY };
   }
 
+  if (marquee.value && svgRoot.value) {
+    const { x: worldX, y: worldY } = screenToWorld(event.clientX, event.clientY);
+    marquee.value.endX = worldX;
+    marquee.value.endY = worldY;
+  }
+
   // Mise à jour de l'aperçu de connexion
   if (connectionMode.value && connectionSource.value && svgRoot.value) {
     const { x, y } = screenToLocalCoordinates(event.clientX, event.clientY, svgRoot.value, null);
@@ -139,8 +171,259 @@ function handleMouseMove(event: MouseEvent) {
   }
 }
 
-function handleMouseUp() {
+function handleMouseUp(event: MouseEvent) {
   isPanning.value = false;
+
+  if (marquee.value) {
+    commitMarqueeSelection(event.ctrlKey || event.metaKey);
+    marquee.value = null;
+  }
+}
+
+/** Convertit des coordonnées écran en coordonnées monde (après pan/zoom). */
+function screenToWorld(screenX: number, screenY: number): { x: number; y: number } {
+  if (!svgRoot.value) return { x: 0, y: 0 };
+  const { x, y } = screenToLocalCoordinates(screenX, screenY, svgRoot.value, null);
+  return {
+    x: (x - pan.value.x) / zoomLevel.value,
+    y: (y - pan.value.y) / zoomLevel.value,
+  };
+}
+
+/** Rectangle normalisé du marquee en espace monde. */
+const marqueeRect = computed(() => {
+  if (!marquee.value) return null;
+  const { startX, startY, endX, endY } = marquee.value;
+  return {
+    x: Math.min(startX, endX),
+    y: Math.min(startY, endY),
+    w: Math.abs(endX - startX),
+    h: Math.abs(endY - startY),
+  };
+});
+
+/** Commit la sélection courante à partir du rectangle marquee. */
+function commitMarqueeSelection(addToSelection: boolean) {
+  const rect = marqueeRect.value;
+  if (!rect || (rect.w < 2 && rect.h < 2)) return;
+
+  const hits: string[] = [];
+  for (const node of Object.values(graphStore.nodes)) {
+    const abs = getNodeAbsolutePosition(node.id);
+    if (!abs) continue;
+    // Intersection de bounding box (pas inclusion stricte, plus naturel).
+    const nx1 = abs.x;
+    const ny1 = abs.y;
+    const nx2 = abs.x + node.geometry.w;
+    const ny2 = abs.y + node.geometry.h;
+    const intersects =
+      nx1 < rect.x + rect.w &&
+      nx2 > rect.x &&
+      ny1 < rect.y + rect.h &&
+      ny2 > rect.y;
+    if (intersects) hits.push(node.id);
+  }
+
+  if (!addToSelection) selectedNodeIds.value.clear();
+  for (const id of hits) selectedNodeIds.value.add(id);
+}
+
+// --- Halos de groupes ---
+// Pour chaque groupe non vide, calculer la bounding box englobante de ses membres.
+interface GroupHalo {
+  id: string;
+  name: string;
+  color: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+const GROUP_PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+
+function colorForGroup(groupId: string, explicit?: string): string {
+  if (explicit) return explicit;
+  // Hash simple de l'ID pour palette stable.
+  let h = 0;
+  for (let i = 0; i < groupId.length; i++) h = (h * 31 + groupId.charCodeAt(i)) | 0;
+  return GROUP_PALETTE[Math.abs(h) % GROUP_PALETTE.length];
+}
+
+// Guides de magnétisme actifs, transformés en coordonnées monde pour le rendu.
+// Le snap opère en coordonnées locales au parent du noeud traîné ; on remonte
+// la hiérarchie pour obtenir la position absolue du guide.
+const worldSnapGuides = computed(() => {
+  return snapGuides.value.map((guide) => {
+    let offsetX = 0;
+    let offsetY = 0;
+    if (guide.sourceNodeId) {
+      const source = graphStore.nodes[guide.sourceNodeId];
+      if (source?.parentId) {
+        const parentAbs = getNodeAbsolutePosition(source.parentId);
+        if (parentAbs) {
+          offsetX = parentAbs.x;
+          offsetY = parentAbs.y;
+        }
+      }
+    }
+    return {
+      type: guide.type,
+      // Coordonnée monde de la ligne, extension sur tout l'écran via des valeurs
+      // géantes pour simplifier (le clipping viewport SVG fait le reste).
+      position: guide.position + (guide.type === 'vertical' ? offsetX : offsetY),
+    };
+  });
+});
+
+const groupHalos = computed((): GroupHalo[] => {
+  const halos: GroupHalo[] = [];
+  const PADDING = 8;
+  for (const group of groups.value.values()) {
+    if (group.nodeIds.size < 2) continue;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let found = false;
+    for (const nodeId of group.nodeIds) {
+      const node = graphStore.nodes[nodeId];
+      if (!node) continue;
+      const abs = getNodeAbsolutePosition(nodeId);
+      if (!abs) continue;
+      found = true;
+      minX = Math.min(minX, abs.x);
+      minY = Math.min(minY, abs.y);
+      maxX = Math.max(maxX, abs.x + node.geometry.w);
+      maxY = Math.max(maxY, abs.y + node.geometry.h);
+    }
+    if (!found) continue;
+
+    halos.push({
+      id: group.id,
+      name: group.name,
+      color: colorForGroup(group.id, group.color),
+      x: minX - PADDING,
+      y: minY - PADDING,
+      w: maxX - minX + PADDING * 2,
+      h: maxY - minY + PADDING * 2,
+    });
+  }
+  return halos;
+});
+
+// --- Menu contextuel ---
+function openNodeContextMenu(payload: { nodeId: string; x: number; y: number }) {
+  const { nodeId, x, y } = payload;
+  const hasMulti = selectedNodeIds.value.size > 1;
+  const gid = graphStore.nodes[nodeId]?.data?.groupId as string | undefined;
+
+  const items: ContextMenuItem[] = [
+    {
+      label: 'Dupliquer',
+      shortcut: 'Ctrl+D',
+      icon: '⎘',
+      action: () => { void duplicate(); },
+    },
+    {
+      label: 'Copier',
+      shortcut: 'Ctrl+C',
+      icon: '⧉',
+      action: () => copy(),
+    },
+    {
+      label: 'Couper',
+      shortcut: 'Ctrl+X',
+      icon: '✂',
+      action: () => cut(),
+    },
+    {
+      label: 'Coller',
+      shortcut: 'Ctrl+V',
+      icon: '📋',
+      disabled: !canPaste(),
+      action: () => { void paste(); },
+    },
+    { label: '', separator: true },
+    {
+      label: hasMulti ? 'Grouper' : 'Grouper (2+ requis)',
+      shortcut: 'Ctrl+G',
+      icon: '◫',
+      disabled: !hasMulti,
+      action: () => createGroupFromSelection(),
+    },
+    {
+      label: 'Dégrouper',
+      shortcut: 'Ctrl+Maj+G',
+      disabled: !gid,
+      action: () => { if (gid) dissolveGroup(gid); },
+    },
+    { label: '', separator: true },
+    {
+      label: 'Ajouter à la bibliothèque',
+      icon: '📚',
+      action: () => addSelectionToLibrary(nodeId),
+    },
+    { label: '', separator: true },
+    {
+      label: 'Supprimer',
+      shortcut: 'Suppr',
+      icon: '🗑',
+      danger: true,
+      action: () => {
+        for (const id of Array.from(selectedNodeIds.value)) graphStore.deleteNode(id);
+        clearSelection();
+      },
+    },
+  ];
+
+  contextMenu.value = { x, y, items };
+}
+
+function openBackgroundContextMenu(event: MouseEvent) {
+  event.preventDefault();
+  const items: ContextMenuItem[] = [
+    {
+      label: 'Coller ici',
+      shortcut: 'Ctrl+V',
+      icon: '📋',
+      disabled: !canPaste(),
+      action: () => { void paste(); },
+    },
+    { label: '', separator: true },
+    {
+      label: 'Tout sélectionner',
+      shortcut: 'Ctrl+A',
+      action: () => {
+        selectedNodeIds.value = new Set(Object.keys(graphStore.nodes));
+      },
+    },
+    {
+      label: 'Désélectionner',
+      shortcut: 'Échap',
+      disabled: selectedNodeIds.value.size === 0,
+      action: () => clearSelection(),
+    },
+  ];
+  contextMenu.value = { x: event.clientX, y: event.clientY, items };
+}
+
+async function addSelectionToLibrary(fallbackNodeId: string) {
+  // Si sélection multiple, on ajoute uniquement la racine cliquée pour
+  // éviter de polluer la bibliothèque avec des variantes incomplètes.
+  const node = graphStore.nodes[fallbackNodeId];
+  if (!node) return;
+  const defaultName = (node.data?.name as string) ?? 'Mon bloc';
+  const name = window.prompt('Nom du bloc dans la bibliothèque :', defaultName);
+  if (!name) return;
+  await libraryStore.addFromNode(node, name);
+}
+
+function handleSvgContextMenu(event: MouseEvent) {
+  const target = event.target as Element;
+  const isCanvasClick =
+    target.tagName === 'svg' ||
+    target.classList.contains('canvas-root') ||
+    target.classList.contains('canvas-background');
+  if (isCanvasClick) openBackgroundContextMenu(event);
 }
 
 // --- Mode connexion ---
@@ -166,17 +449,67 @@ function cancelConnection() {
 function handleKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     cancelConnection();
+    if (marquee.value) marquee.value = null;
+    if (searchOpen.value) searchOpen.value = false;
   }
+
+  // Ignorer les raccourcis pendant l'édition de texte, SAUF Ctrl+F
+  // qui doit toujours pouvoir ouvrir le panneau de recherche.
+  const target = event.target as HTMLElement | null;
+  const isEditingText =
+    target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+
+  // Ctrl+F : ouvrir la recherche globale (priorité sur la recherche navigateur).
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
+    event.preventDefault();
+    searchOpen.value = true;
+    return;
+  }
+
+  if (isEditingText) return;
+
+  // Ctrl+G : grouper la sélection. Ctrl+Shift+G : dégrouper.
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'g') {
+    event.preventDefault();
+    if (event.shiftKey) {
+      // Dégrouper : dissoudre chaque groupe touché par la sélection
+      const affected = new Set<string>();
+      for (const nodeId of selectedNodeIds.value) {
+        const gid = graphStore.nodes[nodeId]?.data?.groupId as string | undefined;
+        if (gid) affected.add(gid);
+      }
+      for (const gid of affected) dissolveGroup(gid);
+    } else if (selectedNodeIds.value.size >= 2) {
+      createGroupFromSelection();
+    }
+  }
+}
+
+// --- Taille du container (pour la minimap et zoom to fit) ---
+const container = ref<HTMLDivElement | null>(null);
+const containerSize = ref({ w: 800, h: 600 });
+let resizeObserver: ResizeObserver | null = null;
+
+function updateContainerSize() {
+  if (!container.value) return;
+  const rect = container.value.getBoundingClientRect();
+  containerSize.value = { w: rect.width, h: rect.height };
 }
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
   window.addEventListener('mouseup', handleMouseUp);
+  updateContainerSize();
+  if (container.value && 'ResizeObserver' in window) {
+    resizeObserver = new ResizeObserver(updateContainerSize);
+    resizeObserver.observe(container.value);
+  }
 });
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown);
   window.removeEventListener('mouseup', handleMouseUp);
+  resizeObserver?.disconnect();
 });
 
 // Exposer la ref SVG pour l'export
@@ -185,7 +518,8 @@ defineExpose({ svgRoot, pan, zoomLevel });
 
 <template>
   <div
-    class="flex-grow h-full bg-gray-50 overflow-hidden relative"
+    ref="container"
+    class="graph-canvas-container flex-grow h-full bg-gray-50 overflow-hidden relative"
     @drop="handleDrop"
     @dragover="handleDragOver"
   >
@@ -201,11 +535,32 @@ defineExpose({ svgRoot, pan, zoomLevel });
       ref="svgRoot"
       width="100%"
       height="100%"
+      role="application"
+      aria-label="Canevas d'édition de graphe"
       @wheel="handleWheel"
       @mousedown="handleMouseDown"
       @mousemove="handleMouseMove"
-      :class="{ 'cursor-grab': !isPanning, 'cursor-grabbing': isPanning }"
+      @contextmenu="handleSvgContextMenu"
+      :class="['graph-canvas', { 'cursor-grab': !isPanning, 'cursor-grabbing': isPanning }]"
     >
+      <!-- Définition de la grille (pattern SVG) -->
+      <defs>
+        <pattern
+          id="canvas-grid"
+          :width="snapConfig.gridSize"
+          :height="snapConfig.gridSize"
+          patternUnits="userSpaceOnUse"
+        >
+          <path
+            :d="`M ${snapConfig.gridSize} 0 L 0 0 0 ${snapConfig.gridSize}`"
+            fill="none"
+            stroke="#e5e7eb"
+            stroke-width="1"
+            vector-effect="non-scaling-stroke"
+          />
+        </pattern>
+      </defs>
+
       <g :transform="transform" class="canvas-root">
         <!-- Rectangle de fond pour capturer les clics sur le canvas vide -->
         <rect
@@ -213,9 +568,53 @@ defineExpose({ svgRoot, pan, zoomLevel });
           y="-10000"
           width="20000"
           height="20000"
-          fill="transparent"
+          :fill="snapConfig.snapToGrid ? 'url(#canvas-grid)' : 'transparent'"
           class="canvas-background"
         />
+
+        <!-- Guides de magnétisme actifs -->
+        <g class="snap-guides pointer-events-none">
+          <line
+            v-for="(guide, i) in worldSnapGuides"
+            :key="i"
+            :x1="guide.type === 'vertical' ? guide.position : -10000"
+            :y1="guide.type === 'horizontal' ? guide.position : -10000"
+            :x2="guide.type === 'vertical' ? guide.position : 10000"
+            :y2="guide.type === 'horizontal' ? guide.position : 10000"
+            stroke="#ec4899"
+            stroke-width="1"
+            stroke-dasharray="4,3"
+            vector-effect="non-scaling-stroke"
+          />
+        </g>
+
+        <!-- Halos de groupes (sous les noeuds, au-dessus du fond) -->
+        <g class="group-halos pointer-events-none">
+          <g v-for="halo in groupHalos" :key="halo.id">
+            <rect
+              :x="halo.x"
+              :y="halo.y"
+              :width="halo.w"
+              :height="halo.h"
+              :stroke="halo.color"
+              :fill="halo.color"
+              fill-opacity="0.08"
+              stroke-width="1.5"
+              stroke-dasharray="6,4"
+              rx="6"
+              vector-effect="non-scaling-stroke"
+            />
+            <text
+              :x="halo.x + 6"
+              :y="halo.y - 4"
+              :fill="halo.color"
+              font-size="11"
+              font-weight="600"
+            >
+              {{ halo.name }}
+            </text>
+          </g>
+        </g>
 
         <!-- Calque des arêtes (en dessous des noeuds) -->
         <EdgeLayer />
@@ -241,8 +640,58 @@ defineExpose({ svgRoot, pan, zoomLevel });
           :zoom-level="zoomLevel"
           @start-connection="startConnection"
           @finish-connection="finishConnection"
+          @context-menu="openNodeContextMenu"
+        />
+
+        <!-- Rectangle de sélection (marquee) -->
+        <rect
+          v-if="marqueeRect"
+          :x="marqueeRect.x"
+          :y="marqueeRect.y"
+          :width="marqueeRect.w"
+          :height="marqueeRect.h"
+          fill="#3b82f6"
+          fill-opacity="0.1"
+          stroke="#3b82f6"
+          stroke-width="1"
+          stroke-dasharray="4,3"
+          vector-effect="non-scaling-stroke"
+          class="pointer-events-none"
         />
       </g>
     </svg>
+
+    <!-- Fil d'Ariane (coin supérieur gauche) -->
+    <Breadcrumb
+      :canvas-width="containerSize.w"
+      :canvas-height="containerSize.h"
+    />
+
+    <!-- Gestionnaire de vues sauvegardées (coin supérieur droit) -->
+    <ViewsPanel />
+
+    <!-- Panneau de recherche (Ctrl+F) -->
+    <SearchPanel
+      v-if="searchOpen"
+      :canvas-width="containerSize.w"
+      :canvas-height="containerSize.h"
+      @close="searchOpen = false"
+    />
+
+    <!-- Minimap (coin inférieur droit) -->
+    <Minimap
+      class="absolute bottom-3 right-3 z-10"
+      :canvas-width="containerSize.w"
+      :canvas-height="containerSize.h"
+    />
+
+    <!-- Menu contextuel (clic droit) -->
+    <ContextMenu
+      v-if="contextMenu"
+      :x="contextMenu.x"
+      :y="contextMenu.y"
+      :items="contextMenu.items"
+      @close="closeContextMenu"
+    />
   </div>
 </template>
