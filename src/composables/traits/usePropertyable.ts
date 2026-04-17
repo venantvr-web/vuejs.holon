@@ -133,7 +133,7 @@ export interface PropertyableHandlers {
 }
 
 // Templates prédéfinis
-const PREDEFINED_TEMPLATES: PropertyTemplate[] = [
+export const PREDEFINED_TEMPLATES: PropertyTemplate[] = [
   {
     name: 'Archimate Element',
     description: 'Propriétés standard pour un élément Archimate',
