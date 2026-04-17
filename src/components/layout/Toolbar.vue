@@ -8,6 +8,7 @@ import { useViewport } from '../../composables/useViewport';
 import { getNodeAbsolutePosition } from '../../composables/traits/utils/trait-helpers';
 import ValidationPanel from '../canvas/ValidationPanel.vue';
 import VersionsPanel from '../canvas/VersionsPanel.vue';
+import ViewsPanel from '../canvas/ViewsPanel.vue';
 import SuggestionsPanel from '../canvas/SuggestionsPanel.vue';
 import ExportMenu from './ExportMenu.vue';
 import ImportButton from './ImportButton.vue';
@@ -113,50 +114,50 @@ function handleUngroup() {
 </script>
 
 <template>
-  <header class="bg-white border-b px-4 py-2 flex items-center justify-between">
-    <h1 class="text-lg font-semibold text-gray-800">Holon</h1>
+  <header class="app-surface border-b app-border px-4 py-2 flex items-center justify-between">
+    <h1 class="text-lg font-semibold app-fg">Holon</h1>
 
     <div class="flex items-center gap-2">
       <!-- Zoom -->
-      <div class="flex items-center bg-gray-100 rounded">
+      <div class="flex items-center app-surface-2 rounded">
         <button
           @click="zoomBy(1 / 1.2)"
-          class="px-2 py-1.5 text-sm hover:bg-gray-200 rounded-l"
+          class="px-2 py-1.5 text-sm app-hover rounded-l"
           title="Zoom arrière"
         >
           −
         </button>
-        <span class="px-2 text-xs font-mono min-w-[44px] text-center text-gray-700">{{ zoomPercent }}%</span>
+        <span class="px-2 text-xs font-mono min-w-[44px] text-center app-fg">{{ zoomPercent }}%</span>
         <button
           @click="zoomBy(1.2)"
-          class="px-2 py-1.5 text-sm hover:bg-gray-200"
+          class="px-2 py-1.5 text-sm app-hover"
           title="Zoom avant"
         >
           +
         </button>
         <button
           @click="handleFit"
-          class="px-2 py-1.5 text-sm hover:bg-gray-200 border-l border-gray-300"
+          class="px-2 py-1.5 text-sm app-hover border-l app-border"
           title="Ajuster à la sélection (ou tout)"
         >
           ⛶
         </button>
         <button
           @click="resetView"
-          class="px-2 py-1.5 text-sm hover:bg-gray-200 border-l border-gray-300 rounded-r"
+          class="px-2 py-1.5 text-sm app-hover border-l app-border rounded-r"
           title="Réinitialiser la vue (100 %)"
         >
           1:1
         </button>
       </div>
 
-      <span class="w-px h-5 bg-gray-300 mx-1"></span>
+      <span class="w-px h-5 bg-[var(--border)] mx-1"></span>
 
       <!-- Annuler / Rétablir -->
       <button
         @click="undo"
         :disabled="!canUndo"
-        class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         :title="`${t('toolbar.undo')} (Ctrl+Z)`"
       >
         ↶ {{ t('toolbar.undo') }}
@@ -164,19 +165,19 @@ function handleUngroup() {
       <button
         @click="redo"
         :disabled="!canRedo"
-        class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         :title="`${t('toolbar.redo')} (Ctrl+Maj+Z)`"
       >
         ↷ {{ t('toolbar.redo') }}
       </button>
 
-      <span class="w-px h-5 bg-gray-300 mx-1"></span>
+      <span class="w-px h-5 bg-[var(--border)] mx-1"></span>
 
       <!-- Magnétisme / Grille -->
       <button
         @click="toggleGrid"
         class="px-2 py-1.5 text-sm rounded transition-colors"
-        :class="snapConfig.snapToGrid ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-gray-100 hover:bg-gray-200'"
+        :class="snapConfig.snapToGrid ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'app-btn'"
         title="Afficher la grille et y aimanter (activé/désactivé)"
       >
         ▦ Grille
@@ -184,20 +185,20 @@ function handleUngroup() {
       <button
         @click="toggleNodeSnap"
         class="px-2 py-1.5 text-sm rounded transition-colors"
-        :class="snapConfig.snapToNodes ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-gray-100 hover:bg-gray-200'"
+        :class="snapConfig.snapToNodes ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'app-btn'"
         title="Aimanter sur les autres noeuds (Alt pendant le drag désactive temporairement)"
       >
         ⊹ Aimant
       </button>
 
-      <span class="w-px h-5 bg-gray-300 mx-1"></span>
+      <span class="w-px h-5 bg-[var(--border)] mx-1"></span>
 
       <!-- Auto-layout -->
       <div class="relative">
         <button
           @click="layoutMenuOpen = !layoutMenuOpen"
           :disabled="isLayouting"
-          class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors disabled:opacity-40"
+          class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40"
           title="Appliquer un algorithme de mise en page automatique"
         >
           <span v-if="isLayouting">⟳ Mise en page…</span>
@@ -205,20 +206,20 @@ function handleUngroup() {
         </button>
         <div
           v-if="layoutMenuOpen"
-          class="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded shadow-lg py-1 w-56 z-40 text-sm"
+          class="absolute top-full left-0 mt-1 app-surface border app-border rounded shadow-lg py-1 w-56 z-40 text-sm"
           @mouseleave="layoutMenuOpen = false"
         >
-          <div class="px-3 py-1 text-xs font-semibold text-gray-500 uppercase">Algorithmes</div>
+          <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">Algorithmes</div>
           <button
             v-for="l in LAYOUTS"
             :key="l.value"
-            class="w-full text-left px-3 py-1.5 hover:bg-gray-100"
+            class="w-full text-left px-3 py-1.5 app-hover"
             :class="{ 'bg-blue-50 font-medium': currentAlgorithm === l.value }"
             :title="l.hint"
             @click="runLayout(l.value)"
           >
             <div>{{ l.label }}</div>
-            <div class="text-xs text-gray-400">{{ l.hint }}</div>
+            <div class="text-xs app-subtle">{{ l.hint }}</div>
           </button>
         </div>
       </div>
@@ -228,44 +229,44 @@ function handleUngroup() {
         <button
           @click="alignMenuOpen = !alignMenuOpen"
           :disabled="!canAlign"
-          class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           title="Aligner et distribuer (2+ éléments requis)"
         >
           Aligner ▾
         </button>
         <div
           v-if="alignMenuOpen"
-          class="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded shadow-lg py-1 w-56 z-40 text-sm"
+          class="absolute top-full left-0 mt-1 app-surface border app-border rounded shadow-lg py-1 w-56 z-40 text-sm"
           @mouseleave="alignMenuOpen = false"
         >
-          <div class="px-3 py-1 text-xs font-semibold text-gray-500 uppercase">Aligner</div>
-          <button class="w-full text-left px-3 py-1 hover:bg-gray-100" @click="runAlign(() => alignNodes('left'))">Gauche</button>
-          <button class="w-full text-left px-3 py-1 hover:bg-gray-100" @click="runAlign(() => alignNodes('center-h'))">Centrer horizontalement</button>
-          <button class="w-full text-left px-3 py-1 hover:bg-gray-100" @click="runAlign(() => alignNodes('right'))">Droite</button>
-          <button class="w-full text-left px-3 py-1 hover:bg-gray-100" @click="runAlign(() => alignNodes('top'))">Haut</button>
-          <button class="w-full text-left px-3 py-1 hover:bg-gray-100" @click="runAlign(() => alignNodes('center-v'))">Centrer verticalement</button>
-          <button class="w-full text-left px-3 py-1 hover:bg-gray-100" @click="runAlign(() => alignNodes('bottom'))">Bas</button>
+          <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">Aligner</div>
+          <button class="w-full text-left px-3 py-1 app-hover" @click="runAlign(() => alignNodes('left'))">Gauche</button>
+          <button class="w-full text-left px-3 py-1 app-hover" @click="runAlign(() => alignNodes('center-h'))">Centrer horizontalement</button>
+          <button class="w-full text-left px-3 py-1 app-hover" @click="runAlign(() => alignNodes('right'))">Droite</button>
+          <button class="w-full text-left px-3 py-1 app-hover" @click="runAlign(() => alignNodes('top'))">Haut</button>
+          <button class="w-full text-left px-3 py-1 app-hover" @click="runAlign(() => alignNodes('center-v'))">Centrer verticalement</button>
+          <button class="w-full text-left px-3 py-1 app-hover" @click="runAlign(() => alignNodes('bottom'))">Bas</button>
 
-          <div class="my-1 border-t border-gray-200"></div>
-          <div class="px-3 py-1 text-xs font-semibold text-gray-500 uppercase">Distribuer</div>
-          <button class="w-full text-left px-3 py-1 hover:bg-gray-100 disabled:opacity-40" :disabled="!canDistribute" @click="runAlign(() => distributeNodes('horizontal'))">Horizontalement</button>
-          <button class="w-full text-left px-3 py-1 hover:bg-gray-100 disabled:opacity-40" :disabled="!canDistribute" @click="runAlign(() => distributeNodes('vertical'))">Verticalement</button>
+          <div class="my-1 border-t app-border"></div>
+          <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">Distribuer</div>
+          <button class="w-full text-left px-3 py-1 app-hover disabled:opacity-40" :disabled="!canDistribute" @click="runAlign(() => distributeNodes('horizontal'))">Horizontalement</button>
+          <button class="w-full text-left px-3 py-1 app-hover disabled:opacity-40" :disabled="!canDistribute" @click="runAlign(() => distributeNodes('vertical'))">Verticalement</button>
 
-          <div class="my-1 border-t border-gray-200"></div>
-          <div class="px-3 py-1 text-xs font-semibold text-gray-500 uppercase">Harmoniser taille</div>
-          <button class="w-full text-left px-3 py-1 hover:bg-gray-100" @click="runAlign(() => matchWidth())">Largeur</button>
-          <button class="w-full text-left px-3 py-1 hover:bg-gray-100" @click="runAlign(() => matchHeight())">Hauteur</button>
-          <button class="w-full text-left px-3 py-1 hover:bg-gray-100" @click="runAlign(() => matchSize())">Largeur et hauteur</button>
+          <div class="my-1 border-t app-border"></div>
+          <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">Harmoniser taille</div>
+          <button class="w-full text-left px-3 py-1 app-hover" @click="runAlign(() => matchWidth())">Largeur</button>
+          <button class="w-full text-left px-3 py-1 app-hover" @click="runAlign(() => matchHeight())">Hauteur</button>
+          <button class="w-full text-left px-3 py-1 app-hover" @click="runAlign(() => matchSize())">Largeur et hauteur</button>
         </div>
       </div>
 
-      <span class="w-px h-5 bg-gray-300 mx-1"></span>
+      <span class="w-px h-5 bg-[var(--border)] mx-1"></span>
 
       <!-- Grouper / Dégrouper -->
       <button
         @click="handleGroup"
         :disabled="!canGroup"
-        class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         title="Grouper la sélection (Ctrl+G)"
       >
         Grouper
@@ -273,13 +274,13 @@ function handleUngroup() {
       <button
         @click="handleUngroup"
         :disabled="!canUngroup"
-        class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         title="Dégrouper la sélection (Ctrl+Shift+G)"
       >
         Dégrouper
       </button>
 
-      <span class="w-px h-5 bg-gray-300 mx-1"></span>
+      <span class="w-px h-5 bg-[var(--border)] mx-1"></span>
 
       <!-- Validation -->
       <ValidationPanel />
@@ -290,7 +291,10 @@ function handleUngroup() {
       <!-- Versions -->
       <VersionsPanel />
 
-      <span class="w-px h-5 bg-gray-300 mx-1"></span>
+      <!-- Vues sauvegardées -->
+      <ViewsPanel />
+
+      <span class="w-px h-5 bg-[var(--border)] mx-1"></span>
 
       <!-- Import JSON -->
       <ImportButton />
@@ -298,7 +302,7 @@ function handleUngroup() {
       <!-- Export (PNG 96/200/300 DPI · SVG · PDF · JSON) -->
       <ExportMenu />
 
-      <span class="w-px h-5 bg-gray-300 mx-1"></span>
+      <span class="w-px h-5 bg-[var(--border)] mx-1"></span>
 
       <!-- Thème / Langue / Aide -->
       <ThemePicker />

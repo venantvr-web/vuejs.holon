@@ -67,13 +67,13 @@ function focusCrumb(crumb: Crumb) {
 <template>
   <nav
     v-if="crumbs.length > 1"
-    class="breadcrumb absolute top-3 left-3 z-10 bg-white/90 border border-gray-300 rounded shadow-md px-3 py-1.5 text-xs flex items-center gap-1 max-w-[60%] overflow-hidden"
+    class="breadcrumb absolute top-3 left-3 z-10 app-surface border app-border rounded shadow-md px-3 py-1.5 text-xs flex items-center gap-1 max-w-[60%] overflow-hidden"
   >
     <template v-for="(crumb, i) in crumbs" :key="crumb.id ?? 'root'">
-      <span v-if="i > 0" class="text-gray-400">›</span>
+      <span v-if="i > 0" class="app-subtle">›</span>
       <button
         class="truncate max-w-[160px] hover:text-blue-600 hover:underline"
-        :class="{ 'font-semibold text-gray-900': i === crumbs.length - 1, 'text-gray-600': i !== crumbs.length - 1 }"
+        :class="{ 'font-semibold app-fg': i === crumbs.length - 1, 'app-muted': i !== crumbs.length - 1 }"
         :title="crumb.label"
         @click="focusCrumb(crumb)"
       >

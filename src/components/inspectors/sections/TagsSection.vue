@@ -33,7 +33,7 @@ function isApplied(tagId: string): boolean {
 <template>
   <section class="p-3 border-b">
     <div class="flex items-center justify-between mb-2">
-      <h3 class="text-sm font-semibold text-gray-700">Tags</h3>
+      <h3 class="text-sm font-semibold app-fg">Tags</h3>
       <button
         class="text-xs text-blue-600 hover:text-blue-800 hover:underline"
         @click="picker = !picker"
@@ -61,11 +61,11 @@ function isApplied(tagId: string): boolean {
         </button>
       </span>
     </div>
-    <div v-else class="text-xs text-gray-400 italic mb-2">Aucun tag appliqué.</div>
+    <div v-else class="text-xs app-subtle italic mb-2">Aucun tag appliqué.</div>
 
     <!-- Picker -->
     <div v-if="picker" class="border rounded bg-gray-50 p-2 space-y-2">
-      <div class="text-xs font-medium text-gray-600">Tags disponibles</div>
+      <div class="text-xs font-medium app-muted">Tags disponibles</div>
       <div class="flex flex-wrap gap-1">
         <button
           v-for="tag in availableTags"
@@ -85,7 +85,7 @@ function isApplied(tagId: string): boolean {
       </div>
 
       <div class="border-t pt-2 space-y-1">
-        <div class="text-xs font-medium text-gray-600">Créer un tag</div>
+        <div class="text-xs font-medium app-muted">Créer un tag</div>
         <div class="flex items-center gap-2">
           <input
             v-model="newLabel"

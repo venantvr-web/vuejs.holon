@@ -100,12 +100,12 @@ export interface Theme {
   author?: string;
 }
 
-// Thèmes prédéfinis
+// Thèmes prédéfinis — réduits à deux modes : Jour (clair) et Nuit (sombre).
 export const PRESET_THEMES: Record<string, Theme> = {
   light: {
     id: 'light',
-    name: 'Clair',
-    description: 'Thème clair par défaut',
+    name: 'Jour',
+    description: 'Mode clair',
     isDark: false,
     colors: {
       primary: '#3b82f6',
@@ -150,8 +150,8 @@ export const PRESET_THEMES: Record<string, Theme> = {
 
   dark: {
     id: 'dark',
-    name: 'Sombre',
-    description: 'Thème sombre',
+    name: 'Nuit',
+    description: 'Mode sombre',
     isDark: true,
     colors: {
       primary: '#60a5fa',
@@ -193,149 +193,40 @@ export const PRESET_THEMES: Record<string, Theme> = {
       arrowColor: '#94a3b8',
     },
   },
-
-  archimate: {
-    id: 'archimate',
-    name: 'Archimate Standard',
-    description: 'Couleurs officielles Archimate',
-    isDark: false,
-    colors: {
-      primary: '#1a73e8',
-      secondary: '#5f6368',
-      accent: '#9334e6',
-      background: '#ffffff',
-      surface: '#f8f9fa',
-      text: '#202124',
-      textMuted: '#5f6368',
-      border: '#dadce0',
-      success: '#34a853',
-      warning: '#fbbc04',
-      error: '#ea4335',
-      info: '#4285f4',
-      selection: '#1a73e8',
-      hover: '#f1f3f4',
-      focus: '#e8f0fe',
-    },
-    archimate: {
-      business: '#FFFFB5',
-      application: '#B5FFFF',
-      technology: '#C9E7B7',
-      motivation: '#CCCCFF',
-      strategy: '#F5DEAA',
-      implementation: '#FFE0E0',
-      physical: '#C9E7B7',
-      generic: '#E0E0E0',
-    },
-    nodeDefaults: {
-      fill: '#ffffff',
-      stroke: '#000000',
-      strokeWidth: 1,
-      opacity: 1,
-      borderRadius: 0,
-    },
-    edgeDefaults: {
-      stroke: '#000000',
-      strokeWidth: 1,
-      arrowColor: '#000000',
-    },
-  },
-
-  blueprint: {
-    id: 'blueprint',
-    name: 'Blueprint',
-    description: 'Style plan technique',
-    isDark: true,
-    colors: {
-      primary: '#4fc3f7',
-      secondary: '#81d4fa',
-      accent: '#00bcd4',
-      background: '#0d47a1',
-      surface: '#1565c0',
-      text: '#e3f2fd',
-      textMuted: '#90caf9',
-      border: '#1976d2',
-      success: '#00e676',
-      warning: '#ffea00',
-      error: '#ff5252',
-      info: '#40c4ff',
-      selection: '#4fc3f7',
-      hover: '#1976d2',
-      focus: '#1e88e5',
-    },
-    archimate: {
-      business: '#fff59d',
-      application: '#80deea',
-      technology: '#a5d6a7',
-      motivation: '#b39ddb',
-      strategy: '#ffcc80',
-      implementation: '#ef9a9a',
-      physical: '#a5d6a7',
-      generic: '#bdbdbd',
-    },
-    nodeDefaults: {
-      fill: 'transparent',
-      stroke: '#4fc3f7',
-      strokeWidth: 2,
-      opacity: 1,
-      borderRadius: 0,
-    },
-    edgeDefaults: {
-      stroke: '#4fc3f7',
-      strokeWidth: 1,
-      arrowColor: '#4fc3f7',
-    },
-  },
-
-  highContrast: {
-    id: 'highContrast',
-    name: 'Contraste élevé',
-    description: 'Pour accessibilité',
-    isDark: true,
-    colors: {
-      primary: '#ffff00',
-      secondary: '#00ffff',
-      accent: '#ff00ff',
-      background: '#000000',
-      surface: '#1a1a1a',
-      text: '#ffffff',
-      textMuted: '#cccccc',
-      border: '#ffffff',
-      success: '#00ff00',
-      warning: '#ffff00',
-      error: '#ff0000',
-      info: '#00ffff',
-      selection: '#ffff00',
-      hover: '#333333',
-      focus: '#444444',
-    },
-    archimate: {
-      business: '#ffff00',
-      application: '#00ffff',
-      technology: '#00ff00',
-      motivation: '#ff00ff',
-      strategy: '#ffa500',
-      implementation: '#ff6666',
-      physical: '#00ff00',
-      generic: '#ffffff',
-    },
-    nodeDefaults: {
-      fill: '#000000',
-      stroke: '#ffffff',
-      strokeWidth: 2,
-      opacity: 1,
-      borderRadius: 0,
-    },
-    edgeDefaults: {
-      stroke: '#ffffff',
-      strokeWidth: 2,
-      arrowColor: '#ffffff',
-    },
-  },
 };
 
-// État global du thème
-const currentThemeId = ref<string>('light');
+// État global du thème, persisté en localStorage pour survivre aux reloads.
+const THEME_STORAGE_KEY = 'holon.theme';
+function loadInitialTheme(): string {
+  try {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored === 'light' || stored === 'dark') return stored;
+  } catch { /* ignore */ }
+  // Sinon : respecter la préférence système (prefers-color-scheme).
+  try {
+    if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) return 'dark';
+  } catch { /* ignore */ }
+  return 'light';
+}
+
+const currentThemeId = ref<string>(loadInitialTheme());
 const customThemes = ref<Map<string, Theme>>(new Map());
+
+// Application immédiate du thème au chargement du module (avant tout mount),
+// pour éviter un flash visuel au démarrage.
+function applyThemeToDocument(themeId: string) {
+  const theme = PRESET_THEMES[themeId] ?? PRESET_THEMES.light;
+  const root = document.documentElement;
+  for (const [key, value] of Object.entries(theme.colors)) {
+    root.style.setProperty(`--color-${key}`, value);
+  }
+  for (const [key, value] of Object.entries(theme.archimate)) {
+    root.style.setProperty(`--archimate-${key}`, value);
+  }
+  if (theme.isDark) root.classList.add('dark');
+  else root.classList.remove('dark');
+}
+applyThemeToDocument(currentThemeId.value);
 
 /**
  * État réactif géré par le trait Themeable.
@@ -416,6 +307,7 @@ export function useThemeable(): ThemeableState & ThemeableHandlers {
     if (PRESET_THEMES[themeId] || customThemes.value.has(themeId)) {
       currentThemeId.value = themeId;
       applyThemeToCss();
+      try { localStorage.setItem(THEME_STORAGE_KEY, themeId); } catch { /* ignore */ }
     }
   }
 

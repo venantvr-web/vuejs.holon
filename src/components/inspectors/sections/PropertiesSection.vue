@@ -71,7 +71,7 @@ function inputTypeFor(type: PropertyType): string {
 <template>
   <section class="p-3 border-b">
     <div class="flex items-center justify-between mb-2">
-      <h3 class="text-sm font-semibold text-gray-700">Propriétés personnalisées</h3>
+      <h3 class="text-sm font-semibold app-fg">Propriétés personnalisées</h3>
       <button
         class="text-xs text-blue-600 hover:text-blue-800 hover:underline"
         @click="adderOpen = !adderOpen"
@@ -88,7 +88,7 @@ function inputTypeFor(type: PropertyType): string {
         class="group flex items-start gap-2"
       >
         <div class="flex-1 min-w-0">
-          <label class="block text-xs text-gray-500 truncate">
+          <label class="block text-xs app-subtle truncate">
             {{ prop.label ?? prop.key }}
             <span v-if="prop.required" class="text-red-500">*</span>
           </label>
@@ -124,10 +124,10 @@ function inputTypeFor(type: PropertyType): string {
         </button>
       </div>
     </div>
-    <div v-else class="text-xs text-gray-400 italic mb-2">Aucune propriété.</div>
+    <div v-else class="text-xs app-subtle italic mb-2">Aucune propriété.</div>
 
     <!-- Templates -->
-    <div v-if="templates.length > 0" class="text-xs text-gray-500 mb-2">
+    <div v-if="templates.length > 0" class="text-xs app-subtle mb-2">
       Modèles :
       <button
         v-for="tpl in templates"

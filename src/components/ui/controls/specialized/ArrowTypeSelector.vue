@@ -74,7 +74,7 @@ function handleChange(event: Event) {
     <select
       :value="modelValue"
       @change="handleChange"
-      class="w-full px-2 py-1.5 border border-gray-300 rounded text-xs focus:border-blue-500 focus:outline-none bg-white"
+      class="w-full px-2 py-1.5 border app-border rounded text-xs focus:border-blue-500 focus:outline-none"
     >
       <template v-if="showCategories">
         <!-- Avec catégories (optgroups) -->

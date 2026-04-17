@@ -24,7 +24,7 @@ const MATURITIES = Object.values(ModelingMaturity);
 
 <template>
   <section class="p-3 border-b">
-    <h3 class="text-sm font-semibold mb-2 text-gray-700">Maturité du modèle</h3>
+    <h3 class="text-sm font-semibold mb-2 app-fg">Maturité du modèle</h3>
 
     <!-- État courant -->
     <div class="flex items-center gap-2 mb-3">
@@ -40,7 +40,7 @@ const MATURITIES = Object.values(ModelingMaturity);
 
     <!-- Échelle -->
     <div class="mb-3">
-      <label class="block text-xs text-gray-600 mb-1">Niveau</label>
+      <label class="block text-xs app-muted mb-1">Niveau</label>
       <div class="grid grid-cols-7 gap-0.5">
         <button
           v-for="level in MATURITIES"
@@ -62,7 +62,7 @@ const MATURITIES = Object.values(ModelingMaturity);
 
     <!-- Confiance (0–100%) -->
     <div>
-      <label class="flex items-center justify-between text-xs text-gray-600 mb-1">
+      <label class="flex items-center justify-between text-xs app-muted mb-1">
         <span>Confiance</span>
         <span class="font-mono">{{ Math.round(confidence * 100) }} %</span>
       </label>

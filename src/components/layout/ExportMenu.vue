@@ -81,28 +81,28 @@ function exportJson() {
     </button>
     <div
       v-if="isOpen"
-      class="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg py-1 w-64 z-40 text-sm"
+      class="absolute top-full right-0 mt-1 app-surface border app-border rounded shadow-lg py-1 w-64 z-40 text-sm"
       @mouseleave="isOpen = false"
     >
-      <div class="px-3 py-1 text-xs font-semibold text-gray-500 uppercase">Image raster</div>
-      <button class="w-full text-left px-3 py-1.5 hover:bg-gray-100" @click="exportPng(1, '96 DPI')">
+      <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">Image raster</div>
+      <button class="w-full text-left px-3 py-1.5 app-hover" @click="exportPng(1, '96 DPI')">
         PNG · Écran (96 DPI)
       </button>
-      <button class="w-full text-left px-3 py-1.5 hover:bg-gray-100" @click="exportPng(2, '200 DPI')">
+      <button class="w-full text-left px-3 py-1.5 app-hover" @click="exportPng(2, '200 DPI')">
         PNG · Haute qualité (200 DPI)
       </button>
-      <button class="w-full text-left px-3 py-1.5 hover:bg-gray-100" @click="exportPng(3.125, '300 DPI')">
+      <button class="w-full text-left px-3 py-1.5 app-hover" @click="exportPng(3.125, '300 DPI')">
         PNG · Impression (300 DPI)
       </button>
 
-      <div class="my-1 border-t border-gray-200"></div>
-      <div class="px-3 py-1 text-xs font-semibold text-gray-500 uppercase">Vectoriel / Document</div>
-      <button class="w-full text-left px-3 py-1.5 hover:bg-gray-100" @click="exportSvg">SVG</button>
-      <button class="w-full text-left px-3 py-1.5 hover:bg-gray-100" @click="exportPdf">PDF</button>
+      <div class="my-1 border-t app-border"></div>
+      <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">Vectoriel / Document</div>
+      <button class="w-full text-left px-3 py-1.5 app-hover" @click="exportSvg">SVG</button>
+      <button class="w-full text-left px-3 py-1.5 app-hover" @click="exportPdf">PDF</button>
 
-      <div class="my-1 border-t border-gray-200"></div>
-      <div class="px-3 py-1 text-xs font-semibold text-gray-500 uppercase">Données</div>
-      <button class="w-full text-left px-3 py-1.5 hover:bg-gray-100" @click="exportJson">
+      <div class="my-1 border-t app-border"></div>
+      <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">Données</div>
+      <button class="w-full text-left px-3 py-1.5 app-hover" @click="exportJson">
         JSON (v1.0, avec métadonnées)
       </button>
     </div>

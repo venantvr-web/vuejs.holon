@@ -170,7 +170,7 @@ onUnmounted(() => {
 <template>
   <svg
     ref="root"
-    class="minimap bg-white/90 border border-gray-300 rounded shadow-md cursor-pointer select-none"
+    class="minimap app-surface border app-border rounded shadow-md cursor-pointer select-none"
     :width="MINIMAP_W"
     :height="MINIMAP_H"
     @mousedown="handleMouseDown"

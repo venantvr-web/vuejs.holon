@@ -47,10 +47,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="views-panel absolute top-3 right-3 z-10">
+  <div class="views-panel relative">
     <button
       @click="isOpen = !isOpen"
-      class="px-3 py-1.5 text-sm bg-white/90 border border-gray-300 rounded shadow-md hover:bg-gray-100"
+      class="px-3 py-1.5 text-sm app-btn rounded transition-colors"
       title="Gérer les vues sauvegardées"
     >
       🗂 Vues ({{ savedViews.length }})
@@ -58,31 +58,31 @@ onBeforeUnmount(() => {
 
     <div
       v-if="isOpen"
-      class="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg w-64 max-h-[300px] overflow-y-auto"
+      class="absolute top-full right-0 mt-1 app-surface border app-border rounded shadow-lg w-64 max-h-[300px] overflow-y-auto z-40"
       @mousedown.stop
     >
-      <div class="p-2 border-b flex items-center justify-between">
-        <span class="text-sm font-semibold">Vues sauvegardées</span>
+      <div class="p-2 border-b app-border flex items-center justify-between">
+        <span class="text-sm font-semibold app-fg">Vues sauvegardées</span>
         <button
           @click="handleSave"
-          class="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+          class="text-xs text-blue-600 hover:underline"
           title="Sauvegarder la vue courante"
         >
           + Sauver
         </button>
       </div>
 
-      <ul v-if="savedViews.length > 0" class="divide-y divide-gray-100">
+      <ul v-if="savedViews.length > 0" class="divide-y divide-[var(--border)]">
         <li
           v-for="view in savedViews"
           :key="view.id"
-          class="group flex items-center justify-between px-3 py-1.5 hover:bg-gray-50 cursor-pointer"
-          :class="{ 'bg-blue-50': activeView?.id === view.id }"
+          class="group flex items-center justify-between px-3 py-1.5 app-hover cursor-pointer"
+          :class="{ 'app-selected': activeView?.id === view.id }"
           @click="handleRestore(view.id)"
         >
           <div class="flex-1 min-w-0">
-            <div class="text-sm truncate">{{ view.name }}</div>
-            <div class="text-xs text-gray-400 font-mono">
+            <div class="text-sm truncate app-fg">{{ view.name }}</div>
+            <div class="text-xs app-subtle font-mono">
               {{ Math.round(view.zoom * 100) }} %
             </div>
           </div>
@@ -95,7 +95,7 @@ onBeforeUnmount(() => {
           </button>
         </li>
       </ul>
-      <div v-else class="p-3 text-xs text-gray-400 text-center">
+      <div v-else class="p-3 text-xs app-subtle text-center">
         Aucune vue sauvegardée.<br />
         Cliquez sur « + Sauver » pour capturer la vue courante.
       </div>

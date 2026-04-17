@@ -3,6 +3,8 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import { useEdgeSelectionState } from '../../composables/useEdgeSelection';
+import { useViewport } from '../../composables/useViewport';
+import { useThemeable } from '../../composables/traits/useThemeable';
 import {
   calculateEdgeIntersection,
   getNodeCenter,
@@ -12,6 +14,14 @@ import {
   ARROW_MARKERS,
 } from '../../composables/traits';
 import type { Edge } from '../../types';
+
+const { zoomLevel } = useViewport();
+const { isDarkMode } = useThemeable();
+// Facteur inverse du zoom pour conserver la taille d'écran des libellés.
+const fontMul = computed(() => 1 / zoomLevel.value);
+// Couleur neutre des arêtes et marqueurs adaptée au thème.
+const edgeColor = computed(() => (isDarkMode.value ? '#d1d5db' : '#333'));
+const edgeColorHex = computed(() => edgeColor.value.replace('#', ''));
 
 const props = defineProps<{
   pendingConnection?: {
@@ -279,15 +289,19 @@ function getEdgeArrowProps(edge: Edge) {
   };
 }
 
-// Helper pour générer le SVG d'un marker
-function generateMarkerSVG(type: ArrowType, size: number, color: string, position: 'start' | 'end'): string {
+// Helper pour générer le SVG d'un marker.
+// Les générateurs d'ARROW_MARKERS produisent un SVG avec `currentColor` pour
+// fill/stroke. On remplace cette valeur par la couleur demandée afin que le
+// marqueur suive EXACTEMENT la couleur du trait, indépendamment de l'héritage
+// CSS (sinon le trait est en gris-thème mais la flèche reste noire).
+function generateMarkerSVG(type: ArrowType, size: number, color: string, _position: 'start' | 'end'): string {
   if (type === ArrowType.None) return '';
 
   const markerGenerator = ARROW_MARKERS[type];
   if (!markerGenerator) return '';
 
   const isFilled = type.includes('filled');
-  return markerGenerator(size, isFilled);
+  return markerGenerator(size, isFilled).replace(/currentColor/g, color);
 }
 
 // Helper pour calculer refX/refY selon le type
@@ -333,18 +347,14 @@ const allMarkers = computed(() => {
   Object.values(graphStore.edges).forEach(edge => {
     const { startArrow, endArrow, size } = getEdgeArrowProps(edge);
 
-    // Markers normaux (gris foncé)
-    addMarker(startArrow, '#333', 'start', size);
-    addMarker(endArrow, '#333', 'end', size);
+    // Markers normaux (couleur thème)
+    addMarker(startArrow, edgeColor.value, 'start', size);
+    addMarker(endArrow, edgeColor.value, 'end', size);
 
     // Markers sélectionnés (bleu)
     addMarker(startArrow, '#3b82f6', 'start', size);
     addMarker(endArrow, '#3b82f6', 'end', size);
   });
-
-  // Toujours ajouter les markers par défaut pour la connexion en cours
-  addMarker(ArrowType.Dot, '#3b82f6', 'start', 10);
-  addMarker(ArrowType.Arrow, '#3b82f6', 'end', 10);
 
   return markers;
 });
@@ -356,7 +366,7 @@ function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean
 
   if (type === ArrowType.None) return '';
 
-  const color = isSelected ? '#3b82f6' : '#333';
+  const color = isSelected ? '#3b82f6' : edgeColor.value;
   const id = `arrow-${type}-${position}-${color.replace('#', '')}`;
   return `url(#${id})`;
 }
@@ -413,7 +423,7 @@ function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean
       <path
         :d="edge.path"
         fill="none"
-        :stroke="selectedEdgeId === edge.id ? '#3b82f6' : '#333'"
+        :stroke="selectedEdgeId === edge.id ? '#3b82f6' : edgeColor"
         stroke-width="2"
         :stroke-dasharray="edge.strokeDasharray"
         vector-effect="non-scaling-stroke"
@@ -429,21 +439,21 @@ function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean
         @dblclick="startEditingLabel(edge.id, $event)"
       >
         <rect
-          :x="edge.midX - (edge.label.length * 3.5) - 4"
-          :y="edge.midY - 10"
-          :width="edge.label.length * 7 + 8"
-          height="18"
+          :x="edge.midX - (edge.label.length * 3.5 + 4) * fontMul"
+          :y="edge.midY - 10 * fontMul"
+          :width="(edge.label.length * 7 + 8) * fontMul"
+          :height="18 * fontMul"
           fill="#ffffff"
           :stroke="selectedEdgeId === edge.id ? '#3b82f6' : '#d1d5db'"
           stroke-width="1"
-          rx="3"
+          :rx="3 * fontMul"
           vector-effect="non-scaling-stroke"
         />
         <text
           :x="edge.midX"
-          :y="edge.midY + 4"
+          :y="edge.midY + 4 * fontMul"
           text-anchor="middle"
-          font-size="12"
+          :font-size="12 * fontMul"
           :fill="selectedEdgeId === edge.id ? '#1e40af' : '#333'"
           class="select-none pointer-events-none"
         >
@@ -458,22 +468,22 @@ function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean
         @dblclick="startEditingLabel(edge.id, $event)"
       >
         <rect
-          :x="edge.midX - 24"
-          :y="edge.midY - 10"
-          width="48"
-          height="18"
+          :x="edge.midX - 24 * fontMul"
+          :y="edge.midY - 10 * fontMul"
+          :width="48 * fontMul"
+          :height="18 * fontMul"
           fill="#ffffff"
           stroke="#3b82f6"
           stroke-width="1"
           stroke-dasharray="3,2"
-          rx="3"
+          :rx="3 * fontMul"
           vector-effect="non-scaling-stroke"
         />
         <text
           :x="edge.midX"
-          :y="edge.midY + 4"
+          :y="edge.midY + 4 * fontMul"
           text-anchor="middle"
-          font-size="11"
+          :font-size="11 * fontMul"
           fill="#9ca3af"
           font-style="italic"
           class="select-none pointer-events-none"
