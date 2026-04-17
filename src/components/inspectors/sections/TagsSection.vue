@@ -35,7 +35,7 @@ function isApplied(tagId: string): boolean {
     <div class="flex items-center justify-between mb-2">
       <h3 class="text-sm font-semibold app-fg">Tags</h3>
       <button
-        class="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+        class="text-xs app-link"
         @click="picker = !picker"
       >
         {{ picker ? 'Fermer' : '+ Ajouter' }}

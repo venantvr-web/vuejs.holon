@@ -180,7 +180,6 @@ export {
   PRESET_THEMES,
   type Theme,
   type ColorPalette,
-  type ArchimateLayerColors,
   type ThemeableState,
   type ThemeableHandlers
 } from './useThemeable';

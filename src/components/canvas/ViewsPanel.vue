@@ -65,7 +65,7 @@ onBeforeUnmount(() => {
         <span class="text-sm font-semibold app-fg">Vues sauvegardées</span>
         <button
           @click="handleSave"
-          class="text-xs text-blue-600 hover:underline"
+          class="text-xs app-link"
           title="Sauvegarder la vue courante"
         >
           + Sauver
