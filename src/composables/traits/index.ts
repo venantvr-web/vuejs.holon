@@ -355,3 +355,31 @@ export {
   type ConstrainableState,
   type ConstrainableHandlers
 } from './useConstrainable';
+
+// === Intelligence et Polish (Sprint 8) ===
+
+// Suggestions intelligentes
+export {
+  useSuggestable,
+  type SuggestionType,
+  type SuggestionPriority,
+  type Suggestion,
+  type ConnectionSuggestion,
+  type PatternSuggestion,
+  type SuggestionContext,
+  type SuggestableState,
+  type SuggestableHandlers
+} from './useSuggestable';
+
+// Gestion de versions
+export {
+  useVersionable,
+  type GraphSnapshot,
+  type ChangeType,
+  type NodeChange,
+  type EdgeChange,
+  type GraphDiff,
+  type VersionBranch,
+  type VersionableState,
+  type VersionableHandlers
+} from './useVersionable';
