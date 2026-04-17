@@ -96,7 +96,7 @@ export interface TaggableHandlers {
 }
 
 // Tags prédéfinis
-const PREDEFINED_TAGS: Tag[] = [
+export const PREDEFINED_TAGS: Tag[] = [
   { id: 'important', label: 'Important', color: '#f44336', description: 'Élément important' },
   { id: 'todo', label: 'À faire', color: '#ff9800', description: 'Action à réaliser' },
   { id: 'done', label: 'Terminé', color: '#4caf50', description: 'Travail complété' },
