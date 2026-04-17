@@ -125,7 +125,92 @@ export const ARCHIMATE_TYPES = {
 } as const;
 
 export type ArchimateLayer = keyof typeof ARCHIMATE_TYPES;
-export type ArchimateType = string;
+
+/**
+ * Enum des types Archimate (pour compatibilité avec nouveaux traits).
+ */
+export enum ArchimateType {
+  // Business Layer
+  BUSINESS_ACTOR = 'business-actor',
+  BUSINESS_ROLE = 'business-role',
+  BUSINESS_COLLABORATION = 'business-collaboration',
+  BUSINESS_INTERFACE = 'business-interface',
+  BUSINESS_PROCESS = 'business-process',
+  BUSINESS_FUNCTION = 'business-function',
+  BUSINESS_INTERACTION = 'business-interaction',
+  BUSINESS_EVENT = 'business-event',
+  BUSINESS_SERVICE = 'business-service',
+  BUSINESS_OBJECT = 'business-object',
+  BUSINESS_CONTRACT = 'business-contract',
+  BUSINESS_REPRESENTATION = 'business-representation',
+  BUSINESS_PRODUCT = 'business-product',
+
+  // Application Layer
+  APPLICATION_COMPONENT = 'application-component',
+  APPLICATION_COLLABORATION = 'application-collaboration',
+  APPLICATION_INTERFACE = 'application-interface',
+  APPLICATION_FUNCTION = 'application-function',
+  APPLICATION_INTERACTION = 'application-interaction',
+  APPLICATION_PROCESS = 'application-process',
+  APPLICATION_EVENT = 'application-event',
+  APPLICATION_SERVICE = 'application-service',
+  DATA_OBJECT = 'application-data-object',
+
+  // Technology Layer
+  TECHNOLOGY_NODE = 'technology-node',
+  TECHNOLOGY_DEVICE = 'technology-device',
+  TECHNOLOGY_SYSTEM_SOFTWARE = 'technology-system-software',
+  TECHNOLOGY_COLLABORATION = 'technology-collaboration',
+  TECHNOLOGY_INTERFACE = 'technology-interface',
+  TECHNOLOGY_PATH = 'technology-path',
+  TECHNOLOGY_COMMUNICATION_NETWORK = 'technology-communication-network',
+  TECHNOLOGY_FUNCTION = 'technology-function',
+  TECHNOLOGY_PROCESS = 'technology-process',
+  TECHNOLOGY_INTERACTION = 'technology-interaction',
+  TECHNOLOGY_EVENT = 'technology-event',
+  TECHNOLOGY_SERVICE = 'technology-service',
+  TECHNOLOGY_ARTIFACT = 'technology-artifact',
+
+  // Motivation Layer
+  STAKEHOLDER = 'motivation-stakeholder',
+  DRIVER = 'motivation-driver',
+  ASSESSMENT = 'motivation-assessment',
+  GOAL = 'motivation-goal',
+  OUTCOME = 'motivation-outcome',
+  PRINCIPLE = 'motivation-principle',
+  REQUIREMENT = 'motivation-requirement',
+  CONSTRAINT = 'motivation-constraint',
+  MEANING = 'motivation-meaning',
+  VALUE = 'motivation-value',
+
+  // Strategy Layer
+  RESOURCE = 'strategy-resource',
+  CAPABILITY = 'strategy-capability',
+  COURSE_OF_ACTION = 'strategy-course-of-action',
+  VALUE_STREAM = 'strategy-value-stream',
+
+  // Implementation & Migration
+  WORK_PACKAGE = 'implementation-work-package',
+  DELIVERABLE = 'implementation-deliverable',
+  IMPLEMENTATION_EVENT = 'implementation-event',
+  PLATEAU = 'implementation-plateau',
+  GAP = 'implementation-gap',
+
+  // Physical Layer
+  EQUIPMENT = 'physical-equipment',
+  FACILITY = 'physical-facility',
+  DISTRIBUTION_NETWORK = 'physical-distribution-network',
+  MATERIAL = 'physical-material',
+
+  // Generic / Other
+  GROUPING = 'generic-grouping',
+  LOCATION = 'generic-location',
+  JUNCTION = 'generic-junction',
+  NOTE = 'generic-note',
+}
+
+// Type alias pour compatibilité avec code existant
+export type ArchimateTypeString = string;
 
 /**
  * Options de configuration pour le trait Typeable.
