@@ -124,6 +124,63 @@ html, body, #app {
   background-color: rgba(96, 165, 250, 0.22);
 }
 
+/* Rendu du guide utilisateur. Les styles scopés Vue ne s'appliquent pas au
+   contenu `v-html`, d'où la règle globale sur `.user-manual-content`. */
+.user-manual-content {
+  color: var(--fg);
+  line-height: 1.55;
+}
+.user-manual-content h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1rem 0 0.5rem;
+  color: var(--fg);
+}
+.user-manual-content h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0.8rem 0 0.4rem;
+  color: var(--fg);
+}
+.user-manual-content h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0.6rem 0 0.3rem;
+  color: var(--fg-muted);
+}
+.user-manual-content p {
+  margin: 0.5rem 0;
+  color: var(--fg);
+}
+.user-manual-content ul,
+.user-manual-content ol {
+  margin: 0.5rem 0 0.5rem 1.25rem;
+  padding: 0;
+}
+.user-manual-content ul { list-style: disc; }
+.user-manual-content ol { list-style: decimal; }
+.user-manual-content li {
+  margin: 0.25rem 0;
+  color: var(--fg);
+}
+.user-manual-content strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+.user-manual-content em {
+  font-style: italic;
+  color: var(--fg-muted);
+}
+.user-manual-content code {
+  padding: 1px 5px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85em;
+  color: var(--fg);
+}
+
 /* Lien textuel : couleur d'accent + soulignement au survol. */
 .app-link {
   color: var(--accent);

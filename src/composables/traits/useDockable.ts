@@ -210,28 +210,32 @@ export function useDockable(options: DockableOptions): DockableState & DockableH
   const dockingError = ref<string | null>(null);
   const localRules = ref<ContainmentRule | null>(options.containmentRules ?? null);
 
-  // Récupère les règles effectives pour ce noeud
+  // Récupère les règles effectives pour ce noeud.
+  //
+  // Philosophie Holon (graphe récursif) : TOUT noeud peut contenir tout autre
+  // noeud. Les règles Archimate strictes (business-actor.canContain = false
+  // par exemple) sont en conflit avec ce principe → on les IGNORE pour le
+  // docking. Elles restent disponibles dans DEFAULT_CONTAINMENT_RULES pour
+  // un éventuel mode de validation strict (useValidatable), mais ne bloquent
+  // pas l'insertion hiérarchique.
+  //
+  // Priorité : règles locales explicitement posées > règles par node.type
+  // (shape/container, permissives) > défaut permissif.
   function getEffectiveRules(): ContainmentRule {
     const node = graphStore.nodes[options.nodeId.value];
     if (!node) return { canContain: false, canBeContained: true };
 
-    // Priorité : règles locales > règles par type Archimate > règles par type de noeud > défaut
     if (localRules.value) {
       return localRules.value;
-    }
-
-    const archimateType = node.data?.archimateType as string | undefined;
-    if (archimateType && DEFAULT_CONTAINMENT_RULES[archimateType]) {
-      return DEFAULT_CONTAINMENT_RULES[archimateType];
     }
 
     if (DEFAULT_CONTAINMENT_RULES[node.type]) {
       return DEFAULT_CONTAINMENT_RULES[node.type];
     }
 
-    // Défaut : les containers peuvent contenir, les autres non
+    // Défaut permissif : tout noeud peut contenir et être contenu.
     return {
-      canContain: node.type === 'container',
+      canContain: true,
       canBeContained: true,
     };
   }
@@ -288,20 +292,18 @@ export function useDockable(options: DockableOptions): DockableState & DockableH
       return { allowed: false, reason: 'Cet élément ne peut pas être contenu dans un autre' };
     }
 
-    // Vérifier si le parent peut contenir des enfants
-    const parentArchimateType = parent.data?.archimateType as string | undefined;
-    const parentRules = parentArchimateType
-      ? DEFAULT_CONTAINMENT_RULES[parentArchimateType]
-      : DEFAULT_CONTAINMENT_RULES[parent.type];
+    // Philosophie Holon : on ignore l'archimateType pour le docking (cf.
+    // getEffectiveRules). Seul le node.type (shape/container, tous deux
+    // permissifs par défaut) décide si le parent accepte des enfants.
+    const parentRules = DEFAULT_CONTAINMENT_RULES[parent.type];
 
-    if (parentRules && !parentRules.canContain) {
+    if (parentRules && parentRules.canContain === false) {
       return { allowed: false, reason: 'Le parent ne peut pas contenir d\'éléments' };
     }
 
-    // Vérifier les types de parents autorisés
+    // Vérifier les types de parents autorisés (si la règle locale du noeud l'impose).
     if (rules.allowedParentTypes && rules.allowedParentTypes.length > 0) {
-      const parentType = parentArchimateType ?? parent.type;
-      if (!rules.allowedParentTypes.includes(parentType)) {
+      if (!rules.allowedParentTypes.includes(parent.type)) {
         return {
           allowed: false,
           reason: `Type de parent non autorisé. Autorisés: ${rules.allowedParentTypes.join(', ')}`
@@ -311,8 +313,7 @@ export function useDockable(options: DockableOptions): DockableState & DockableH
 
     // Vérifier les types de parents interdits
     if (rules.forbiddenParentTypes && rules.forbiddenParentTypes.length > 0) {
-      const parentType = parentArchimateType ?? parent.type;
-      if (rules.forbiddenParentTypes.includes(parentType)) {
+      if (rules.forbiddenParentTypes.includes(parent.type)) {
         return { allowed: false, reason: 'Type de parent interdit' };
       }
     }
@@ -367,12 +368,9 @@ export function useDockable(options: DockableOptions): DockableState & DockableH
       return { allowed: false, reason: `Nombre max d'enfants (${rules.maxChildren}) atteint` };
     }
 
-    // Vérifier les types d'enfants autorisés
-    const childArchimateType = child.data?.archimateType as string | undefined;
-    const childType = childArchimateType ?? child.type;
-
+    // Vérifier les types d'enfants autorisés / interdits (basé sur node.type).
     if (rules.allowedChildTypes && rules.allowedChildTypes.length > 0) {
-      if (!rules.allowedChildTypes.includes(childType)) {
+      if (!rules.allowedChildTypes.includes(child.type)) {
         return {
           allowed: false,
           reason: `Type d'enfant non autorisé. Autorisés: ${rules.allowedChildTypes.join(', ')}`
@@ -380,9 +378,8 @@ export function useDockable(options: DockableOptions): DockableState & DockableH
       }
     }
 
-    // Vérifier les types d'enfants interdits
     if (rules.forbiddenChildTypes && rules.forbiddenChildTypes.length > 0) {
-      if (rules.forbiddenChildTypes.includes(childType)) {
+      if (rules.forbiddenChildTypes.includes(child.type)) {
         return { allowed: false, reason: 'Type d\'enfant interdit' };
       }
     }
@@ -435,17 +432,17 @@ export function useDockable(options: DockableOptions): DockableState & DockableH
     }
   }
 
-  // Helper pour vérifier si un parent peut accepter un enfant
-  function canAcceptChildForParent(parentId: string, childId: string): { allowed: boolean; reason?: string } {
+  // Helper pour vérifier si un parent peut accepter un enfant.
+  // Comme getEffectiveRules, on ignore l'archimateType au profit du node.type
+  // permissif. Holon est récursif par nature : tout noeud peut en contenir
+  // tout autre, peu importe son étiquette Archimate.
+  function canAcceptChildForParent(parentId: string, _childId: string): { allowed: boolean; reason?: string } {
     const parent = graphStore.nodes[parentId];
     if (!parent) return { allowed: false, reason: 'Parent introuvable' };
 
-    const parentArchimateType = parent.data?.archimateType as string | undefined;
-    const parentRules = parentArchimateType
-      ? DEFAULT_CONTAINMENT_RULES[parentArchimateType]
-      : DEFAULT_CONTAINMENT_RULES[parent.type] ?? { canContain: parent.type === 'container' };
+    const parentRules = DEFAULT_CONTAINMENT_RULES[parent.type] ?? { canContain: true };
 
-    if (!parentRules.canContain) {
+    if (parentRules.canContain === false) {
       return { allowed: false, reason: 'Le parent ne peut pas contenir d\'éléments' };
     }
 
@@ -456,15 +453,6 @@ export function useDockable(options: DockableOptions): DockableState & DockableH
       ).length;
       if (parentChildCount >= parentRules.maxChildren) {
         return { allowed: false, reason: `Le parent a atteint son max d'enfants (${parentRules.maxChildren})` };
-      }
-    }
-
-    // Vérifier les types d'enfants autorisés par le parent
-    const child = graphStore.nodes[childId];
-    if (child && parentRules.allowedChildTypes && parentRules.allowedChildTypes.length > 0) {
-      const childType = (child.data?.archimateType as string) ?? child.type;
-      if (!parentRules.allowedChildTypes.includes(childType)) {
-        return { allowed: false, reason: 'Type d\'enfant non accepté par ce parent' };
       }
     }
 

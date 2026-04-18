@@ -34,6 +34,7 @@ const emit = defineEmits<{
   (e: 'start-connection', nodeId: string): void;
   (e: 'finish-connection', nodeId: string): void;
   (e: 'context-menu', payload: { nodeId: string; x: number; y: number }): void;
+  (e: 'open-type-picker', payload: { nodeId: string; x: number; y: number }): void;
 }>();
 
 const graphStore = useGraphStore();
@@ -106,6 +107,29 @@ const isHovered = ref(false);
 const showShapePanel = ref(false);
 const showTypePanel = ref(false);
 const node = computed(() => graphStore.nodes[props.nodeId]);
+
+/**
+ * Résolution du fill à 3 niveaux :
+ * 1. Si l'utilisateur a explicitement surchargé la couleur (data.customFill true)
+ *    → utiliser currentStyle.fill tel quel.
+ * 2. Sinon si un type Archimate est défini → utiliser le tint teinté.
+ * 3. Sinon → currentStyle.fill (valeur par défaut du noeud).
+ */
+const resolvedFill = computed(() => {
+  const customFill = node.value?.data?.customFill as boolean | undefined;
+  if (customFill) return currentStyle.value.fill;
+  if (typeable.typeTintFill.value) return typeable.typeTintFill.value;
+  return currentStyle.value.fill;
+});
+
+function handleOpenTypePicker(event: MouseEvent) {
+  event.stopPropagation();
+  emit('open-type-picker', {
+    nodeId: props.nodeId,
+    x: event.clientX,
+    y: event.clientY,
+  });
+}
 
 // Pour la récursion
 const ChildNodeRenderer = defineAsyncComponent(() => import('./NodeRenderer.vue'));
@@ -291,8 +315,8 @@ async function addToLibrary() {
     <path
       v-if="shapeable.shape.value !== NodeShape.Rectangle && shapeable.shape.value !== NodeShape.RoundedRectangle"
       :d="shapePath"
-      :fill="typeable.typeColor.value !== '#ffffff' ? typeable.typeColor.value : currentStyle.fill"
-      :stroke="connectionMode ? '#3b82f6' : (isDropTarget ? '#22c55e' : (isSelected ? '#3b82f6' : currentStyle.stroke))"
+      :fill="resolvedFill"
+      :stroke="connectionMode ? 'var(--accent-selected)' : (isDropTarget ? 'var(--accent-valid)' : (isSelected ? 'var(--accent-selected)' : currentStyle.stroke))"
       :stroke-width="connectionMode || isDropTarget || isSelected ? 3 : currentStyle.strokeWidth"
       :stroke-dasharray="isDropTarget ? '5,5' : 'none'"
       :opacity="currentStyle.opacity"
@@ -303,8 +327,8 @@ async function addToLibrary() {
       v-else
       :width="node.geometry.w"
       :height="node.geometry.h"
-      :fill="typeable.typeColor.value !== '#ffffff' ? typeable.typeColor.value : currentStyle.fill"
-      :stroke="connectionMode ? '#3b82f6' : (isDropTarget ? '#22c55e' : (isSelected ? '#3b82f6' : currentStyle.stroke))"
+      :fill="resolvedFill"
+      :stroke="connectionMode ? 'var(--accent-selected)' : (isDropTarget ? 'var(--accent-valid)' : (isSelected ? 'var(--accent-selected)' : currentStyle.stroke))"
       :stroke-width="connectionMode || isDropTarget || isSelected ? 3 : currentStyle.strokeWidth"
       :stroke-dasharray="isDropTarget ? '5,5' : 'none'"
       :opacity="currentStyle.opacity"
@@ -361,19 +385,33 @@ async function addToLibrary() {
         @start-connection="$emit('start-connection', $event)"
         @finish-connection="$emit('finish-connection', $event)"
         @context-menu="$emit('context-menu', $event)"
+        @open-type-picker="$emit('open-type-picker', $event)"
       />
     </template>
 
-    <!-- Icône type Archimate -->
-    <text
+    <!-- Grand picto Archimate en filigrane au centre du noeud.
+         Le wrapper <g opacity=...> est crucial : les emojis couleur (COLR)
+         ne respectent PAS fill-opacity, il faut l'opacité sur le groupe.
+         IMPORTANT : pointer-events="none" DOIT être posé AUSSI sur le <text>
+         car cette propriété CSS ne s'hérite pas en SVG. Sans ça, le picto
+         intercepte la souris pendant un drag et casse le docking. -->
+    <g
       v-if="typeable.typeIcon.value"
-      :x="8 * fontMul"
-      :y="node.geometry.h - 8 * fontMul"
-      :font-size="16 * fontMul"
-      class="pointer-events-none"
+      opacity="0.18"
+      pointer-events="none"
+      class="select-none"
     >
-      {{ typeable.typeIcon.value }}
-    </text>
+      <text
+        :x="node.geometry.w / 2"
+        :y="node.geometry.h / 2"
+        text-anchor="middle"
+        dominant-baseline="central"
+        :font-size="Math.min(node.geometry.w, node.geometry.h) * 0.5"
+        pointer-events="none"
+      >
+        {{ typeable.typeIcon.value }}
+      </text>
+    </g>
 
     <!-- Label (mode lecture) -->
     <text
@@ -416,11 +454,12 @@ async function addToLibrary() {
       class="pointer-events-none"
     />
 
-    <!-- Indicateur verrouillé -->
+    <!-- Indicateur verrouillé (coin inférieur gauche — le coin inférieur
+         droit est occupé par le picker de type + la poignée resize). -->
     <text
       v-if="lockable.isLocked.value"
-      :x="node.geometry.w - 20 * fontMul"
-      :y="node.geometry.h - 8 * fontMul"
+      :x="12 * fontMul"
+      :y="node.geometry.h - 12 * fontMul"
       :font-size="12 * fontMul"
       fill="#666"
       class="pointer-events-none"
@@ -436,7 +475,7 @@ async function addToLibrary() {
     >
       <circle
         :cx="node.geometry.w / 2"
-        :cy="-8 * fontMul"
+        :cy="-12 * fontMul"
         :r="8 * fontMul"
         fill="#e5e7eb"
         stroke="#9ca3af"
@@ -444,8 +483,9 @@ async function addToLibrary() {
       />
       <text
         :x="node.geometry.w / 2"
-        :y="-4 * fontMul"
+        :y="-12 * fontMul"
         text-anchor="middle"
+        dominant-baseline="central"
         :font-size="10 * fontMul"
         font-weight="bold"
         fill="#666"
@@ -455,7 +495,7 @@ async function addToLibrary() {
       </text>
     </g>
 
-    <!-- Icône commentaire "?" (coin supérieur droit) -->
+    <!-- Icône commentaire "?" (coin supérieur droit, chip à 12 du coin) -->
     <g
       v-if="isHovered || isSelected || tooltip.hasComment.value"
       class="cursor-pointer"
@@ -464,17 +504,18 @@ async function addToLibrary() {
       @mouseleave="tooltip.hideTooltip"
     >
       <circle
-        :cx="node.geometry.w - 10 * fontMul"
-        :cy="10 * fontMul"
+        :cx="node.geometry.w - 12 * fontMul"
+        :cy="12 * fontMul"
         :r="8 * fontMul"
         :fill="tooltip.hasComment.value ? '#fbbf24' : '#e5e7eb'"
         :stroke="tooltip.hasComment.value ? '#f59e0b' : '#9ca3af'"
         stroke-width="1"
       />
       <text
-        :x="node.geometry.w - 10 * fontMul"
-        :y="14 * fontMul"
+        :x="node.geometry.w - 12 * fontMul"
+        :y="12 * fontMul"
         text-anchor="middle"
+        dominant-baseline="central"
         :font-size="12 * fontMul"
         font-weight="bold"
         :fill="tooltip.hasComment.value ? '#78350f' : '#6b7280'"
@@ -493,7 +534,7 @@ async function addToLibrary() {
       height="120"
     >
       <div
-        class="bg-yellow-50 border border-yellow-300 rounded-lg shadow-lg p-2 text-sm app-fg"
+        class="bg-yellow-50 border border-yellow-300 rounded-lg shadow-lg p-2 text-sm text-yellow-900"
         @mouseenter="tooltip.showTooltip"
         @mouseleave="tooltip.hideTooltip"
       >
@@ -507,10 +548,10 @@ async function addToLibrary() {
       :x="node.geometry.w + 8"
       y="-10"
       width="220"
-      height="140"
+      height="170"
     >
       <div
-        class="app-surface border border-blue-400 rounded-lg shadow-lg p-2"
+        class="app-surface border border-blue-400 rounded-lg shadow-lg p-2 pb-3"
         @mousedown.stop
         @click.stop
       >
@@ -522,7 +563,7 @@ async function addToLibrary() {
           placeholder="Ajouter un commentaire..."
           autofocus
         />
-        <div class="flex justify-between mt-2">
+        <div class="flex justify-between mt-2 mb-1">
           <button
             v-if="tooltip.hasComment.value"
             @click="tooltip.deleteComment"
@@ -558,6 +599,35 @@ async function addToLibrary() {
       class="cursor-crosshair hover:r-8 transition-all"
       @mousedown.stop.prevent="$emit('start-connection', nodeId)"
     />
+
+    <!-- Sélecteur de type Archimate (top-right, aligné sur la rangée
+         du chip commentaire, à gauche de lui). Émet vers GraphCanvas qui
+         rend la popup en overlay HTML (taille constante au zoom). -->
+    <g
+      v-if="(isHovered || isSelected) && !isResizing"
+      class="cursor-pointer"
+      @click="handleOpenTypePicker"
+    >
+      <circle
+        :cx="node.geometry.w - 32 * fontMul"
+        :cy="12 * fontMul"
+        :r="8 * fontMul"
+        :fill="typeable.typeColor.value !== '#ffffff' ? typeable.typeColor.value : '#e5e7eb'"
+        stroke="#9ca3af"
+        stroke-width="1"
+        vector-effect="non-scaling-stroke"
+      />
+      <text
+        :x="node.geometry.w - 32 * fontMul"
+        :y="12 * fontMul"
+        text-anchor="middle"
+        dominant-baseline="central"
+        :font-size="12 * fontMul"
+        class="pointer-events-none select-none"
+      >
+        {{ typeable.typeIcon.value || '🏷' }}
+      </text>
+    </g>
 
     <!-- Poignée de redimensionnement -->
     <g
