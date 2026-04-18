@@ -124,7 +124,7 @@ const NodeSchema = z.object({
   type: z.enum(['container', 'shape']),
   geometry: GeometrySchema,
   styling: StylingSchema,
-  data: z.record(z.unknown()).default({}),
+  data: z.record(z.string(), z.unknown()).default({}),
 });
 
 /**
@@ -135,7 +135,7 @@ const EdgeSchema = z.object({
   sourceId: z.string().min(1),
   targetId: z.string().min(1),
   routing: z.enum(['straight', 'orthogonal']).default('straight'),
-  data: z.record(z.unknown()).optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
@@ -146,7 +146,7 @@ const ImportDataSchema = z.object({
   exportedAt: z.string().optional(),
   nodes: z.array(NodeSchema),
   edges: z.array(EdgeSchema),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
@@ -179,9 +179,11 @@ export function useImportable(): ImportableHandlers {
       return { valid: true, errors: [] };
     } catch (error) {
       if (error instanceof z.ZodError) {
+        // Zod 4 : l'API expose `issues`, pas `errors`. Ce bug masquait
+        // silencieusement les validations en lançant une TypeError.
         return {
           valid: false,
-          errors: error.errors.map((e) => `${e.path.join('.')}: ${e.message}`),
+          errors: error.issues.map((e) => `${e.path.join('.')}: ${e.message}`),
         };
       }
       return { valid: false, errors: ['Erreur de validation inconnue'] };

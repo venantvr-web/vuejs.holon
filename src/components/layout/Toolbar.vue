@@ -15,9 +15,12 @@ import ImportButton from './ImportButton.vue';
 import ThemePicker from './ThemePicker.vue';
 import LanguagePicker from './LanguagePicker.vue';
 import ShortcutsHelp from './ShortcutsHelp.vue';
+import UserManualModal from './UserManualModal.vue';
 import { useI18n } from '../../composables/useI18n';
 
 const { t } = useI18n();
+
+const manualOpen = ref(false);
 
 const graphStore = useGraphStore();
 const { selectedNodeIds } = useSelectionState();
@@ -115,7 +118,14 @@ function handleUngroup() {
 
 <template>
   <header class="app-surface border-b app-border px-4 py-2 flex items-center justify-between">
-    <h1 class="text-lg font-semibold app-fg">Holon</h1>
+    <button
+      type="button"
+      class="text-lg font-semibold app-fg mr-6 hover:text-blue-500 transition-colors cursor-pointer"
+      title="Guide utilisateur (onboarding)"
+      @click="manualOpen = true"
+    >
+      Holon
+    </button>
 
     <div class="flex items-center gap-2">
       <!-- Zoom -->
@@ -318,5 +328,8 @@ function handleUngroup() {
         {{ t('toolbar.clear') }}
       </button>
     </div>
+
+    <!-- Guide utilisateur (ouvert via clic sur « Holon ») -->
+    <UserManualModal v-if="manualOpen" @close="manualOpen = false" />
   </header>
 </template>

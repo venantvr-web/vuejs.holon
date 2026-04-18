@@ -232,8 +232,10 @@ export interface TypeableState {
   typeLabel: Ref<string>;
   /** Icône associée au type */
   typeIcon: Ref<string>;
-  /** Couleur de la couche ArchiMate */
+  /** Couleur de la couche ArchiMate (hex opaque) */
   typeColor: Ref<string>;
+  /** Couleur de remplissage teintée (rgba avec alpha) pour le fond du noeud */
+  typeTintFill: Ref<string>;
 }
 
 /**
@@ -306,28 +308,34 @@ export function useTypeable(options: TypeableOptions): TypeableState & TypeableH
     return ARCHIMATE_TYPES[layer]?.color ?? '#ffffff';
   });
 
+  /**
+   * Convertit un hex (#RGB ou #RRGGBB) en rgba avec l'alpha donné.
+   * Utilisé pour générer le fond teinté des noeuds Archimate : la couleur
+   * de la layer reste reconnaissable tout en laissant passer le fond.
+   */
+  function hexToRgba(hex: string, alpha: number): string {
+    let h = hex.replace('#', '');
+    if (h.length === 3) h = h.split('').map(c => c + c).join('');
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  const typeTintFill = computed(() => {
+    const color = typeColor.value;
+    if (color === '#ffffff') return '';
+    return hexToRgba(color, 0.35);
+  });
+
   function setType(type: ArchimateType) {
     const node = graphStore.nodes[options.nodeId.value];
     if (!node) return;
-
-    // Déterminer la couleur du layer
-    let layerColor = '#ffffff';
-    for (const config of Object.values(ARCHIMATE_TYPES)) {
-      if (type in config.types) {
-        layerColor = config.color;
-        break;
-      }
-    }
-
+    // On stocke uniquement le type — le fill reste piloté par le trait
+    // Styleable + le tint Archimate est calculé à l'affichage. Permet à
+    // l'utilisateur de surcharger la couleur sans perdre le type.
     graphStore.updateNode(options.nodeId.value, {
-      data: {
-        ...node.data,
-        archimateType: type,
-      },
-      styling: {
-        ...node.styling,
-        fill: layerColor,
-      },
+      data: { ...node.data, archimateType: type },
     });
   }
 
@@ -349,6 +357,7 @@ export function useTypeable(options: TypeableOptions): TypeableState & TypeableH
     typeLabel,
     typeIcon,
     typeColor,
+    typeTintFill,
     setType,
     clearType,
   };

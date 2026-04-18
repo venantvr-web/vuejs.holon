@@ -3,6 +3,8 @@
 <script setup lang="ts">
 import { toRef, ref, computed } from 'vue';
 import { useStyleable, PRESET_COLORS } from '../../../composables/traits/useStyleable';
+import { useTypeable } from '../../../composables/traits/useTypeable';
+import { useGraphStore } from '../../../stores/graph';
 
 interface Props {
   nodeId: string;
@@ -10,6 +12,7 @@ interface Props {
 const props = defineProps<Props>();
 const nodeIdRef = toRef(props, 'nodeId');
 
+const graphStore = useGraphStore();
 const {
   currentStyle,
   updateFill,
@@ -18,20 +21,38 @@ const {
   updateOpacity,
 } = useStyleable({ nodeId: nodeIdRef });
 
-// Palette : 4 lignes de couleurs principales (blanc → gris → rouge → orange …)
-// soit 40 teintes, largement suffisant pour un usage courant.
+// Lecture du type Archimate pour permettre à l'utilisateur de revenir à la
+// couleur de la layer s'il a surchargé manuellement.
+const { archimateType, typeLabel, typeTintFill } = useTypeable({ nodeId: nodeIdRef });
+
+const node = computed(() => graphStore.nodes[props.nodeId]);
+const hasCustomFill = computed(() => node.value?.data?.customFill === true);
+
+// Quand l'utilisateur pique une couleur, on active le flag customFill pour
+// qu'il prenne le pas sur le tint Archimate dans NodeRenderer.
+function pickFill(color: string) {
+  updateFill(color);
+  flagCustomFill(true);
+}
+
+function flagCustomFill(value: boolean) {
+  const current = node.value;
+  if (!current) return;
+  graphStore.updateNode(props.nodeId, {
+    data: { ...(current.data ?? {}), customFill: value },
+  });
+}
+
+function clearCustomFill() {
+  flagCustomFill(false);
+}
+
 const PALETTE = computed(() => PRESET_COLORS.slice(0, 60));
 
-// Modèle bidirectionnel pour les pickers HTML <input type="color">
-const customFill = ref<string>(currentStyle.value.fill);
-const customStroke = ref<string>(currentStyle.value.stroke);
-
 function applyCustomFill(value: string) {
-  customFill.value = value;
-  updateFill(value);
+  pickFill(value);
 }
 function applyCustomStroke(value: string) {
-  customStroke.value = value;
   updateStroke(value);
 }
 </script>
@@ -40,6 +61,24 @@ function applyCustomStroke(value: string) {
   <section class="p-3 border-b">
     <h3 class="text-sm font-semibold mb-2 app-fg">Apparence</h3>
 
+    <!-- Indicateur Archimate + retour à la couleur de layer -->
+    <div
+      v-if="archimateType && hasCustomFill"
+      class="mb-3 p-2 rounded border app-border flex items-center justify-between gap-2"
+      :style="{ backgroundColor: typeTintFill }"
+    >
+      <span class="text-xs app-fg truncate">
+        Type {{ typeLabel }} — couleur surchargée
+      </span>
+      <button
+        class="text-xs app-link flex-shrink-0"
+        title="Revenir à la couleur de la layer Archimate"
+        @click="clearCustomFill"
+      >
+        Revenir au type
+      </button>
+    </div>
+
     <!-- Couleur de fond -->
     <label class="block text-xs app-muted mb-1">Couleur de fond</label>
     <div class="grid grid-cols-10 gap-0.5 mb-2">
@@ -47,17 +86,17 @@ function applyCustomStroke(value: string) {
         v-for="color in PALETTE"
         :key="'fill-' + color"
         :style="{ backgroundColor: color }"
-        class="w-5 h-5 rounded-sm border border-gray-300 hover:scale-125 transition-transform"
-        :class="{ 'ring-2 ring-blue-500 z-10 relative': currentStyle.fill === color }"
+        class="w-5 h-5 rounded-sm border app-border hover:scale-125 transition-transform"
+        :class="{ 'ring-2 ring-blue-500 z-10 relative': currentStyle.fill === color && hasCustomFill }"
         :title="color"
-        @click="updateFill(color)"
+        @click="pickFill(color)"
       />
     </div>
     <div class="flex items-center gap-2 mb-3">
       <input
         type="color"
         :value="currentStyle.fill"
-        class="w-7 h-7 border border-gray-300 rounded cursor-pointer"
+        class="w-7 h-7 border app-border rounded cursor-pointer"
         title="Couleur personnalisée"
         @input="applyCustomFill(($event.target as HTMLInputElement).value)"
       />
@@ -71,7 +110,7 @@ function applyCustomStroke(value: string) {
         v-for="color in PALETTE"
         :key="'stroke-' + color"
         :style="{ backgroundColor: color }"
-        class="w-5 h-5 rounded-sm border border-gray-300 hover:scale-125 transition-transform"
+        class="w-5 h-5 rounded-sm border app-border hover:scale-125 transition-transform"
         :class="{ 'ring-2 ring-blue-500 z-10 relative': currentStyle.stroke === color }"
         :title="color"
         @click="updateStroke(color)"
@@ -81,7 +120,7 @@ function applyCustomStroke(value: string) {
       <input
         type="color"
         :value="currentStyle.stroke"
-        class="w-7 h-7 border border-gray-300 rounded cursor-pointer"
+        class="w-7 h-7 border app-border rounded cursor-pointer"
         title="Couleur personnalisée"
         @input="applyCustomStroke(($event.target as HTMLInputElement).value)"
       />

@@ -4,6 +4,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import { ref } from 'vue';
 import { useGraphStore } from '../../../stores/graph';
 import { useDraggable } from '../useDraggable';
+import { useSnapState } from '../useSnappable';
 
 // Mock de la base de données
 vi.mock('../../../db', () => ({
@@ -36,6 +37,10 @@ describe('useDraggable', () => {
     addEventListenerSpy = vi.spyOn(window, 'addEventListener');
     removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
     dispatchEventSpy = vi.spyOn(window, 'dispatchEvent');
+    // Désactiver le magnétisme pour que les tests mesurent le drag brut.
+    const { config } = useSnapState();
+    config.value.snapToGrid = false;
+    config.value.snapToNodes = false;
   });
 
   afterEach(() => {

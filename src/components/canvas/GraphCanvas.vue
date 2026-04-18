@@ -11,6 +11,8 @@ import EdgeLayer from './EdgeLayer.vue';
 import Minimap from './Minimap.vue';
 import Breadcrumb from './Breadcrumb.vue';
 import SearchPanel from './SearchPanel.vue';
+import NodeArchimateTypePicker from './NodeArchimateTypePicker.vue';
+import { useTypeable, type ArchimateType } from '../../composables/traits/useTypeable';
 import ContextMenu, { type ContextMenuItem } from '../ui/ContextMenu.vue';
 
 const graphStore = useGraphStore();
@@ -34,6 +36,42 @@ function closeContextMenu() {
 
 // Panneau de recherche (Ctrl+F).
 const searchOpen = ref(false);
+
+// Popup du sélecteur Archimate (rendu en overlay HTML pour garder une taille
+// constante au zoom). x/y sont en coordonnées écran.
+const typePicker = ref<{ nodeId: string; x: number; y: number } | null>(null);
+
+function openTypePicker(payload: { nodeId: string; x: number; y: number }) {
+  typePicker.value = payload;
+}
+
+function closeTypePicker() {
+  typePicker.value = null;
+}
+
+/** Applique le type Archimate au noeud cible et réinitialise customFill
+ *  pour que le tint de la layer prenne effet immédiatement. */
+function applyTypeToNode(nodeId: string, type: string | null) {
+  const nodeIdRef = computed(() => nodeId);
+  const { setType, clearType } = useTypeable({ nodeId: nodeIdRef });
+  if (type === null) {
+    clearType();
+  } else {
+    setType(type as ArchimateType);
+    // Reset du flag customFill pour que le nouveau tint soit visible.
+    const node = graphStore.nodes[nodeId];
+    if (node?.data?.customFill) {
+      graphStore.updateNode(nodeId, {
+        data: { ...(node.data ?? {}), customFill: false },
+      });
+    }
+  }
+}
+
+const typePickerCurrent = computed(() => {
+  if (!typePicker.value) return null;
+  return graphStore.nodes[typePicker.value.nodeId]?.data?.archimateType ?? null;
+});
 
 const svgRoot = ref<SVGSVGElement | null>(null);
 
@@ -640,6 +678,7 @@ defineExpose({ svgRoot, pan, zoomLevel });
           @start-connection="startConnection"
           @finish-connection="finishConnection"
           @context-menu="openNodeContextMenu"
+          @open-type-picker="openTypePicker"
         />
 
         <!-- Calque des arêtes (au-dessus des noeuds pour que les flèches
@@ -734,5 +773,19 @@ defineExpose({ svgRoot, pan, zoomLevel });
       :items="contextMenu.items"
       @close="closeContextMenu"
     />
+
+    <!-- Sélecteur de type Archimate, rendu en HTML overlay pour taille
+         constante au zoom. Positionné à droite du chip qui a émis l'event. -->
+    <div
+      v-if="typePicker"
+      class="fixed z-40"
+      :style="{ left: (typePicker.x + 8) + 'px', top: (typePicker.y - 200) + 'px' }"
+    >
+      <NodeArchimateTypePicker
+        :current-type="typePickerCurrent"
+        @select="(t) => typePicker && applyTypeToNode(typePicker.nodeId, t)"
+        @close="closeTypePicker"
+      />
+    </div>
   </div>
 </template>
