@@ -426,7 +426,12 @@ const VALIDATION_RULES: ValidationRule[] = [
 
         for (const neighbor of graph[nodeId] || []) {
           if (!visited.has(neighbor)) {
-            if (detectCycle(neighbor, [...path, neighbor])) return true;
+            if (detectCycle(neighbor, [...path, neighbor])) {
+              // Dépiler avant chaque retour anticipé : un noeud laissé dans
+              // recStack provoquait de faux cycles sur les parcours suivants.
+              recStack.delete(nodeId);
+              return true;
+            }
           } else if (recStack.has(neighbor)) {
             issues.push({
               ruleId: 'HIER-001',
@@ -436,6 +441,7 @@ const VALIDATION_RULES: ValidationRule[] = [
               nodeIds: [...path, neighbor],
               suggestion: 'Supprimer une des relations de composition du cycle',
             });
+            recStack.delete(nodeId);
             return true;
           }
         }

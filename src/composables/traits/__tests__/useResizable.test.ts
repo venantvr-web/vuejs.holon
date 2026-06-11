@@ -327,7 +327,7 @@ describe('useResizable - Autosize', () => {
 
       expect(autosize.value).toBe(false);
 
-      fitToChildren(false); // animate=false pour ne pas réactiver autosize
+      fitToChildren(); // l'état autosize persistant doit être préservé
 
       const padding = effectivePadding.value;
       const paddingTop = DEFAULT_AUTOSIZE_CONFIG.paddingTop;

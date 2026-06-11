@@ -88,7 +88,7 @@ export interface ResizableHandlers {
   /** Calcule les limites rectangulaires englobant tous les enfants */
   calculateChildrenBounds: () => ChildrenBounds | null;
   /** Ajuste la taille du conteneur pour englober tous les enfants */
-  fitToChildren: (animate?: boolean) => void;
+  fitToChildren: () => void;
   /** Agrandit le conteneur si un enfant dépasse */
   expandToFitChild: (childId: string) => void;
 }
@@ -211,6 +211,8 @@ export function useResizable(options: ResizableOptions): ResizableState & Resiza
 
   // Debounce pour autosize
   let autosizeTimeout: ReturnType<typeof setTimeout> | null = null;
+  // Autosize suspendu le temps d'un resize manuel (restauré au mouseup).
+  let autosizeSuspended = false;
 
   // === RESIZE MANUEL ===
 
@@ -229,9 +231,11 @@ export function useResizable(options: ResizableOptions): ResizableState & Resiza
     const node = graphStore.nodes[options.nodeId.value];
     if (!node) return;
 
-    // Désactiver autosize pendant le resize manuel
-    const wasAutosize = autosize.value;
-    if (wasAutosize) {
+    // Suspendre l'autosize PENDANT le resize manuel uniquement ; il est
+    // restauré dans handleResizeEnd. Comme l'état est persisté dans
+    // node.data, l'oublier rendait la désactivation définitive.
+    autosizeSuspended = autosize.value;
+    if (autosizeSuspended) {
       autosize.value = false;
     }
 
@@ -318,6 +322,13 @@ export function useResizable(options: ResizableOptions): ResizableState & Resiza
   function handleResizeEnd() {
     isResizing.value = false;
     initialChildrenGeometry.value.clear();
+
+    // Restaurer l'autosize suspendu au début du resize.
+    if (autosizeSuspended) {
+      autosizeSuspended = false;
+      autosize.value = true;
+    }
+
     options.onResizeEnd?.();
 
     window.removeEventListener('mousemove', handleResizeMove);
@@ -451,17 +462,14 @@ export function useResizable(options: ResizableOptions): ResizableState & Resiza
     }
   }
 
-  function fitToChildren(animate = true) {
+  function fitToChildren() {
+    // Ajustement ponctuel : activer le temps d'appliquer, puis restaurer
+    // l'état persistant. L'ancien paramètre `animate` conditionnait à tort
+    // la restauration et activait définitivement l'autosize par défaut.
     const wasAutosize = autosize.value;
-
-    // Temporairement activer pour appliquer
     autosize.value = true;
     applyAutosize();
-
-    // Restaurer l'état précédent si pas animé
-    if (!animate) {
-      autosize.value = wasAutosize;
-    }
+    autosize.value = wasAutosize;
   }
 
   function expandToFitChild(childId: string) {
