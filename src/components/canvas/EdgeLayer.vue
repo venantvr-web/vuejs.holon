@@ -5,6 +5,7 @@ import { useGraphStore } from '../../stores/graph';
 import { useEdgeSelectionState } from '../../composables/useEdgeSelection';
 import { useViewport } from '../../composables/useViewport';
 import { useThemeable } from '../../composables/traits/useThemeable';
+import { useFilterable } from '../../composables/traits/useFilterable';
 import {
   calculateEdgeIntersection,
   getNodeCenter,
@@ -33,6 +34,9 @@ const props = defineProps<{
 }>();
 
 const graphStore = useGraphStore();
+
+// Filtre DSL : les arêtes touchant un noeud écarté sont masquées ou estompées.
+const filterable = useFilterable();
 
 // État de sélection des edges (état global partagé avec PropertyInspector)
 const { selectedEdgeId, selectEdge: selectEdgeGlobal, deselectEdge } = useEdgeSelectionState();
@@ -139,6 +143,8 @@ interface RenderedEdge {
   midY: number;
   label: string;
   strokeDasharray: string;
+  /** Vrai si l'arête est estompée par le filtre actif. */
+  dimmed: boolean;
 }
 
 // Calcule le path SVG selon le type de routage
@@ -194,6 +200,7 @@ const renderedEdges = computed((): RenderedEdge[] => {
     const targetNode = graphStore.nodes[edge.targetId];
 
     if (!sourceNode || !targetNode) return null;
+    if (filterable.isEdgeHidden(edge)) return null;
 
     // Centres des noeuds
     const sourceCenter = getNodeCenter(edge.sourceId, graphStore.nodes);
@@ -253,6 +260,7 @@ const renderedEdges = computed((): RenderedEdge[] => {
       midY: (sourcePoint.y + targetPoint.y) / 2,
       label: (edge.data?.name as string) ?? '',
       strokeDasharray,
+      dimmed: filterable.isEdgeDimmed(edge),
     };
   }).filter((e): e is RenderedEdge => e !== null);
 });
@@ -396,6 +404,7 @@ function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean
       v-for="edge in renderedEdges"
       :key="edge.id"
       class="edge-group"
+      :opacity="edge.dimmed ? 0.25 : undefined"
       @click="selectEdge(edge.id, $event)"
       @contextmenu="handleEdgeContextMenu(edge.id, $event)"
     >

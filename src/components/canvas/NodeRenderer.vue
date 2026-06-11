@@ -16,6 +16,7 @@ import {
   useLockable,
   useShapeable,
   useTypeable,
+  useFilterable,
   PRESET_COLORS,
   NodeShape,
   generateShapePath,
@@ -122,6 +123,25 @@ const resolvedFill = computed(() => {
   return currentStyle.value.fill;
 });
 
+/**
+ * Couleur du label, calculée par contraste avec le fond du noeud.
+ * Un `#333` figé était illisible en mode sombre dès que le fond du noeud
+ * était foncé ou transparent ; si le fill n'est pas un hexa analysable,
+ * on retombe sur la couleur de texte du thème.
+ */
+const labelColor = computed(() => {
+  const fill = resolvedFill.value;
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(fill ?? '');
+  if (!hex) return 'var(--fg)';
+  let value = hex[1];
+  if (value.length === 3) value = value.split('').map(c => c + c).join('');
+  const r = parseInt(value.slice(0, 2), 16);
+  const g = parseInt(value.slice(2, 4), 16);
+  const b = parseInt(value.slice(4, 6), 16);
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luminance < 140 ? '#f3f4f6' : '#1f2937';
+});
+
 function handleOpenTypePicker(event: MouseEvent) {
   event.stopPropagation();
   emit('open-type-picker', {
@@ -143,6 +163,20 @@ const children = computed(() => {
 });
 
 const transform = computed(() => `translate(${node.value?.geometry.x ?? 0} ${node.value?.geometry.y ?? 0})`);
+
+// --- Filtre DSL (trait Filterable) ---
+// Chaque noeud s'auto-masque : la récursion suffit alors à cacher les
+// descendants d'un conteneur masqué sans filtrage explicite des enfants.
+const filterable = useFilterable();
+const isFilteredOut = computed(() => filterable.isNodeHidden(props.nodeId));
+// L'opacité d'estompage n'est appliquée qu'au plus haut noeud estompé de la
+// branche : les <g> SVG composent les opacités, on évite le double estompage.
+const filterDimOpacity = computed(() => {
+  if (!filterable.isNodeDimmed(props.nodeId)) return undefined;
+  const parentId = node.value?.parentId;
+  if (parentId && filterable.isNodeDimmed(parentId)) return undefined;
+  return 0.25;
+});
 
 const showResizeHandle = computed(() => {
   if (lockable.isSizeLocked.value) return false;
@@ -294,8 +328,9 @@ async function addToLibrary() {
 
 <template>
   <g
-    v-if="node"
+    v-if="node && !isFilteredOut"
     :transform="transform"
+    :opacity="filterDimOpacity"
     @mousedown="handleMouseDown"
     @dblclick="handleDoubleClick"
     @keydown="handleKeyDown"
@@ -343,7 +378,7 @@ async function addToLibrary() {
         :y="node.geometry.h / 2 + 5 * fontMul"
         text-anchor="middle"
         :font-size="20 * fontMul"
-        fill="#666"
+        :fill="labelColor"
       >
         ▶
       </text>
@@ -352,7 +387,8 @@ async function addToLibrary() {
         :y="node.geometry.h - 8 * fontMul"
         text-anchor="middle"
         :font-size="10 * fontMul"
-        fill="#999"
+        :fill="labelColor"
+        opacity="0.7"
       >
         {{ collapsible.childCount.value }} enfant(s)
       </text>
@@ -418,8 +454,9 @@ async function addToLibrary() {
       v-if="!isEditing"
       :x="18 * fontMul"
       :y="13 * fontMul"
-      fill="#333"
+      :fill="labelColor"
       :font-size="14 * fontMul"
+      font-weight="500"
       dominant-baseline="middle"
       pointer-events="none"
       class="select-none"
@@ -439,7 +476,7 @@ async function addToLibrary() {
         v-model="editValue"
         @keydown="handleEditKeydown"
         @blur="commitEdit"
-        class="w-full h-full px-1 text-sm border border-blue-500 rounded outline-none"
+        class="app-input w-full h-full px-1 text-sm outline-none"
         autofocus
       />
     </foreignObject>
@@ -477,8 +514,8 @@ async function addToLibrary() {
         :cx="node.geometry.w / 2"
         :cy="-12 * fontMul"
         :r="8 * fontMul"
-        fill="#e5e7eb"
-        stroke="#9ca3af"
+        fill="var(--surface-3)"
+        stroke="var(--border)"
         stroke-width="1"
       />
       <text
@@ -488,7 +525,7 @@ async function addToLibrary() {
         dominant-baseline="central"
         :font-size="10 * fontMul"
         font-weight="bold"
-        fill="#666"
+        fill="var(--fg-muted)"
         pointer-events="none"
       >
         {{ collapsible.isCollapsed.value ? '+' : '-' }}
@@ -507,8 +544,8 @@ async function addToLibrary() {
         :cx="node.geometry.w - 12 * fontMul"
         :cy="12 * fontMul"
         :r="8 * fontMul"
-        :fill="tooltip.hasComment.value ? '#fbbf24' : '#e5e7eb'"
-        :stroke="tooltip.hasComment.value ? '#f59e0b' : '#9ca3af'"
+        :fill="tooltip.hasComment.value ? '#fbbf24' : 'var(--surface-3)'"
+        :stroke="tooltip.hasComment.value ? '#f59e0b' : 'var(--border)'"
         stroke-width="1"
       />
       <text
@@ -518,7 +555,7 @@ async function addToLibrary() {
         dominant-baseline="central"
         :font-size="12 * fontMul"
         font-weight="bold"
-        :fill="tooltip.hasComment.value ? '#78350f' : '#6b7280'"
+        :fill="tooltip.hasComment.value ? '#78350f' : 'var(--fg-subtle)'"
         pointer-events="none"
       >
         ?
