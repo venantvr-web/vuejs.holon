@@ -309,8 +309,6 @@ export {
 export {
   useLabelableEdge,
   type EdgeLabel,
-  type LabelStyle,
-  type LabelBackground,
   type LabelableEdgeOptions,
   type LabelableEdgeState,
   type LabelableEdgeHandlers

@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useGraphStore } from '../../../stores/graph';
+import type { Edge } from '../../../types';
 import {
   calculateEdgeRoute,
   calculateArrowAngle,
@@ -65,11 +66,11 @@ describe('useRoutable', () => {
   describe('calculateEdgeRoute', () => {
     it('calcule une route droite (Straight)', async () => {
       const source = await graphStore.createNode(
-        { label: 'Source', type: 'box', geometry: { x: 0, y: 0, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 0, y: 0, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Source' } },
         null
       );
       const target = await graphStore.createNode(
-        { label: 'Target', type: 'box', geometry: { x: 200, y: 0, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 200, y: 0, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Target' } },
         null
       );
       const edge = await graphStore.createEdge(source.id, target.id);
@@ -86,11 +87,11 @@ describe('useRoutable', () => {
 
     it('calcule une route orthogonale horizontale', async () => {
       const source = await graphStore.createNode(
-        { label: 'Source', type: 'box', geometry: { x: 0, y: 0, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 0, y: 0, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Source' } },
         null
       );
       const target = await graphStore.createNode(
-        { label: 'Target', type: 'box', geometry: { x: 300, y: 50, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 300, y: 50, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Target' } },
         null
       );
       const edge = await graphStore.createEdge(source.id, target.id);
@@ -104,11 +105,11 @@ describe('useRoutable', () => {
 
     it('calcule une route courbe (Curved)', async () => {
       const source = await graphStore.createNode(
-        { label: 'Source', type: 'box', geometry: { x: 0, y: 0, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 0, y: 0, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Source' } },
         null
       );
       const target = await graphStore.createNode(
-        { label: 'Target', type: 'box', geometry: { x: 200, y: 200, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 200, y: 200, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Target' } },
         null
       );
       const edge = await graphStore.createEdge(source.id, target.id);
@@ -121,11 +122,11 @@ describe('useRoutable', () => {
 
     it('calcule une route Bézier', async () => {
       const source = await graphStore.createNode(
-        { label: 'Source', type: 'box', geometry: { x: 0, y: 0, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 0, y: 0, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Source' } },
         null
       );
       const target = await graphStore.createNode(
-        { label: 'Target', type: 'box', geometry: { x: 200, y: 200, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 200, y: 200, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Target' } },
         null
       );
       const edge = await graphStore.createEdge(source.id, target.id);
@@ -138,11 +139,11 @@ describe('useRoutable', () => {
 
     it('retourne null si le noeud source n\'existe pas', async () => {
       const target = await graphStore.createNode(
-        { label: 'Target', type: 'box', geometry: { x: 200, y: 0, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 200, y: 0, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Target' } },
         null
       );
 
-      const fakeEdge = { id: 'fake', sourceId: 'nonexistent', targetId: target.id, routing: 'straight' };
+      const fakeEdge: Edge = { id: 'fake', sourceId: 'nonexistent', targetId: target.id, routing: 'straight' };
       const route = calculateEdgeRoute(fakeEdge, graphStore.nodes, RoutingType.Straight);
 
       expect(route).toBeNull();
@@ -150,11 +151,11 @@ describe('useRoutable', () => {
 
     it('retourne null si le noeud target n\'existe pas', async () => {
       const source = await graphStore.createNode(
-        { label: 'Source', type: 'box', geometry: { x: 0, y: 0, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 0, y: 0, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Source' } },
         null
       );
 
-      const fakeEdge = { id: 'fake', sourceId: source.id, targetId: 'nonexistent', routing: 'straight' };
+      const fakeEdge: Edge = { id: 'fake', sourceId: source.id, targetId: 'nonexistent', routing: 'straight' };
       const route = calculateEdgeRoute(fakeEdge, graphStore.nodes, RoutingType.Straight);
 
       expect(route).toBeNull();
@@ -164,20 +165,20 @@ describe('useRoutable', () => {
   describe('route avec noeuds imbriqués', () => {
     it('calcule correctement les intersections pour des noeuds enfants', async () => {
       const parent1 = await graphStore.createNode(
-        { label: 'Parent1', type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, data: {} },
+        { type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Parent1' } },
         null
       );
       const child1 = await graphStore.createNode(
-        { label: 'Child1', type: 'box', geometry: { x: 50, y: 50, w: 50, h: 50 }, data: {} },
+        { type: 'shape', geometry: { x: 50, y: 50, w: 50, h: 50 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child1' } },
         parent1.id
       );
 
       const parent2 = await graphStore.createNode(
-        { label: 'Parent2', type: 'container', geometry: { x: 400, y: 0, w: 200, h: 200 }, data: {} },
+        { type: 'container', geometry: { x: 400, y: 0, w: 200, h: 200 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Parent2' } },
         null
       );
       const child2 = await graphStore.createNode(
-        { label: 'Child2', type: 'box', geometry: { x: 50, y: 50, w: 50, h: 50 }, data: {} },
+        { type: 'shape', geometry: { x: 50, y: 50, w: 50, h: 50 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child2' } },
         parent2.id
       );
 

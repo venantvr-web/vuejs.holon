@@ -98,7 +98,7 @@ function formatDate(ts: number): string {
               </div>
               <div v-if="snap.description" class="text-xs app-subtle truncate">{{ snap.description }}</div>
               <div class="text-xs app-subtle font-mono mt-0.5">
-                {{ formatDate(snap.timestamp) }} ·
+                {{ formatDate(snap.metadata.createdAt) }} ·
                 {{ Object.keys(snap.state.nodes).length }} noeuds ·
                 {{ Object.keys(snap.state.edges).length }} arêtes
               </div>

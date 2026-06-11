@@ -64,7 +64,7 @@ export interface Node {
 /**
  * Type de routage pour les liens.
  */
-export type EdgeRouting = 'straight' | 'orthogonal';
+export type EdgeRouting = 'straight' | 'orthogonal' | 'curved' | 'bezier';
 
 /**
  * Types de flèches pour les marqueurs d'edges.

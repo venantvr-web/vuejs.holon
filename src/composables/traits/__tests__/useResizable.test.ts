@@ -6,7 +6,6 @@ import { useGraphStore } from '../../../stores/graph';
 import {
   useResizable,
   DEFAULT_AUTOSIZE_CONFIG,
-  type ChildrenBounds,
 } from '../useResizable';
 
 // Mock de la base de données
@@ -39,7 +38,7 @@ describe('useResizable - Autosize', () => {
   describe('calculateChildrenBounds', () => {
     it('retourne null si le parent n\'a pas d\'enfants', async () => {
       const parent = await graphStore.createNode(
-        { label: 'Parent', type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, data: {} },
+        { type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Parent' } },
         null
       );
 
@@ -52,11 +51,11 @@ describe('useResizable - Autosize', () => {
 
     it('calcule les bounds corrects pour un seul enfant', async () => {
       const parent = await graphStore.createNode(
-        { label: 'Parent', type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, data: {} },
+        { type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Parent' } },
         null
       );
       await graphStore.createNode(
-        { label: 'Child', type: 'box', geometry: { x: 30, y: 40, w: 50, h: 60 }, data: {} },
+        { type: 'shape', geometry: { x: 30, y: 40, w: 50, h: 60 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child' } },
         parent.id
       );
 
@@ -76,25 +75,25 @@ describe('useResizable - Autosize', () => {
 
     it('calcule les bounds corrects pour plusieurs enfants', async () => {
       const parent = await graphStore.createNode(
-        { label: 'Parent', type: 'container', geometry: { x: 0, y: 0, w: 300, h: 300 }, data: {} },
+        { type: 'container', geometry: { x: 0, y: 0, w: 300, h: 300 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Parent' } },
         null
       );
 
       // Enfant 1: en haut à gauche
       await graphStore.createNode(
-        { label: 'Child1', type: 'box', geometry: { x: 10, y: 10, w: 40, h: 30 }, data: {} },
+        { type: 'shape', geometry: { x: 10, y: 10, w: 40, h: 30 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child1' } },
         parent.id
       );
 
       // Enfant 2: en bas à droite
       await graphStore.createNode(
-        { label: 'Child2', type: 'box', geometry: { x: 100, y: 150, w: 60, h: 40 }, data: {} },
+        { type: 'shape', geometry: { x: 100, y: 150, w: 60, h: 40 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child2' } },
         parent.id
       );
 
       // Enfant 3: au milieu
       await graphStore.createNode(
-        { label: 'Child3', type: 'box', geometry: { x: 50, y: 80, w: 30, h: 30 }, data: {} },
+        { type: 'shape', geometry: { x: 50, y: 80, w: 30, h: 30 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child3' } },
         parent.id
       );
 
@@ -114,17 +113,17 @@ describe('useResizable - Autosize', () => {
 
     it('gère les enfants avec des coordonnées négatives', async () => {
       const parent = await graphStore.createNode(
-        { label: 'Parent', type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, data: {} },
+        { type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Parent' } },
         null
       );
 
       await graphStore.createNode(
-        { label: 'Child1', type: 'box', geometry: { x: -20, y: -10, w: 40, h: 30 }, data: {} },
+        { type: 'shape', geometry: { x: -20, y: -10, w: 40, h: 30 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child1' } },
         parent.id
       );
 
       await graphStore.createNode(
-        { label: 'Child2', type: 'box', geometry: { x: 50, y: 60, w: 40, h: 30 }, data: {} },
+        { type: 'shape', geometry: { x: 50, y: 60, w: 40, h: 30 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child2' } },
         parent.id
       );
 
@@ -143,12 +142,12 @@ describe('useResizable - Autosize', () => {
   describe('applyAutosize', () => {
     it('redimensionne le parent pour englober les enfants avec padding', async () => {
       const parent = await graphStore.createNode(
-        { label: 'Parent', type: 'container', geometry: { x: 0, y: 0, w: 100, h: 100 }, data: { autosize: true } },
+        { type: 'container', geometry: { x: 0, y: 0, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Parent', autosize: true } },
         null
       );
 
       await graphStore.createNode(
-        { label: 'Child', type: 'box', geometry: { x: 20, y: 20, w: 50, h: 40 }, data: {} },
+        { type: 'shape', geometry: { x: 20, y: 20, w: 50, h: 40 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child' } },
         parent.id
       );
 
@@ -169,13 +168,13 @@ describe('useResizable - Autosize', () => {
 
     it('décale les enfants pour respecter le padding gauche/haut', async () => {
       const parent = await graphStore.createNode(
-        { label: 'Parent', type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, data: { autosize: true } },
+        { type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Parent', autosize: true } },
         null
       );
 
       // Enfant positionné à (5, 5) - trop proche du bord
       const child = await graphStore.createNode(
-        { label: 'Child', type: 'box', geometry: { x: 5, y: 5, w: 50, h: 40 }, data: {} },
+        { type: 'shape', geometry: { x: 5, y: 5, w: 50, h: 40 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child' } },
         parent.id
       );
 
@@ -195,22 +194,22 @@ describe('useResizable - Autosize', () => {
 
     it('décale tous les enfants ensemble pour préserver leurs positions relatives', async () => {
       const parent = await graphStore.createNode(
-        { label: 'Parent', type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, data: { autosize: true } },
+        { type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Parent', autosize: true } },
         null
       );
 
       const child1 = await graphStore.createNode(
-        { label: 'Child1', type: 'box', geometry: { x: 5, y: 10, w: 30, h: 20 }, data: {} },
+        { type: 'shape', geometry: { x: 5, y: 10, w: 30, h: 20 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child1' } },
         parent.id
       );
 
       const child2 = await graphStore.createNode(
-        { label: 'Child2', type: 'box', geometry: { x: 55, y: 60, w: 30, h: 20 }, data: {} },
+        { type: 'shape', geometry: { x: 55, y: 60, w: 30, h: 20 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child2' } },
         parent.id
       );
 
       const nodeId = ref(parent.id);
-      const { applyAutosize, effectivePadding } = useResizable({ nodeId });
+      const { applyAutosize } = useResizable({ nodeId });
 
       const initialOffset = {
         x: child2.geometry.x - child1.geometry.x,
@@ -234,13 +233,13 @@ describe('useResizable - Autosize', () => {
 
     it('gère les enfants avec coordonnées négatives', async () => {
       const parent = await graphStore.createNode(
-        { label: 'Parent', type: 'container', geometry: { x: 100, y: 100, w: 200, h: 200 }, data: { autosize: true } },
+        { type: 'container', geometry: { x: 100, y: 100, w: 200, h: 200 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Parent', autosize: true } },
         null
       );
 
       // Enfant avec coordonnées négatives
       const child = await graphStore.createNode(
-        { label: 'Child', type: 'box', geometry: { x: -30, y: -20, w: 50, h: 40 }, data: {} },
+        { type: 'shape', geometry: { x: -30, y: -20, w: 50, h: 40 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child' } },
         parent.id
       );
 
@@ -265,12 +264,12 @@ describe('useResizable - Autosize', () => {
 
     it('ne fait rien si autosize est désactivé', async () => {
       const parent = await graphStore.createNode(
-        { label: 'Parent', type: 'container', geometry: { x: 0, y: 0, w: 100, h: 100 }, data: { autosize: false } },
+        { type: 'container', geometry: { x: 0, y: 0, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Parent', autosize: false } },
         null
       );
 
       await graphStore.createNode(
-        { label: 'Child', type: 'box', geometry: { x: 20, y: 20, w: 200, h: 200 }, data: {} },
+        { type: 'shape', geometry: { x: 20, y: 20, w: 200, h: 200 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child' } },
         parent.id
       );
 
@@ -290,7 +289,7 @@ describe('useResizable - Autosize', () => {
   describe('effectivePadding avec zoom', () => {
     it('ajuste le padding selon le zoom', async () => {
       const parent = await graphStore.createNode(
-        { label: 'Parent', type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, data: {} },
+        { type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Parent' } },
         null
       );
 
@@ -313,12 +312,12 @@ describe('useResizable - Autosize', () => {
   describe('fitToChildren', () => {
     it('applique l\'autosize même si désactivé puis le désactive', async () => {
       const parent = await graphStore.createNode(
-        { label: 'Parent', type: 'container', geometry: { x: 0, y: 0, w: 50, h: 50 }, data: { autosize: false } },
+        { type: 'container', geometry: { x: 0, y: 0, w: 50, h: 50 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Parent', autosize: false } },
         null
       );
 
       await graphStore.createNode(
-        { label: 'Child', type: 'box', geometry: { x: 20, y: 20, w: 100, h: 80 }, data: {} },
+        { type: 'shape', geometry: { x: 20, y: 20, w: 100, h: 80 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child' } },
         parent.id
       );
 

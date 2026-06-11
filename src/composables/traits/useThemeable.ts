@@ -1,6 +1,5 @@
 // src/composables/traits/useThemeable.ts
 import { ref, computed, type Ref } from 'vue';
-import { useGraphStore } from '../../stores/graph';
 
 /**
  * Palette de couleurs pour un thème.

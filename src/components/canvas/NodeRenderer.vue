@@ -23,7 +23,7 @@ import {
   generateShapePath,
   getShapesByCategory,
   ARCHIMATE_TYPES,
-  getAllArchimateTypes,
+  type ArchimateType,
 } from '../../composables/traits';
 
 const props = defineProps<{
@@ -72,7 +72,7 @@ const { isEditing, editValue, displayValue, startEditing, commitEdit, handleEdit
   nodeId: nodeIdRef,
 });
 
-const { isStylePanelOpen, currentStyle, toggleStylePanel, updateFill, updateStroke } = useStyleable({
+const { isStylePanelOpen, currentStyle, updateFill, updateStroke } = useStyleable({
   nodeId: nodeIdRef,
 });
 
@@ -198,8 +198,14 @@ const shapePath = computed(() => {
 // Groupes de formes pour le panneau
 const shapeGroups = getShapesByCategory();
 
-// Types Archimate pour le panneau
-const archimateTypes = getAllArchimateTypes();
+// Les couches d'ARCHIMATE_TYPES ont des clés de types hétérogènes : itérées
+// telles quelles dans le template, TS infère `never` pour les entrées. On
+// expose une vue uniforme pour le v-for du panneau de types.
+interface ArchimateTypeEntry { label: string; icon: string }
+function typesOf(layerConfig: { types: Record<string, ArchimateTypeEntry> }): Record<ArchimateType, ArchimateTypeEntry> {
+  return layerConfig.types as Record<ArchimateType, ArchimateTypeEntry>;
+}
+
 
 // --- Handlers ---
 function handleMouseDown(event: MouseEvent) {
@@ -786,11 +792,11 @@ async function addToLibrary() {
               </div>
               <div class="grid grid-cols-2 gap-1">
                 <button
-                  v-for="(typeConfig, typeKey) in layerConfig.types"
+                  v-for="(typeConfig, typeKey) in typesOf(layerConfig)"
                   :key="typeKey"
                   @click="typeable.setType(typeKey)"
                   class="p-1 text-xs border rounded app-hover text-left"
-                  :class="{ 'ring-2 ring-blue-500': typeable.archimateType.value === typeKey }"
+                  :class="{ 'app-ring-accent ring-2': typeable.archimateType.value === typeKey }"
                 >
                   {{ typeConfig.icon }} {{ typeConfig.label }}
                 </button>

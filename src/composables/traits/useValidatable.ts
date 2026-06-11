@@ -196,9 +196,8 @@ export interface ValidatableHandlers {
  * Matrice de relations autorisées entre types Archimate.
  * Basée sur la spécification Archimate 3.2.
  */
-const ALLOWED_RELATIONSHIPS: Record<
-  RelationType,
-  Partial<Record<ArchimateType, ArchimateType[]>>
+const ALLOWED_RELATIONSHIPS: Partial<
+  Record<RelationType, Partial<Record<ArchimateType, ArchimateType[]>>>
 > = {
   // Composition - Hierarchical strong containment
   [RelationType.Composition]: {
@@ -329,7 +328,7 @@ const VALIDATION_RULES: ValidationRule[] = [
     category: 'relationships',
     severity: 'error',
     enabled: true,
-    validate: (nodes, edges) => {
+    validate: (_nodes, edges) => {
       const issues: ValidationIssue[] = [];
       for (const edge of Object.values(edges)) {
         if (edge.sourceId === edge.targetId) {
@@ -618,7 +617,7 @@ const VALIDATION_RULES: ValidationRule[] = [
     category: 'completeness',
     severity: 'error',
     enabled: true,
-    validate: (nodes, edges) => {
+    validate: (_nodes, edges) => {
       const issues: ValidationIssue[] = [];
       for (const edge of Object.values(edges)) {
         if (!edge.data?.relationType) {

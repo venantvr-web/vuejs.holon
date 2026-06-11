@@ -121,7 +121,7 @@ export function useGeometry() {
    */
   function convertCoordinates(
     nodeId: string,
-    fromParentId: string | null,
+    _fromParentId: string | null,
     toParentId: string | null
   ): { x: number; y: number } {
     const node = graphStore.nodes[nodeId];

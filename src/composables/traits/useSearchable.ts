@@ -229,7 +229,7 @@ export function useSearchable(): SearchableState & SearchableHandlers {
             matches: result.matches?.map((m) => ({
               field: m.key || '',
               value: m.value || '',
-              indices: m.indices,
+              indices: m.indices?.map(([start, end]) => [start, end] as [number, number]),
             })) || [],
             score: result.score,
           });
@@ -256,7 +256,7 @@ export function useSearchable(): SearchableState & SearchableHandlers {
             matches: result.matches?.map((m) => ({
               field: m.key || '',
               value: m.value || '',
-              indices: m.indices,
+              indices: m.indices?.map(([start, end]) => [start, end] as [number, number]),
             })) || [],
             score: result.score,
           });

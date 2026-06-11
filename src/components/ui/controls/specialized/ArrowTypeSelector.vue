@@ -9,7 +9,7 @@ interface ArrowTypeSelectorProps {
   showCategories?: boolean;
 }
 
-const props = withDefaults(defineProps<ArrowTypeSelectorProps>(), {
+withDefaults(defineProps<ArrowTypeSelectorProps>(), {
   position: 'end',
   showCategories: true,
 });
