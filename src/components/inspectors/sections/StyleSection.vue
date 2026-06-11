@@ -1,7 +1,7 @@
 
 <!-- src/components/inspectors/sections/StyleSection.vue -->
 <script setup lang="ts">
-import { toRef, ref, computed } from 'vue';
+import { toRef, computed } from 'vue';
 import { useStyleable, PRESET_COLORS } from '../../../composables/traits/useStyleable';
 import { useTypeable } from '../../../composables/traits/useTypeable';
 import { useGraphStore } from '../../../stores/graph';
@@ -58,8 +58,8 @@ function applyCustomStroke(value: string) {
 </script>
 
 <template>
-  <section class="p-3 border-b">
-    <h3 class="text-sm font-semibold mb-2 app-fg">Apparence</h3>
+  <section class="p-3 border-b app-border">
+    <h3 class="app-section-title mb-2">Apparence</h3>
 
     <!-- Indicateur Archimate + retour à la couleur de layer -->
     <div
@@ -87,7 +87,7 @@ function applyCustomStroke(value: string) {
         :key="'fill-' + color"
         :style="{ backgroundColor: color }"
         class="w-5 h-5 rounded-sm border app-border hover:scale-125 transition-transform"
-        :class="{ 'ring-2 ring-blue-500 z-10 relative': currentStyle.fill === color && hasCustomFill }"
+        :class="{ 'ring-2 app-ring-accent z-10 relative': currentStyle.fill === color && hasCustomFill }"
         :title="color"
         @click="pickFill(color)"
       />
@@ -111,7 +111,7 @@ function applyCustomStroke(value: string) {
         :key="'stroke-' + color"
         :style="{ backgroundColor: color }"
         class="w-5 h-5 rounded-sm border app-border hover:scale-125 transition-transform"
-        :class="{ 'ring-2 ring-blue-500 z-10 relative': currentStyle.stroke === color }"
+        :class="{ 'ring-2 app-ring-accent z-10 relative': currentStyle.stroke === color }"
         :title="color"
         @click="updateStroke(color)"
       />

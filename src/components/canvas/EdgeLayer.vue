@@ -5,6 +5,7 @@ import { useGraphStore } from '../../stores/graph';
 import { useEdgeSelectionState } from '../../composables/useEdgeSelection';
 import { useViewport } from '../../composables/useViewport';
 import { useThemeable } from '../../composables/traits/useThemeable';
+import { useFilterable } from '../../composables/traits/useFilterable';
 import {
   calculateEdgeIntersection,
   getNodeCenter,
@@ -24,15 +25,10 @@ const fontMul = computed(() => 1 / zoomLevel.value);
 // une couleur concrète pour construire leur ID unique dans <defs>.
 const edgeColor = computed(() => (isDarkMode.value ? '#d1d5db' : '#333333'));
 
-const props = defineProps<{
-  pendingConnection?: {
-    sourceId: string;
-    mouseX: number;
-    mouseY: number;
-  } | null;
-}>();
-
 const graphStore = useGraphStore();
+
+// Filtre DSL : les arêtes touchant un noeud écarté sont masquées ou estompées.
+const filterable = useFilterable();
 
 // État de sélection des edges (état global partagé avec PropertyInspector)
 const { selectedEdgeId, selectEdge: selectEdgeGlobal, deselectEdge } = useEdgeSelectionState();
@@ -139,6 +135,8 @@ interface RenderedEdge {
   midY: number;
   label: string;
   strokeDasharray: string;
+  /** Vrai si l'arête est estompée par le filtre actif. */
+  dimmed: boolean;
 }
 
 // Calcule le path SVG selon le type de routage
@@ -187,6 +185,22 @@ function calculatePath(
   }
 }
 
+/**
+ * Résout l'extrémité visible d'une arête : si le noeud est caché dans un
+ * conteneur replié, l'arête doit aboutir au conteneur replié le plus
+ * extérieur (sinon la flèche pointait dans le vide à l'intérieur du bloc).
+ */
+function resolveVisibleEndpoint(nodeId: string): string {
+  let effective = nodeId;
+  let current = graphStore.nodes[nodeId];
+  while (current?.parentId) {
+    const parent = graphStore.nodes[current.parentId];
+    if (parent?.data?.collapsed === true) effective = parent.id;
+    current = parent;
+  }
+  return effective;
+}
+
 // Calcule les points de départ et d'arrivée de chaque arête avec intersection des bords
 const renderedEdges = computed((): RenderedEdge[] => {
   return Object.values(graphStore.edges).map(edge => {
@@ -194,21 +208,28 @@ const renderedEdges = computed((): RenderedEdge[] => {
     const targetNode = graphStore.nodes[edge.targetId];
 
     if (!sourceNode || !targetNode) return null;
+    if (filterable.isEdgeHidden(edge)) return null;
+
+    // Reroutage vers les ancêtres repliés visibles ; une arête interne à
+    // un même conteneur replié n'est pas rendue.
+    const sourceVisibleId = resolveVisibleEndpoint(edge.sourceId);
+    const targetVisibleId = resolveVisibleEndpoint(edge.targetId);
+    if (sourceVisibleId === targetVisibleId) return null;
 
     // Centres des noeuds
-    const sourceCenter = getNodeCenter(edge.sourceId, graphStore.nodes);
-    const targetCenter = getNodeCenter(edge.targetId, graphStore.nodes);
+    const sourceCenter = getNodeCenter(sourceVisibleId, graphStore.nodes);
+    const targetCenter = getNodeCenter(targetVisibleId, graphStore.nodes);
 
     // Points d'intersection avec les bords (les flèches ne traversent plus les noeuds!)
     const sourcePoint = calculateEdgeIntersection(
-      edge.sourceId,
+      sourceVisibleId,
       targetCenter.x,
       targetCenter.y,
       graphStore.nodes
     );
 
     const targetPoint = calculateEdgeIntersection(
-      edge.targetId,
+      targetVisibleId,
       sourceCenter.x,
       sourceCenter.y,
       graphStore.nodes
@@ -253,33 +274,11 @@ const renderedEdges = computed((): RenderedEdge[] => {
       midY: (sourcePoint.y + targetPoint.y) / 2,
       label: (edge.data?.name as string) ?? '',
       strokeDasharray,
+      dimmed: filterable.isEdgeDimmed(edge),
     };
   }).filter((e): e is RenderedEdge => e !== null);
 });
 
-// Connexion en cours (preview)
-const pendingEdge = computed(() => {
-  if (!props.pendingConnection) return null;
-
-  const sourceNode = graphStore.nodes[props.pendingConnection.sourceId];
-  if (!sourceNode) return null;
-
-  const sourceCenter = getNodeCenter(props.pendingConnection.sourceId, graphStore.nodes);
-  const sourcePoint = calculateEdgeIntersection(
-    props.pendingConnection.sourceId,
-    props.pendingConnection.mouseX,
-    props.pendingConnection.mouseY,
-    graphStore.nodes
-  );
-
-  return {
-    sourceX: sourcePoint.x,
-    sourceY: sourcePoint.y,
-    targetX: props.pendingConnection.mouseX,
-    targetY: props.pendingConnection.mouseY,
-    path: `M ${sourcePoint.x} ${sourcePoint.y} L ${props.pendingConnection.mouseX} ${props.pendingConnection.mouseY}`,
-  };
-});
 
 // Helper pour obtenir les propriétés de flèche d'un edge
 function getEdgeArrowProps(edge: Edge) {
@@ -333,7 +332,9 @@ const allMarkers = computed(() => {
   const addMarker = (type: ArrowType, color: string, position: 'start' | 'end', size: number) => {
     if (type === ArrowType.None) return;
 
-    const id = `arrow-${type}-${position}-${color.replace('#', '')}`;
+    // La taille fait partie de l'identité du marqueur : deux arêtes de même
+    // type mais d'arrowSize différents partageaient le premier marqueur vu.
+    const id = `arrow-${type}-${position}-${color.replace('#', '')}-${size}`;
     if (seen.has(id)) return;
     seen.add(id);
 
@@ -362,13 +363,13 @@ const allMarkers = computed(() => {
 
 // Helper pour obtenir l'URL du marker pour un edge
 function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean): string {
-  const { startArrow, endArrow } = getEdgeArrowProps(edge);
+  const { startArrow, endArrow, size } = getEdgeArrowProps(edge);
   const type = position === 'start' ? startArrow : endArrow;
 
   if (type === ArrowType.None) return '';
 
   const color = isSelected ? '#3b82f6' : edgeColor.value;
-  const id = `arrow-${type}-${position}-${color.replace('#', '')}`;
+  const id = `arrow-${type}-${position}-${color.replace('#', '')}-${size}`;
   return `url(#${id})`;
 }
 </script>
@@ -396,6 +397,7 @@ function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean
       v-for="edge in renderedEdges"
       :key="edge.id"
       class="edge-group"
+      :opacity="edge.dimmed ? 0.25 : undefined"
       @click="selectEdge(edge.id, $event)"
       @contextmenu="handleEdgeContextMenu(edge.id, $event)"
     >
@@ -513,20 +515,6 @@ function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean
         />
       </foreignObject>
     </g>
-
-    <!-- Connexion en cours (preview) -->
-    <path
-      v-if="pendingEdge"
-      :d="pendingEdge.path"
-      fill="none"
-      stroke="var(--accent-selected)"
-      stroke-width="2"
-      stroke-dasharray="5,5"
-      vector-effect="non-scaling-stroke"
-      marker-start="url(#start-dot-blue)"
-      marker-end="url(#arrowhead-blue)"
-      class="edge-pending"
-    />
   </g>
 </template>
 

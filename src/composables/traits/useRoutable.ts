@@ -1,9 +1,8 @@
 // src/composables/traits/useRoutable.ts
-import { computed, type Ref } from 'vue';
+import { computed, type DeepReadonly, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import { calculateEdgeIntersection, getNodeCenter } from './useAnchorable';
 import type { Node, Edge } from '../../types';
-import { getNodeAbsolutePosition } from './utils/trait-helpers';
 
 // Types de routage
 export enum RoutingType {
@@ -112,9 +111,8 @@ export function useRoutable(options: RoutableOptions): RoutableState & RoutableH
   });
 
   const controlPoints = computed((): ControlPoint[] => {
-    const e = edge.value;
-    if (!e) return [];
-    return (e as any).controlPoints ?? [];
+    const points = edge.value?.data?.controlPoints;
+    return Array.isArray(points) ? (points as ControlPoint[]) : [];
   });
 
   // Calcule la route complète de l'edge
@@ -147,7 +145,7 @@ export function useRoutable(options: RoutableOptions): RoutableState & RoutableH
         break;
 
       case RoutingType.Orthogonal:
-        path = calculateOrthogonalPath(sourcePoint, targetPoint, sourceNode, targetNode);
+        path = calculateOrthogonalPath(sourcePoint, targetPoint);
         break;
 
       case RoutingType.Curved:
@@ -170,12 +168,7 @@ export function useRoutable(options: RoutableOptions): RoutableState & RoutableH
     };
   }
 
-  function calculateOrthogonalPath(
-    source: RoutePoint,
-    target: RoutePoint,
-    sourceNode: Node,
-    targetNode: Node
-  ): string {
+  function calculateOrthogonalPath(source: RoutePoint, target: RoutePoint): string {
     const dx = target.x - source.x;
     const dy = target.y - source.y;
 
@@ -210,7 +203,6 @@ export function useRoutable(options: RoutableOptions): RoutableState & RoutableH
     if (points.length === 0) {
       // Par défaut, courbe de Bézier cubique
       const dx = target.x - source.x;
-      const dy = target.y - source.y;
 
       const cp1x = source.x + dx * 0.3;
       const cp1y = source.y;
@@ -247,9 +239,10 @@ export function useRoutable(options: RoutableOptions): RoutableState & RoutableH
   }
 
   function setRoutingType(type: RoutingType) {
-    if (!edge.value) return;
-    // Note: il faut ajouter le support dans le store pour mettre à jour l'edge
-    // Pour l'instant, on stocke dans data
+    const e = edge.value;
+    if (!e) return;
+    // Les valeurs de l'enum RoutingType sont les littéraux d'EdgeRouting.
+    void graphStore.updateEdge(e.id, { routing: type as Edge['routing'] });
   }
 
   function addControlPoint(point: ControlPoint, index?: number) {
@@ -279,8 +272,11 @@ export function useRoutable(options: RoutableOptions): RoutableState & RoutableH
   }
 
   function updateEdgeControlPoints(points: ControlPoint[]) {
-    // TODO: Ajouter une méthode updateEdge dans le store
-    // Pour l'instant, rien à faire car les edges n'ont pas de champ controlPoints
+    const e = edge.value;
+    if (!e) return;
+    void graphStore.updateEdge(e.id, {
+      data: { ...(e.data ?? {}), controlPoints: points },
+    });
   }
 
   return {
@@ -299,7 +295,7 @@ export function useRoutable(options: RoutableOptions): RoutableState & RoutableH
 // Fonction utilitaire pour calculer la route d'un edge directement
 export function calculateEdgeRoute(
   edge: Edge,
-  nodes: Record<string, Node>,
+  nodes: DeepReadonly<Record<string, Node>>,
   routingType: RoutingType = RoutingType.Straight
 ): EdgeRoute | null {
   const sourceNode = nodes[edge.sourceId];

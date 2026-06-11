@@ -1,7 +1,7 @@
 // src/composables/traits/__tests__/useClipboardable.spec.ts
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
-import type { Node, Edge } from '../../../types';
+import type { Node } from '../../../types';
 
 vi.mock('../../../db', () => {
   const table = () => ({

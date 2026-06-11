@@ -3,7 +3,6 @@ import { ref, computed, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import { useSelectionState } from './useSelectable';
 import { nanoid } from 'nanoid';
-import type { Node } from '../../types';
 
 /**
  * Représente un groupe de noeuds.

@@ -1,5 +1,5 @@
 // src/composables/traits/useAnchorable.ts
-import { computed, type Ref } from 'vue';
+import { type DeepReadonly,  computed, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import type { Node } from '../../types';
 import { getNodeAbsolutePosition, getNodeCenter as getNodeCenterHelper } from './utils/trait-helpers';
@@ -283,7 +283,7 @@ export function calculateEdgeIntersection(
   nodeId: string,
   targetX: number,
   targetY: number,
-  nodes: Record<string, Node>
+  nodes: DeepReadonly<Record<string, Node>>
 ): { x: number; y: number } {
   const node = nodes[nodeId];
   if (!node) return { x: 0, y: 0 };
@@ -315,6 +315,6 @@ export function calculateEdgeIntersection(
 
 // Helper pour calculer le centre absolu d'un noeud
 // Note: Wrapper pour compatibilité avec l'ancienne signature qui prend 'nodes'
-export function getNodeCenter(nodeId: string, nodes: Record<string, Node>): { x: number; y: number } {
+export function getNodeCenter(nodeId: string, _nodes: DeepReadonly<Record<string, Node>>): { x: number; y: number } {
   return getNodeCenterHelper(nodeId) || { x: 0, y: 0 };
 }

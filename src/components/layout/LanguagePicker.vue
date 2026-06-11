@@ -2,6 +2,7 @@
 <!-- src/components/layout/LanguagePicker.vue -->
 <script setup lang="ts">
 import { ref } from 'vue';
+import { Globe } from 'lucide-vue-next';
 import { useI18n, AVAILABLE_LOCALES, type Locale } from '../../composables/useI18n';
 
 const { locale, setLocale } = useI18n();
@@ -17,11 +18,12 @@ function choose(v: Locale) {
   <div class="relative">
     <button
       @click="isOpen = !isOpen"
-      class="px-2 py-1.5 text-sm app-btn rounded transition-colors"
+      class="px-2 py-1.5 text-sm app-btn rounded transition-colors duration-150 inline-flex items-center gap-1.5"
       :title="`Langue : ${locale}`"
       aria-label="Choisir la langue"
     >
-      🌐 {{ locale }}
+      <Globe :size="16" />
+      <span class="uppercase text-xs font-medium">{{ locale }}</span>
     </button>
     <div
       v-if="isOpen"
@@ -31,8 +33,8 @@ function choose(v: Locale) {
       <button
         v-for="l in AVAILABLE_LOCALES"
         :key="l.value"
-        class="w-full text-left px-3 py-1.5 app-hover flex items-center gap-2"
-        :class="{ 'bg-blue-50 font-medium': locale === l.value }"
+        class="w-full text-left px-3 py-1.5 app-hover flex items-center gap-2 transition-colors duration-150"
+        :class="{ 'app-selected font-medium': locale === l.value }"
         @click="choose(l.value)"
       >
         <span>{{ l.flag }}</span>

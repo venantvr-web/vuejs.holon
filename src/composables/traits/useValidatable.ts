@@ -196,12 +196,11 @@ export interface ValidatableHandlers {
  * Matrice de relations autorisées entre types Archimate.
  * Basée sur la spécification Archimate 3.2.
  */
-const ALLOWED_RELATIONSHIPS: Record<
-  RelationType,
-  Partial<Record<ArchimateType, ArchimateType[]>>
+const ALLOWED_RELATIONSHIPS: Partial<
+  Record<RelationType, Partial<Record<ArchimateType, ArchimateType[]>>>
 > = {
   // Composition - Hierarchical strong containment
-  [RelationType.COMPOSITION]: {
+  [RelationType.Composition]: {
     [ArchimateType.BUSINESS_ACTOR]: [
       ArchimateType.BUSINESS_ROLE,
       ArchimateType.BUSINESS_COLLABORATION,
@@ -217,64 +216,64 @@ const ALLOWED_RELATIONSHIPS: Record<
   },
 
   // Aggregation - Hierarchical weak containment
-  [RelationType.AGGREGATION]: {
+  [RelationType.Aggregation]: {
     [ArchimateType.BUSINESS_PROCESS]: [ArchimateType.BUSINESS_FUNCTION],
     [ArchimateType.APPLICATION_COMPONENT]: [ArchimateType.APPLICATION_SERVICE],
   },
 
   // Assignment - Allocation of behavior to active elements
-  [RelationType.ASSIGNMENT]: {
+  [RelationType.Assignment]: {
     [ArchimateType.BUSINESS_ACTOR]: [ArchimateType.BUSINESS_ROLE],
     [ArchimateType.BUSINESS_ROLE]: [ArchimateType.BUSINESS_PROCESS],
     [ArchimateType.APPLICATION_COMPONENT]: [ArchimateType.APPLICATION_FUNCTION],
   },
 
   // Realization - Implementation of abstractions
-  [RelationType.REALIZATION]: {
+  [RelationType.Realization]: {
     [ArchimateType.BUSINESS_PROCESS]: [ArchimateType.BUSINESS_SERVICE],
     [ArchimateType.APPLICATION_COMPONENT]: [ArchimateType.APPLICATION_SERVICE],
     [ArchimateType.TECHNOLOGY_NODE]: [ArchimateType.TECHNOLOGY_SERVICE],
   },
 
   // Serving - Service provision
-  [RelationType.SERVING]: {
+  [RelationType.Serving]: {
     [ArchimateType.BUSINESS_SERVICE]: [ArchimateType.BUSINESS_PROCESS],
     [ArchimateType.APPLICATION_SERVICE]: [ArchimateType.APPLICATION_COMPONENT],
     [ArchimateType.TECHNOLOGY_SERVICE]: [ArchimateType.TECHNOLOGY_NODE],
   },
 
   // Access - Data access
-  [RelationType.ACCESS]: {
+  [RelationType.Access]: {
     [ArchimateType.BUSINESS_PROCESS]: [ArchimateType.BUSINESS_OBJECT],
     [ArchimateType.APPLICATION_COMPONENT]: [ArchimateType.DATA_OBJECT],
   },
 
   // Influence - Motivation impact
-  [RelationType.INFLUENCE]: {
+  [RelationType.Influence]: {
     [ArchimateType.DRIVER]: [ArchimateType.GOAL, ArchimateType.OUTCOME],
     [ArchimateType.GOAL]: [ArchimateType.REQUIREMENT],
   },
 
   // Triggering - Temporal/causal dependency
-  [RelationType.TRIGGERING]: {
+  [RelationType.Triggering]: {
     [ArchimateType.BUSINESS_EVENT]: [ArchimateType.BUSINESS_PROCESS],
     [ArchimateType.BUSINESS_PROCESS]: [ArchimateType.BUSINESS_PROCESS],
   },
 
   // Flow - Transfer of information/value
-  [RelationType.FLOW]: {
+  [RelationType.Flow]: {
     [ArchimateType.BUSINESS_PROCESS]: [ArchimateType.BUSINESS_PROCESS],
     [ArchimateType.APPLICATION_FUNCTION]: [ArchimateType.APPLICATION_FUNCTION],
   },
 
   // Specialization - Generalization hierarchy
-  [RelationType.SPECIALIZATION]: {
+  [RelationType.Specialization]: {
     [ArchimateType.BUSINESS_ACTOR]: [ArchimateType.BUSINESS_ACTOR],
     [ArchimateType.APPLICATION_COMPONENT]: [ArchimateType.APPLICATION_COMPONENT],
   },
 
   // Association - Unspecified relationship
-  [RelationType.ASSOCIATION]: {
+  [RelationType.Association]: {
     // Association allowed between any elements of same layer
   },
 };
@@ -329,12 +328,12 @@ const VALIDATION_RULES: ValidationRule[] = [
     category: 'relationships',
     severity: 'error',
     enabled: true,
-    validate: (nodes, edges) => {
+    validate: (_nodes, edges) => {
       const issues: ValidationIssue[] = [];
       for (const edge of Object.values(edges)) {
         if (edge.sourceId === edge.targetId) {
           const relationType = edge.data?.relationType;
-          if (relationType !== RelationType.SPECIALIZATION) {
+          if (relationType !== RelationType.Specialization) {
             issues.push({
               ruleId: 'REL-002',
               severity: 'error',
@@ -371,7 +370,7 @@ const VALIDATION_RULES: ValidationRule[] = [
       };
 
       for (const edge of Object.values(edges)) {
-        if (edge.data?.relationType !== RelationType.ASSOCIATION) continue;
+        if (edge.data?.relationType !== RelationType.Association) continue;
 
         const sourceNode = nodes[edge.sourceId];
         const targetNode = nodes[edge.targetId];
@@ -407,7 +406,7 @@ const VALIDATION_RULES: ValidationRule[] = [
     validate: (nodes, edges) => {
       const issues: ValidationIssue[] = [];
       const compositionEdges = Object.values(edges).filter(
-        (e) => e.data?.relationType === RelationType.COMPOSITION
+        (e) => e.data?.relationType === RelationType.Composition
       );
 
       // Build adjacency list
@@ -426,7 +425,12 @@ const VALIDATION_RULES: ValidationRule[] = [
 
         for (const neighbor of graph[nodeId] || []) {
           if (!visited.has(neighbor)) {
-            if (detectCycle(neighbor, [...path, neighbor])) return true;
+            if (detectCycle(neighbor, [...path, neighbor])) {
+              // Dépiler avant chaque retour anticipé : un noeud laissé dans
+              // recStack provoquait de faux cycles sur les parcours suivants.
+              recStack.delete(nodeId);
+              return true;
+            }
           } else if (recStack.has(neighbor)) {
             issues.push({
               ruleId: 'HIER-001',
@@ -436,6 +440,7 @@ const VALIDATION_RULES: ValidationRule[] = [
               nodeIds: [...path, neighbor],
               suggestion: 'Supprimer une des relations de composition du cycle',
             });
+            recStack.delete(nodeId);
             return true;
           }
         }
@@ -464,7 +469,7 @@ const VALIDATION_RULES: ValidationRule[] = [
     validate: (nodes, edges) => {
       const issues: ValidationIssue[] = [];
       for (const edge of Object.values(edges)) {
-        if (edge.data?.relationType !== RelationType.COMPOSITION) continue;
+        if (edge.data?.relationType !== RelationType.Composition) continue;
 
         const targetNode = nodes[edge.targetId];
         if (!targetNode) continue;
@@ -612,7 +617,7 @@ const VALIDATION_RULES: ValidationRule[] = [
     category: 'completeness',
     severity: 'error',
     enabled: true,
-    validate: (nodes, edges) => {
+    validate: (_nodes, edges) => {
       const issues: ValidationIssue[] = [];
       for (const edge of Object.values(edges)) {
         if (!edge.data?.relationType) {
@@ -734,9 +739,9 @@ const VALIDATION_RULES: ValidationRule[] = [
     validate: (nodes, edges) => {
       const issues: ValidationIssue[] = [];
       const crossLayerAllowed = [
-        RelationType.SERVING,
-        RelationType.REALIZATION,
-        RelationType.ASSOCIATION,
+        RelationType.Serving,
+        RelationType.Realization,
+        RelationType.Association,
       ];
 
       const getLayer = (type: ArchimateType): string => {

@@ -11,6 +11,20 @@
    ========================================================================= */
 
 :root {
+  /* Typographie. Inter Variable est importée dans main.ts via @fontsource. */
+  --font-sans: 'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+
+  /* Rayons de bordure — trois niveaux suffisent pour toute l'UI. */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  /* Élévation — ombres douces et superposées (plus marquées en mode nuit). */
+  --shadow-1: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 1px rgba(15, 23, 42, 0.04);
+  --shadow-2: 0 2px 4px rgba(15, 23, 42, 0.07), 0 6px 16px rgba(15, 23, 42, 0.08);
+  --shadow-3: 0 4px 8px rgba(15, 23, 42, 0.08), 0 16px 40px rgba(15, 23, 42, 0.14);
+
   --bg:          #ffffff;   /* fond principal app */
   --surface:     #ffffff;   /* surfaces neutres (inspecteur, panneaux) */
   --surface-2:   #f3f4f6;   /* en-têtes, barres, boutons neutres */
@@ -30,6 +44,29 @@
   --accent-valid:     #22c55e;   /* drop target, succès */
   --accent-guide:     #ec4899;   /* guides de magnétisme */
 
+  /* Déclinaisons de l'accent pour les états interactifs. */
+  --accent-hover:   #2563eb;                    /* survol des boutons primaires */
+  --accent-soft:    rgba(59, 130, 246, 0.12);   /* fonds de sélection légers */
+  --accent-strong:  #1e40af;                    /* texte sur fond accent-soft */
+
+  /* Couleurs sémantiques (texte + fond léger associé). */
+  --danger:        #dc2626;
+  --danger-strong: #b91c1c;
+  --danger-bg:     rgba(239, 68, 68, 0.10);
+  --warning:       #d97706;
+  --warning-bg:    rgba(245, 158, 11, 0.12);
+  --success:       #16a34a;
+  --success-bg:    rgba(34, 197, 94, 0.12);
+
+  /* Boutons danger pleins : rouge identique dans les deux modes. */
+  --danger-solid:       #dc2626;
+  --danger-solid-hover: #b91c1c;
+
+  /* Voile des modales et bulle de statut (inversée selon le mode). */
+  --overlay:    rgba(15, 23, 42, 0.45);
+  --tooltip-bg: #1f2937;
+  --tooltip-fg: #f9fafb;
+
   /* Badges sémantiques (couleurs de fond, bordure, texte). */
   --badge-danger-bg:    rgba(239, 68, 68, 0.12);
   --badge-danger-fg:    #b91c1c;
@@ -46,6 +83,10 @@
 }
 
 .dark {
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.50), 0 6px 18px rgba(0, 0, 0, 0.40);
+  --shadow-3: 0 6px 16px rgba(0, 0, 0, 0.55), 0 18px 48px rgba(0, 0, 0, 0.50);
+
   --bg:          #0f172a;
   --surface:     #1f2937;
   --surface-2:   #111827;
@@ -63,6 +104,22 @@
   --accent-selected:  #60a5fa;
   --accent-valid:     #4ade80;
   --accent-guide:     #f472b6;
+
+  --accent-hover:   #3b82f6;
+  --accent-soft:    rgba(96, 165, 250, 0.18);
+  --accent-strong:  #93c5fd;
+
+  --danger:        #f87171;
+  --danger-strong: #fca5a5;
+  --danger-bg:     rgba(239, 68, 68, 0.18);
+  --warning:       #fbbf24;
+  --warning-bg:    rgba(245, 158, 11, 0.20);
+  --success:       #4ade80;
+  --success-bg:    rgba(34, 197, 94, 0.18);
+
+  --overlay:    rgba(2, 6, 23, 0.65);
+  --tooltip-bg: #f3f4f6;
+  --tooltip-fg: #111827;
 
   --badge-danger-bg:    rgba(239, 68, 68, 0.20);
   --badge-danger-fg:    #fca5a5;
@@ -83,6 +140,20 @@ html, body, #app {
   margin: 0;
   background-color: var(--bg);
   color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* La couleur de bordure par défaut de Tailwind (gray-200) ne suit pas le
+   thème : on la remappe globalement sur la variable, pour que `border-b`
+   sans classe de couleur reste correct en mode nuit. */
+*, ::before, ::after {
+  border-color: var(--border);
+}
+
+/* Les curseurs (sliders) suivent l'accent du thème partout. */
+input[type="range"] {
+  accent-color: var(--accent);
 }
 
 /* Surfaces nommées — utilisées par Toolbar, Sidebar, PropertyInspector, etc. */
@@ -107,6 +178,141 @@ html, body, #app {
 .app-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* Bouton primaire : fond accent, texte blanc.
+   Usage : <button class="app-btn-primary px-3 py-1.5 rounded text-sm"> */
+.app-btn-primary {
+  background-color: var(--accent);
+  color: #ffffff;
+  transition: background-color 0.15s ease-out;
+}
+.app-btn-primary:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+}
+.app-btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Bouton destructif : fond rouge plein, texte blanc. */
+.app-btn-danger {
+  background-color: var(--danger-solid);
+  color: #ffffff;
+  transition: background-color 0.15s ease-out;
+}
+.app-btn-danger:hover:not(:disabled) {
+  background-color: var(--danger-solid-hover);
+}
+.app-btn-danger:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Champ de saisie unifié (text, number, select, textarea).
+   Usage : <input class="app-input w-full px-2 py-1 text-sm"> */
+.app-input {
+  background-color: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+.app-input::placeholder {
+  color: var(--fg-subtle);
+}
+.app-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Titre de section de panneau — typographie homogène dans les inspecteurs. */
+.app-section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* Touche clavier (raccourcis, aide). */
+.app-kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  line-height: 1.1rem;
+  color: var(--fg-muted);
+  background-color: var(--surface-2);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+/* Voile des modales — remplace bg-black/40 pour suivre le thème. */
+.app-overlay {
+  background-color: var(--overlay);
+}
+
+/* Bulle de statut/toast (contraste inversé selon le mode). */
+.app-status-pill {
+  background-color: var(--tooltip-bg);
+  color: var(--tooltip-fg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-2);
+}
+
+/* Bouton-bascule (segments, choix de type de relation, etc.). */
+.app-toggle {
+  background-color: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s ease-out, border-color 0.15s ease-out, color 0.15s ease-out;
+}
+.app-toggle:hover {
+  background-color: var(--surface-2);
+}
+.app-toggle-active,
+.app-toggle-active:hover {
+  background-color: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+/* Texte et liens destructifs (suppression, erreurs). */
+.app-danger-text {
+  color: var(--danger);
+}
+.app-danger-link {
+  color: var(--danger);
+  transition: color 0.15s ease-out;
+}
+.app-danger-link:hover {
+  color: var(--danger-strong);
+}
+
+/* Item de menu destructif (menu contextuel). */
+.app-menu-danger {
+  color: var(--danger);
+}
+.app-menu-danger:hover:not(:disabled) {
+  background-color: var(--danger-bg);
+}
+
+/* Anneau de focus/sélection à l'accent — compose avec `ring-2` Tailwind. */
+.app-ring-accent {
+  --tw-ring-color: var(--accent);
+}
+
+/* Bordure accentuée au survol (items déplaçables de la bibliothèque). */
+.app-hover-border-accent {
+  transition: border-color 0.15s ease-out;
+}
+.app-hover-border-accent:hover {
+  border-color: var(--accent);
 }
 
 /* Survol d'élément de liste ou d'item cliquable (ex. items de sidebar,
@@ -176,7 +382,7 @@ html, body, #app {
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 3px;
-  font-family: ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 0.85em;
   color: var(--fg);
 }

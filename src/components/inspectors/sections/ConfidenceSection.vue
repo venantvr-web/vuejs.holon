@@ -23,8 +23,8 @@ const MATURITIES = Object.values(ModelingMaturity);
 </script>
 
 <template>
-  <section class="p-3 border-b">
-    <h3 class="text-sm font-semibold mb-2 app-fg">Maturité du modèle</h3>
+  <section class="p-3 border-b app-border">
+    <h3 class="app-section-title mb-2">Maturité du modèle</h3>
 
     <!-- État courant -->
     <div class="flex items-center gap-2 mb-3">

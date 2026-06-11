@@ -2,6 +2,18 @@
 <!-- src/components/canvas/SuggestionsPanel.vue -->
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import type { Component } from 'vue';
+import {
+  ArrowUpRight,
+  Diamond,
+  Ellipsis,
+  LayoutTemplate,
+  Lightbulb,
+  Pencil,
+  Recycle,
+  X,
+  Zap,
+} from 'lucide-vue-next';
 import { useSuggestable, useSelectionState } from '../../composables/traits';
 import type { Suggestion, SuggestionPriority } from '../../composables/traits';
 
@@ -31,13 +43,14 @@ const PRIORITY_LABEL: Record<SuggestionPriority, string> = {
   low: 'Basse',
 };
 
-const TYPE_ICON: Record<string, string> = {
-  connection: '↗',
-  pattern: '⛩',
-  refactoring: '♻',
-  naming: '✎',
-  completion: '…',
-  optimization: '⚡',
+// Icônes lucide par type de suggestion (fallback : Diamond).
+const TYPE_ICON: Record<string, Component> = {
+  connection: ArrowUpRight,
+  pattern: LayoutTemplate,
+  refactoring: Recycle,
+  naming: Pencil,
+  completion: Ellipsis,
+  optimization: Zap,
 };
 
 function focusSuggestion(s: Suggestion) {
@@ -55,13 +68,15 @@ const count = computed(() => activeSuggestions.value.length);
     <button
       @click="handleGenerate"
       :disabled="isGenerating"
-      class="px-3 py-1.5 text-sm app-btn rounded transition-colors flex items-center gap-1 disabled:opacity-40"
+      class="px-3 py-1.5 text-sm rounded transition-colors duration-150 flex items-center gap-1.5 disabled:opacity-40"
+      :class="isOpen && count > 0 ? 'app-toggle-active' : 'app-btn'"
       title="Générer des suggestions contextuelles"
     >
-      <span>💡 Suggérer</span>
+      <Lightbulb :size="16" />
+      <span>Suggérer</span>
       <span
         v-if="count > 0"
-        class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs rounded-full bg-purple-500 text-white"
+        class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-semibold"
       >
         {{ count }}
       </span>
@@ -69,26 +84,30 @@ const count = computed(() => activeSuggestions.value.length);
 
     <div
       v-if="isOpen && count > 0"
-      class="fixed bottom-3 left-[260px] right-[330px] max-h-[40vh] app-surface border border-purple-300 rounded-lg shadow-xl z-30 flex flex-col"
+      class="fixed bottom-3 left-[260px] right-[330px] max-h-[40vh] app-surface border app-border rounded-lg shadow-xl z-30 flex flex-col"
       @mousedown.stop
     >
-      <div class="flex items-center justify-between px-3 py-2 border-b border-purple-300 app-surface-2">
+      <div class="flex items-center justify-between px-3 py-2 border-b app-border app-surface-2">
         <div class="flex items-center gap-2">
-          <h3 class="text-sm font-semibold app-fg">💡 Suggestions</h3>
+          <h3 class="text-sm font-semibold app-fg flex items-center gap-1.5">
+            <Lightbulb :size="14" class="text-[var(--warning)]" />
+            <span>Suggestions</span>
+          </h3>
           <span class="text-xs app-subtle">{{ count }} proposition{{ count > 1 ? 's' : '' }}</span>
         </div>
         <div class="flex items-center gap-2">
           <button
-            class="text-xs app-subtle hover:app-fg hover:underline"
+            class="text-xs app-subtle hover:text-[var(--fg)] hover:underline transition-colors duration-150"
             @click="clearSuggestions"
           >
             Tout effacer
           </button>
           <button
-            class="app-subtle hover:app-muted px-1"
+            class="app-subtle hover:text-[var(--fg)] transition-colors duration-150 px-1"
+            title="Fermer"
             @click="isOpen = false"
           >
-            ✕
+            <X :size="16" />
           </button>
         </div>
       </div>
@@ -100,7 +119,7 @@ const count = computed(() => activeSuggestions.value.length);
           class="px-3 py-2 app-hover"
         >
           <div class="flex items-start gap-2">
-            <span class="text-lg mt-0.5">{{ TYPE_ICON[s.type] ?? '◆' }}</span>
+            <component :is="TYPE_ICON[s.type] ?? Diamond" :size="16" class="app-muted mt-0.5 flex-shrink-0" />
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1">
                 <span :class="PRIORITY_CLS[s.priority]">
@@ -124,17 +143,17 @@ const count = computed(() => activeSuggestions.value.length);
               </button>
               <button
                 v-if="s.apply"
-                class="text-xs px-2 py-0.5 bg-purple-500 text-white rounded hover:bg-purple-600"
+                class="text-xs px-2 py-0.5 app-btn-primary rounded"
                 @click="applySuggestion(s.id)"
               >
                 Appliquer
               </button>
               <button
-                class="text-xs app-subtle hover:app-muted px-1"
+                class="app-subtle hover:text-[var(--fg)] transition-colors duration-150 px-1"
                 title="Ignorer"
                 @click="dismissSuggestion(s.id)"
               >
-                ✕
+                <X :size="14" />
               </button>
             </div>
           </div>

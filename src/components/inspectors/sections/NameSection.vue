@@ -22,15 +22,15 @@ const name = computed({
 </script>
 
 <template>
-  <section class="p-3 border-b">
-    <h3 class="text-sm font-semibold mb-2 app-fg">Identité</h3>
+  <section class="p-3 border-b app-border">
+    <h3 class="app-section-title mb-2">Identité</h3>
     <label class="block text-xs app-muted mb-1" for="node-name">Nom</label>
     <input
       id="node-name"
       v-model="name"
       type="text"
       placeholder="Nom du noeud…"
-      class="w-full px-2 py-1 text-sm border border-gray-300 rounded outline-none focus:border-blue-500"
+      class="app-input w-full px-2 py-1 text-sm"
     />
   </section>
 </template>

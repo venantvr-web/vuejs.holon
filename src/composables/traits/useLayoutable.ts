@@ -326,7 +326,6 @@ export function useLayoutable(): LayoutableState & LayoutableHandlers {
     if (nodeCount === 0) return;
 
     const cols = Math.ceil(Math.sqrt(nodeCount));
-    const rows = Math.ceil(nodeCount / cols);
 
     const positions = nodes.map((node, index) => {
       const col = index % cols;
@@ -370,7 +369,6 @@ export function useLayoutable(): LayoutableState & LayoutableHandlers {
 
     // Construire la hiérarchie
     const buildHierarchy = (nodeId: string): any => {
-      const node = graphStore.nodes[nodeId];
       const children = nodes.filter((n) => n.parentId === nodeId);
 
       return {

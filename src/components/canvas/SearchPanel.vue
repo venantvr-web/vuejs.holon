@@ -2,9 +2,11 @@
 <!-- src/components/canvas/SearchPanel.vue -->
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { Search, X } from 'lucide-vue-next';
 import { useGraphStore } from '../../stores/graph';
 import { useSearchable, useSelectionState } from '../../composables/traits';
 import { useViewport } from '../../composables/useViewport';
+import { useI18n } from '../../composables/useI18n';
 import { getNodeAbsolutePosition } from '../../composables/traits/utils/trait-helpers';
 
 interface Props {
@@ -16,6 +18,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{ (e: 'close'): void }>();
 
 const graphStore = useGraphStore();
+const { t } = useI18n();
 const { selectedNodeIds, focusedNodeId } = useSelectionState();
 const { search, searchResults } = useSearchable();
 const { fitWorldBox } = useViewport();
@@ -111,21 +114,21 @@ onBeforeUnmount(() => {
     @mousedown.stop
   >
     <div class="p-2 border-b flex items-center gap-2">
-      <span class="app-subtle">🔍</span>
+      <Search :size="16" class="app-subtle flex-shrink-0" />
       <input
         ref="inputRef"
         v-model="query"
         type="text"
-        placeholder="Rechercher un noeud ou une relation…"
-        class="flex-1 px-2 py-1 text-sm outline-none"
+        :placeholder="t('search.placeholder')"
+        class="app-input flex-1 px-2 py-1 text-sm"
         @keydown="handleKey"
       />
       <button
-        class="app-subtle hover:app-muted px-1"
+        class="app-subtle hover:text-[var(--fg)] transition-colors duration-150 px-1"
         title="Fermer (Échap)"
         @click="emit('close')"
       >
-        ✕
+        <X :size="16" />
       </button>
     </div>
 
@@ -133,7 +136,7 @@ onBeforeUnmount(() => {
       v-if="query && items.length === 0"
       class="p-3 text-sm app-subtle text-center"
     >
-      Aucun résultat
+      {{ t('search.noResults') }}
     </div>
 
     <ul
@@ -151,7 +154,9 @@ onBeforeUnmount(() => {
         <div class="flex items-center gap-2 truncate">
           <span
             class="text-xs px-1.5 py-0.5 rounded"
-            :class="item.type === 'node' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'"
+            :class="item.type === 'node'
+              ? 'bg-[var(--accent-soft)] text-[var(--accent-strong)]'
+              : 'bg-[var(--success-bg)] text-[var(--success)]'"
           >
             {{ item.type === 'node' ? 'N' : 'E' }}
           </span>
@@ -162,7 +167,7 @@ onBeforeUnmount(() => {
     </ul>
 
     <div class="px-3 py-1.5 border-t text-xs app-subtle flex justify-between">
-      <span>↑↓ naviguer · Entrée centrer</span>
+      <span><kbd class="app-kbd">↑↓</kbd> naviguer · <kbd class="app-kbd">Entrée</kbd> centrer</span>
       <span>{{ items.length }} résultat{{ items.length > 1 ? 's' : '' }}</span>
     </div>
   </div>
