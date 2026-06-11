@@ -6,6 +6,7 @@ import { Search, X } from 'lucide-vue-next';
 import { useGraphStore } from '../../stores/graph';
 import { useSearchable, useSelectionState } from '../../composables/traits';
 import { useViewport } from '../../composables/useViewport';
+import { useI18n } from '../../composables/useI18n';
 import { getNodeAbsolutePosition } from '../../composables/traits/utils/trait-helpers';
 
 interface Props {
@@ -17,6 +18,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{ (e: 'close'): void }>();
 
 const graphStore = useGraphStore();
+const { t } = useI18n();
 const { selectedNodeIds, focusedNodeId } = useSelectionState();
 const { search, searchResults } = useSearchable();
 const { fitWorldBox } = useViewport();
@@ -117,7 +119,7 @@ onBeforeUnmount(() => {
         ref="inputRef"
         v-model="query"
         type="text"
-        placeholder="Rechercher un noeud ou une relation…"
+        :placeholder="t('search.placeholder')"
         class="app-input flex-1 px-2 py-1 text-sm"
         @keydown="handleKey"
       />
@@ -134,7 +136,7 @@ onBeforeUnmount(() => {
       v-if="query && items.length === 0"
       class="p-3 text-sm app-subtle text-center"
     >
-      Aucun résultat
+      {{ t('search.noResults') }}
     </div>
 
     <ul

@@ -14,7 +14,9 @@ import SearchPanel from './SearchPanel.vue';
 import NodeArchimateTypePicker from './NodeArchimateTypePicker.vue';
 import { useTypeable, type ArchimateType } from '../../composables/traits/useTypeable';
 import ContextMenu, { type ContextMenuItem } from '../ui/ContextMenu.vue';
+import { useI18n } from '../../composables/useI18n';
 
+const { t } = useI18n();
 const graphStore = useGraphStore();
 const libraryStore = useLibraryStore();
 const { screenToLocalCoordinates, getNodeAbsolutePosition } = useGeometry();
@@ -116,6 +118,8 @@ function handleDrop(event: DragEvent) {
   if (!itemJSON || !svgRoot.value) return;
 
   const item = JSON.parse(itemJSON);
+  // screenToLocalCoordinates retourne désormais des coordonnées monde
+  // (pan/zoom déjà défaits).
   const { x, y } = screenToLocalCoordinates(
     event.clientX,
     event.clientY,
@@ -123,12 +127,8 @@ function handleDrop(event: DragEvent) {
     null
   );
 
-  // Ajuster pour le zoom et le pan
-  const adjustedX = (x - pan.value.x) / zoomLevel.value;
-  const adjustedY = (y - pan.value.y) / zoomLevel.value;
-
   graphStore.createNode(
-    { ...item, geometry: { ...item.geometry, x: adjustedX, y: adjustedY } },
+    { ...item, geometry: { ...item.geometry, x, y } },
     null
   );
 }
@@ -203,11 +203,7 @@ function handleMouseMove(event: MouseEvent) {
 
   // Mise à jour de l'aperçu de connexion
   if (connectionMode.value && connectionSource.value && svgRoot.value) {
-    const { x, y } = screenToLocalCoordinates(event.clientX, event.clientY, svgRoot.value, null);
-    connectionPreview.value = {
-      x: (x - pan.value.x) / zoomLevel.value,
-      y: (y - pan.value.y) / zoomLevel.value,
-    };
+    connectionPreview.value = screenToLocalCoordinates(event.clientX, event.clientY, svgRoot.value, null);
   }
 }
 
@@ -223,11 +219,7 @@ function handleMouseUp(event: MouseEvent) {
 /** Convertit des coordonnées écran en coordonnées monde (après pan/zoom). */
 function screenToWorld(screenX: number, screenY: number): { x: number; y: number } {
   if (!svgRoot.value) return { x: 0, y: 0 };
-  const { x, y } = screenToLocalCoordinates(screenX, screenY, svgRoot.value, null);
-  return {
-    x: (x - pan.value.x) / zoomLevel.value,
-    y: (y - pan.value.y) / zoomLevel.value,
-  };
+  return screenToLocalCoordinates(screenX, screenY, svgRoot.value, null);
 }
 
 /** Rectangle normalisé du marquee en espace monde. */
@@ -358,25 +350,25 @@ function openNodeContextMenu(payload: { nodeId: string; x: number; y: number }) 
 
   const items: ContextMenuItem[] = [
     {
-      label: 'Dupliquer',
+      label: t('menu.duplicate'),
       shortcut: 'Ctrl+D',
       icon: '⎘',
       action: () => { void duplicate(); },
     },
     {
-      label: 'Copier',
+      label: t('menu.copy'),
       shortcut: 'Ctrl+C',
       icon: '⧉',
       action: () => copy(),
     },
     {
-      label: 'Couper',
+      label: t('menu.cut'),
       shortcut: 'Ctrl+X',
       icon: '✂',
       action: () => cut(),
     },
     {
-      label: 'Coller',
+      label: t('menu.paste'),
       shortcut: 'Ctrl+V',
       icon: '📋',
       disabled: !canPaste(),
@@ -384,27 +376,27 @@ function openNodeContextMenu(payload: { nodeId: string; x: number; y: number }) 
     },
     { label: '', separator: true },
     {
-      label: hasMulti ? 'Grouper' : 'Grouper (2+ requis)',
+      label: hasMulti ? t('menu.group') : t('menu.groupRequires'),
       shortcut: 'Ctrl+G',
       icon: '◫',
       disabled: !hasMulti,
       action: () => createGroupFromSelection(),
     },
     {
-      label: 'Dégrouper',
+      label: t('menu.ungroup'),
       shortcut: 'Ctrl+Maj+G',
       disabled: !gid,
       action: () => { if (gid) dissolveGroup(gid); },
     },
     { label: '', separator: true },
     {
-      label: 'Ajouter à la bibliothèque',
+      label: t('menu.addToLibrary'),
       icon: '📚',
       action: () => addSelectionToLibrary(nodeId),
     },
     { label: '', separator: true },
     {
-      label: 'Supprimer',
+      label: t('common.delete'),
       shortcut: 'Suppr',
       icon: '🗑',
       danger: true,
@@ -422,7 +414,7 @@ function openBackgroundContextMenu(event: MouseEvent) {
   event.preventDefault();
   const items: ContextMenuItem[] = [
     {
-      label: 'Coller ici',
+      label: t('menu.pasteHere'),
       shortcut: 'Ctrl+V',
       icon: '📋',
       disabled: !canPaste(),
@@ -430,14 +422,14 @@ function openBackgroundContextMenu(event: MouseEvent) {
     },
     { label: '', separator: true },
     {
-      label: 'Tout sélectionner',
+      label: t('menu.selectAll'),
       shortcut: 'Ctrl+A',
       action: () => {
         selectedNodeIds.value = new Set(Object.keys(graphStore.nodes));
       },
     },
     {
-      label: 'Désélectionner',
+      label: t('menu.deselect'),
       shortcut: 'Échap',
       disabled: selectedNodeIds.value.size === 0,
       action: () => clearSelection(),
@@ -451,8 +443,8 @@ async function addSelectionToLibrary(fallbackNodeId: string) {
   // éviter de polluer la bibliothèque avec des variantes incomplètes.
   const node = graphStore.nodes[fallbackNodeId];
   if (!node) return;
-  const defaultName = (node.data?.name as string) ?? 'Mon bloc';
-  const name = window.prompt('Nom du bloc dans la bibliothèque :', defaultName);
+  const defaultName = (node.data?.name as string) ?? t('library.defaultBlockName');
+  const name = window.prompt(t('library.blockNamePrompt'), defaultName);
   if (!name) return;
   await libraryStore.addFromNode(node, name);
 }
@@ -568,7 +560,7 @@ defineExpose({ svgRoot, pan, zoomLevel });
       v-if="connectionMode"
       class="absolute top-2 left-1/2 -translate-x-1/2 bg-blue-500 text-white px-3 py-1 rounded-full text-sm z-10"
     >
-      Mode connexion - Cliquez sur un noeud cible (Echap pour annuler)
+      {{ t('canvas.connectionMode') }}
     </div>
 
     <svg

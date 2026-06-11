@@ -3,6 +3,7 @@
 import { computed, defineAsyncComponent, ref, toRef } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import { useLibraryStore } from '../../stores/library';
+import { useI18n } from '../../composables/useI18n';
 import {
   useDraggable,
   useResizable,
@@ -39,6 +40,7 @@ const emit = defineEmits<{
 }>();
 
 const graphStore = useGraphStore();
+const { t } = useI18n();
 const libraryStore = useLibraryStore();
 const nodeIdRef = toRef(props, 'nodeId');
 const zoomLevelRef = computed(() => props.zoomLevel ?? 1);
@@ -319,8 +321,8 @@ function handleResizeStartIfNotLocked(event: MouseEvent) {
 
 async function addToLibrary() {
   if (!node.value) return;
-  const defaultName = (node.value.data?.name as string) ?? 'Mon bloc';
-  const name = window.prompt('Nom du bloc dans la bibliothèque :', defaultName);
+  const defaultName = (node.value.data?.name as string) ?? t('library.defaultBlockName');
+  const name = window.prompt(t('library.blockNamePrompt'), defaultName);
   if (!name) return;
   await libraryStore.addFromNode(node.value, name);
 }
@@ -588,36 +590,36 @@ async function addToLibrary() {
       height="170"
     >
       <div
-        class="app-surface border border-blue-400 rounded-lg shadow-lg p-2 pb-3"
+        class="app-surface border border-[var(--accent)] rounded-lg shadow-lg p-2 pb-3"
         @mousedown.stop
         @click.stop
       >
-        <div class="text-xs font-medium app-muted mb-1">Commentaire</div>
+        <div class="text-xs font-medium app-muted mb-1">{{ t('canvas.commentLabel') }}</div>
         <textarea
           v-model="tooltip.editCommentValue.value"
           @keydown="handleCommentKeydown"
-          class="w-full h-20 px-2 py-1 text-sm border app-border rounded resize-none outline-none focus:border-blue-500"
-          placeholder="Ajouter un commentaire..."
+          class="app-input w-full h-20 px-2 py-1 text-sm resize-none"
+          :placeholder="t('canvas.commentPlaceholder')"
           autofocus
         />
         <div class="flex justify-between mt-2 mb-1">
           <button
             v-if="tooltip.hasComment.value"
             @click="tooltip.deleteComment"
-            class="text-xs text-red-500 hover:text-red-700"
+            class="text-xs app-danger-link"
           >
-            Supprimer
+            {{ t('common.delete') }}
           </button>
           <div class="flex gap-2 ml-auto">
             <button
               @click="tooltip.cancelEditComment"
               class="px-2 py-1 text-xs app-muted hover:app-fg"
             >
-              Annuler
+              {{ t('common.cancel') }}
             </button>
             <button
               @click="tooltip.commitComment"
-              class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+              class="app-btn-primary px-2 py-1 text-xs rounded"
             >
               OK
             </button>
