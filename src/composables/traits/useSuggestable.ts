@@ -234,8 +234,8 @@ const ARCHITECTURAL_PATTERNS: PatternSuggestion[] = [
       { type: ArchimateType.TECHNOLOGY_NODE, name: 'Technology Node' },
     ],
     relationsToCreate: [
-      { sourceIndex: 0, targetIndex: 1, relationType: RelationType.SERVING },
-      { sourceIndex: 1, targetIndex: 2, relationType: RelationType.SERVING },
+      { sourceIndex: 0, targetIndex: 1, relationType: RelationType.Serving },
+      { sourceIndex: 1, targetIndex: 2, relationType: RelationType.Serving },
     ],
   },
   {
@@ -247,8 +247,8 @@ const ARCHITECTURAL_PATTERNS: PatternSuggestion[] = [
       { type: ArchimateType.APPLICATION_INTERFACE, name: 'Service Interface' },
     ],
     relationsToCreate: [
-      { sourceIndex: 0, targetIndex: 1, relationType: RelationType.REALIZATION },
-      { sourceIndex: 1, targetIndex: 2, relationType: RelationType.ASSIGNMENT },
+      { sourceIndex: 0, targetIndex: 1, relationType: RelationType.Realization },
+      { sourceIndex: 1, targetIndex: 2, relationType: RelationType.Assignment },
     ],
   },
   {
@@ -260,8 +260,8 @@ const ARCHITECTURAL_PATTERNS: PatternSuggestion[] = [
       { type: ArchimateType.REQUIREMENT, name: 'Requirement' },
     ],
     relationsToCreate: [
-      { sourceIndex: 0, targetIndex: 1, relationType: RelationType.INFLUENCE },
-      { sourceIndex: 1, targetIndex: 2, relationType: RelationType.REALIZATION },
+      { sourceIndex: 0, targetIndex: 1, relationType: RelationType.Influence },
+      { sourceIndex: 1, targetIndex: 2, relationType: RelationType.Realization },
     ],
   },
 ];
@@ -275,29 +275,29 @@ const CONNECTION_COMPATIBILITY: Record<
   Array<{ targetType: ArchimateType; relationType: RelationType; confidence: number }>
 > = {
   [ArchimateType.BUSINESS_ACTOR]: [
-    { targetType: ArchimateType.BUSINESS_ROLE, relationType: RelationType.ASSIGNMENT, confidence: 0.9 },
-    { targetType: ArchimateType.BUSINESS_PROCESS, relationType: RelationType.ASSIGNMENT, confidence: 0.7 },
+    { targetType: ArchimateType.BUSINESS_ROLE, relationType: RelationType.Assignment, confidence: 0.9 },
+    { targetType: ArchimateType.BUSINESS_PROCESS, relationType: RelationType.Assignment, confidence: 0.7 },
   ],
   [ArchimateType.BUSINESS_PROCESS]: [
-    { targetType: ArchimateType.BUSINESS_SERVICE, relationType: RelationType.REALIZATION, confidence: 0.9 },
-    { targetType: ArchimateType.BUSINESS_OBJECT, relationType: RelationType.ACCESS, confidence: 0.8 },
-    { targetType: ArchimateType.BUSINESS_PROCESS, relationType: RelationType.TRIGGERING, confidence: 0.7 },
+    { targetType: ArchimateType.BUSINESS_SERVICE, relationType: RelationType.Realization, confidence: 0.9 },
+    { targetType: ArchimateType.BUSINESS_OBJECT, relationType: RelationType.Access, confidence: 0.8 },
+    { targetType: ArchimateType.BUSINESS_PROCESS, relationType: RelationType.Triggering, confidence: 0.7 },
   ],
   [ArchimateType.APPLICATION_COMPONENT]: [
-    { targetType: ArchimateType.APPLICATION_SERVICE, relationType: RelationType.REALIZATION, confidence: 0.9 },
-    { targetType: ArchimateType.DATA_OBJECT, relationType: RelationType.ACCESS, confidence: 0.8 },
-    { targetType: ArchimateType.APPLICATION_INTERFACE, relationType: RelationType.COMPOSITION, confidence: 0.7 },
+    { targetType: ArchimateType.APPLICATION_SERVICE, relationType: RelationType.Realization, confidence: 0.9 },
+    { targetType: ArchimateType.DATA_OBJECT, relationType: RelationType.Access, confidence: 0.8 },
+    { targetType: ArchimateType.APPLICATION_INTERFACE, relationType: RelationType.Composition, confidence: 0.7 },
   ],
   [ArchimateType.TECHNOLOGY_NODE]: [
-    { targetType: ArchimateType.TECHNOLOGY_SERVICE, relationType: RelationType.REALIZATION, confidence: 0.9 },
-    { targetType: ArchimateType.TECHNOLOGY_DEVICE, relationType: RelationType.COMPOSITION, confidence: 0.8 },
+    { targetType: ArchimateType.TECHNOLOGY_SERVICE, relationType: RelationType.Realization, confidence: 0.9 },
+    { targetType: ArchimateType.TECHNOLOGY_DEVICE, relationType: RelationType.Composition, confidence: 0.8 },
   ],
   // Autres types avec compatibilités par défaut
   [ArchimateType.DRIVER]: [
-    { targetType: ArchimateType.GOAL, relationType: RelationType.INFLUENCE, confidence: 0.9 },
+    { targetType: ArchimateType.GOAL, relationType: RelationType.Influence, confidence: 0.9 },
   ],
   [ArchimateType.GOAL]: [
-    { targetType: ArchimateType.REQUIREMENT, relationType: RelationType.REALIZATION, confidence: 0.9 },
+    { targetType: ArchimateType.REQUIREMENT, relationType: RelationType.Realization, confidence: 0.9 },
   ],
   // Initialisation des autres types (réduit pour la concision)
 } as Record<ArchimateType, Array<{ targetType: ArchimateType; relationType: RelationType; confidence: number }>>;
@@ -645,16 +645,23 @@ export function useSuggestable(): SuggestableState & SuggestableHandlers {
           id: generateSuggestionId(),
           type: 'connection',
           priority: conn.confidence > 0.8 ? 'high' : 'medium',
-          description: `Connecter avec ${RelationType[conn.relationType]}`,
+          // conn.relationType est déjà la valeur string de l'enum ; le lookup
+          // inversé RelationType[...] n'existe pas pour les enums string et
+          // affichait « undefined ».
+          description: `Connecter avec ${conn.relationType}`,
           reasoning: conn.reason,
           confidence: conn.confidence,
           nodeIds: [conn.sourceId, conn.targetId],
-          apply: () => {
-            graphStore.createEdge({
-              sourceId: conn.sourceId,
-              targetId: conn.targetId,
-              data: { relationType: conn.relationType },
-            });
+          apply: async () => {
+            // createEdge prend (sourceId, targetId, routing) : l'ancien appel
+            // avec un objet ne créait jamais rien (et donc « Appliquer »
+            // était sans effet).
+            const edge = await graphStore.createEdge(conn.sourceId, conn.targetId);
+            if (edge) {
+              await graphStore.updateEdge(edge.id, {
+                data: { ...(edge.data ?? {}), relationType: conn.relationType },
+              });
+            }
           },
           dismiss: () => {
             dismissSuggestion(allSuggestions[allSuggestions.length - 1].id);
