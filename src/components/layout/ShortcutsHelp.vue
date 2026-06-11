@@ -2,6 +2,7 @@
 <!-- src/components/layout/ShortcutsHelp.vue -->
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { HelpCircle, X } from 'lucide-vue-next';
 import { useKeyboardable, formatShortcut } from '../../composables/traits';
 
 const { getShortcutsByCategory } = useKeyboardable();
@@ -45,33 +46,34 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey));
   <div>
     <button
       @click="isOpen = true"
-      class="px-2 py-1.5 text-sm app-btn rounded transition-colors"
+      class="px-2 py-1.5 text-sm app-btn rounded transition-colors duration-150 inline-flex items-center"
       title="Aide — raccourcis clavier (F1)"
+      aria-label="Aide — raccourcis clavier (F1)"
     >
-      ?
+      <HelpCircle :size="16" />
     </button>
 
     <div
       v-if="isOpen"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      class="app-overlay fixed inset-0 z-50 flex items-center justify-center"
       @click.self="isOpen = false"
     >
       <div class="app-surface border app-border rounded-lg shadow-xl w-[640px] max-h-[80vh] flex flex-col">
-        <div class="flex items-center justify-between px-4 py-3 border-b">
+        <div class="flex items-center justify-between px-4 py-3 border-b app-border">
           <h2 class="text-base font-semibold">Raccourcis clavier</h2>
           <button
             @click="isOpen = false"
-            class="app-subtle hover:app-muted"
+            class="app-subtle hover:app-muted transition-colors duration-150"
             aria-label="Fermer l'aide"
           >
-            ✕
+            <X :size="16" />
           </button>
         </div>
 
         <div class="overflow-y-auto p-4 space-y-4">
           <!-- Extras -->
           <div v-for="(items, category) in EXTRA_SHORTCUTS" :key="category">
-            <h3 class="text-sm font-semibold app-fg mb-2">{{ category }}</h3>
+            <h3 class="text-xs font-semibold uppercase tracking-wide app-muted mb-2">{{ category }}</h3>
             <ul class="space-y-1">
               <li
                 v-for="item in items"
@@ -79,16 +81,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey));
                 class="flex items-center justify-between text-sm gap-4"
               >
                 <span class="app-muted">{{ item.description }}</span>
-                <kbd class="px-2 py-0.5 text-xs font-mono app-surface-2 border app-border rounded">
-                  {{ item.keys }}
-                </kbd>
+                <kbd class="app-kbd">{{ item.keys }}</kbd>
               </li>
             </ul>
           </div>
 
           <!-- Raccourcis enregistrés dans useKeyboardable -->
           <div v-for="(items, category) in grouped" :key="category">
-            <h3 class="text-sm font-semibold app-fg mb-2">{{ category }}</h3>
+            <h3 class="text-xs font-semibold uppercase tracking-wide app-muted mb-2">{{ category }}</h3>
             <ul class="space-y-1">
               <li
                 v-for="s in items"
@@ -96,15 +96,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey));
                 class="flex items-center justify-between text-sm gap-4"
               >
                 <span class="app-muted">{{ s.description }}</span>
-                <kbd class="px-2 py-0.5 text-xs font-mono app-surface-2 border app-border rounded">
-                  {{ formatShortcut(s) }}
-                </kbd>
+                <kbd class="app-kbd">{{ formatShortcut(s) }}</kbd>
               </li>
             </ul>
           </div>
         </div>
 
-        <div class="px-4 py-2 border-t app-surface-2 text-xs app-subtle flex justify-between">
+        <div class="px-4 py-2 border-t app-border app-surface-2 text-xs app-subtle flex justify-between">
           <span>Appuyez sur F1 pour ouvrir/fermer · Échap pour fermer</span>
         </div>
       </div>

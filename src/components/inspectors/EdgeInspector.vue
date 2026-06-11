@@ -11,7 +11,7 @@ defineProps<EdgeInspectorProps>();
 <template>
   <div class="edge-inspector">
     <header class="px-3 py-3 border-b app-surface-2 app-border">
-      <h2 class="text-sm font-bold app-fg">Propriétés de l'arête</h2>
+      <h2 class="text-xs font-semibold uppercase tracking-wide app-muted">Propriétés de l'arête</h2>
       <p class="text-xs app-subtle mt-0.5 font-mono">ID: {{ edgeId.substring(0, 8) }}…</p>
     </header>
 

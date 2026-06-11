@@ -189,17 +189,15 @@ onUnmounted(() => {
       opacity="0.8"
     />
 
-    <!-- Rectangle de la viewport courante -->
+    <!-- Rectangle de la viewport courante — suit l'accent du thème. -->
     <rect
       :x="viewportRect.x"
       :y="viewportRect.y"
       :width="viewportRect.w"
       :height="viewportRect.h"
-      fill="#3b82f6"
       fill-opacity="0.15"
-      stroke="#3b82f6"
       stroke-width="1.5"
-      class="pointer-events-none"
+      class="pointer-events-none fill-[var(--accent)] stroke-[var(--accent)]"
     />
   </svg>
 </template>

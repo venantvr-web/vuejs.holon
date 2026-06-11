@@ -7,6 +7,7 @@
 -->
 <script setup lang="ts">
 import { computed, ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { Tag, X } from 'lucide-vue-next';
 import { ARCHIMATE_TYPES, type ArchimateLayer } from '../../composables/traits/useTypeable';
 
 interface Props {
@@ -116,36 +117,37 @@ onBeforeUnmount(() => {
   >
     <!-- Recherche -->
     <div class="p-2 border-b app-border flex items-center gap-2">
-      <span class="app-subtle text-sm">🏷</span>
+      <Tag :size="16" class="app-subtle flex-shrink-0" />
       <input
         ref="inputRef"
         v-model="query"
         type="text"
         placeholder="Type Archimate…"
-        class="flex-1 px-2 py-1 text-sm outline-none"
+        class="app-input flex-1 px-2 py-1 text-sm"
       />
       <button
-        class="app-subtle hover:app-muted px-1 text-xs"
+        class="app-subtle hover:text-[var(--fg)] transition-colors duration-150 px-1"
         title="Fermer (Échap)"
         @click="emit('close')"
       >
-        ✕
+        <X :size="16" />
       </button>
     </div>
 
     <!-- Action « clear » -->
     <button
-      class="px-3 py-1.5 text-xs text-left app-hover app-subtle border-b app-border"
+      class="px-3 py-1.5 text-xs text-left app-hover app-subtle border-b app-border flex items-center gap-1.5 transition-colors duration-150"
       :class="{ 'app-selected': currentType === null }"
       @click="handleSelect(null)"
     >
-      ✕ Aucun type
+      <X :size="12" class="flex-shrink-0" />
+      <span>Aucun type</span>
     </button>
 
     <!-- Liste groupée par layer -->
     <div class="flex-1 overflow-y-auto">
       <div v-for="[layer, items] in grouped" :key="layer">
-        <div class="px-3 py-1 text-xs font-semibold uppercase app-surface-2 sticky top-0 flex items-center gap-2 app-border border-b">
+        <div class="px-3 py-1 app-section-title app-surface-2 sticky top-0 flex items-center gap-2 app-border border-b">
           <span
             class="inline-block w-3 h-3 rounded border app-border"
             :style="{ backgroundColor: items[0]?.layerColor }"

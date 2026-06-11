@@ -2,6 +2,7 @@
 <!-- src/components/inspectors/sections/TagsSection.vue -->
 <script setup lang="ts">
 import { ref, toRef } from 'vue';
+import { Check, X } from 'lucide-vue-next';
 import { useTaggable } from '../../../composables/traits/useTaggable';
 
 interface Props {
@@ -31,9 +32,9 @@ function isApplied(tagId: string): boolean {
 </script>
 
 <template>
-  <section class="p-3 border-b">
+  <section class="p-3 border-b app-border">
     <div class="flex items-center justify-between mb-2">
-      <h3 class="text-sm font-semibold app-fg">Tags</h3>
+      <h3 class="app-section-title">Tags</h3>
       <button
         class="text-xs app-link"
         @click="picker = !picker"
@@ -53,18 +54,19 @@ function isApplied(tagId: string): boolean {
       >
         {{ tag.label }}
         <button
-          class="hover:opacity-75"
+          class="hover:opacity-75 transition-opacity duration-150"
           @click="toggleTag(tag.id)"
           :title="`Retirer ${tag.label}`"
+          :aria-label="`Retirer ${tag.label}`"
         >
-          ×
+          <X :size="12" />
         </button>
       </span>
     </div>
     <div v-else class="text-xs app-subtle italic mb-2">Aucun tag appliqué.</div>
 
     <!-- Picker -->
-    <div v-if="picker" class="border rounded bg-gray-50 p-2 space-y-2">
+    <div v-if="picker" class="border app-border rounded app-surface-2 p-2 space-y-2">
       <div class="text-xs font-medium app-muted">Tags disponibles</div>
       <div class="flex flex-wrap gap-1">
         <button
@@ -79,7 +81,7 @@ function isApplied(tagId: string): boolean {
           :title="tag.description"
           @click="toggleTag(tag.id)"
         >
-          <span v-if="isApplied(tag.id)">✓</span>
+          <Check v-if="isApplied(tag.id)" :size="12" />
           {{ tag.label }}
         </button>
       </div>
@@ -91,16 +93,16 @@ function isApplied(tagId: string): boolean {
             v-model="newLabel"
             type="text"
             placeholder="Nom du tag…"
-            class="flex-1 px-2 py-1 text-xs border border-gray-300 rounded outline-none focus:border-blue-500"
+            class="app-input flex-1 px-2 py-1 text-xs"
             @keydown.enter="handleCreate"
           />
           <input
             v-model="newColor"
             type="color"
-            class="w-7 h-7 border border-gray-300 rounded cursor-pointer"
+            class="w-7 h-7 border app-border rounded cursor-pointer"
           />
           <button
-            class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-40"
+            class="app-btn-primary px-2 py-1 text-xs rounded"
             :disabled="!newLabel.trim()"
             @click="handleCreate"
           >

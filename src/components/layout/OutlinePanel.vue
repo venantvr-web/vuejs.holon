@@ -2,6 +2,7 @@
 <!-- src/components/layout/OutlinePanel.vue -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { Box, ChevronDown, ChevronRight, Square } from 'lucide-vue-next';
 import { useGraphStore } from '../../stores/graph';
 import { useSelectionState } from '../../composables/traits';
 import { useViewport } from '../../composables/useViewport';
@@ -80,10 +81,6 @@ function handleDoubleClick(node: Node) {
   fitWorldBox({ x: abs.x, y: abs.y, w: node.geometry.w, h: node.geometry.h }, w, h, 60);
 }
 
-function typeBadge(node: Node): string {
-  if (node.type === 'container') return '▣';
-  return '▢';
-}
 </script>
 
 <template>
@@ -93,9 +90,9 @@ function typeBadge(node: Node): string {
         v-model="filter"
         type="text"
         placeholder="Filtrer…"
-        class="flex-1 px-2 py-1 text-xs app-surface border app-border rounded outline-none focus:border-blue-500"
+        class="app-input flex-1 px-2 py-1 text-xs"
       />
-      <span class="text-xs app-subtle">{{ Object.keys(graphStore.nodes).length }}</span>
+      <span class="text-xs app-subtle font-mono">{{ Object.keys(graphStore.nodes).length }}</span>
     </div>
 
     <ul v-if="outline.length > 0" class="flex-1 overflow-y-auto text-xs">
@@ -103,7 +100,7 @@ function typeBadge(node: Node): string {
         v-for="item in outline"
         :key="item.node.id"
         :class="[
-          'flex items-center gap-1 px-1 py-0.5 cursor-pointer rounded app-hover',
+          'flex items-center gap-1 px-1 py-0.5 cursor-pointer rounded app-hover transition-colors duration-150',
           selectedNodeIds.has(item.node.id) ? 'app-selected' : ''
         ]"
         :style="{ paddingLeft: (item.depth * 12 + 4) + 'px' }"
@@ -112,14 +109,19 @@ function typeBadge(node: Node): string {
       >
         <button
           v-if="item.hasChildren"
-          class="app-subtle hover:app-muted w-3"
+          class="app-subtle hover:app-muted w-3 flex-shrink-0 transition-colors duration-150"
+          :aria-label="collapsed.has(item.node.id) ? 'Déplier' : 'Replier'"
           @click="toggleCollapse(item.node.id, $event)"
         >
-          {{ collapsed.has(item.node.id) ? '▸' : '▾' }}
+          <component :is="collapsed.has(item.node.id) ? ChevronRight : ChevronDown" :size="12" />
         </button>
-        <span v-else class="w-3"></span>
+        <span v-else class="w-3 flex-shrink-0"></span>
 
-        <span class="app-subtle">{{ typeBadge(item.node) }}</span>
+        <component
+          :is="item.node.type === 'container' ? Box : Square"
+          :size="12"
+          class="app-subtle flex-shrink-0"
+        />
         <span class="truncate flex-1">{{ getName(item.node) }}</span>
       </li>
     </ul>

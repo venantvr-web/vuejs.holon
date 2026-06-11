@@ -2,6 +2,7 @@
 <!-- src/components/canvas/VersionsPanel.vue -->
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { History, X } from 'lucide-vue-next';
 import { useVersionable } from '../../composables/traits';
 
 const { snapshots, createSnapshot, restoreSnapshot, deleteSnapshot, currentSnapshot } = useVersionable();
@@ -55,10 +56,12 @@ function formatDate(ts: number): string {
   <div class="versions-panel relative">
     <button
       @click="isOpen = !isOpen"
-      class="px-3 py-1.5 text-sm app-btn rounded transition-colors"
+      class="px-3 py-1.5 text-sm rounded transition-colors duration-150 flex items-center gap-1.5"
+      :class="isOpen ? 'app-toggle-active' : 'app-btn'"
       title="Versions du modèle"
     >
-      🕒 Versions ({{ snapshots.length }})
+      <History :size="16" />
+      <span>Versions ({{ snapshots.length }})</span>
     </button>
 
     <div
@@ -89,7 +92,7 @@ function formatDate(ts: number): string {
             <div class="flex-1 min-w-0">
               <div class="text-sm font-medium truncate">
                 {{ snap.name }}
-                <span v-if="snap.tag" class="ml-1 text-xs text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded">
+                <span v-if="snap.tag" class="ml-1 text-xs text-[var(--accent-strong)] bg-[var(--accent-soft)] px-1.5 py-0.5 rounded">
                   {{ snap.tag }}
                 </span>
               </div>
@@ -101,11 +104,11 @@ function formatDate(ts: number): string {
               </div>
             </div>
             <button
-              class="opacity-0 group-hover:opacity-100 text-xs text-red-500 hover:text-red-700 ml-2 px-1"
+              class="opacity-0 group-hover:opacity-100 app-danger-link ml-2 px-1"
               title="Supprimer cette version"
               @click="handleDelete($event, snap.id)"
             >
-              ✕
+              <X :size="14" />
             </button>
           </div>
         </li>
