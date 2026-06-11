@@ -80,8 +80,8 @@ onBeforeUnmount(() => {
       <button
         v-else
         :disabled="item.disabled"
-        class="w-full flex items-center justify-between px-3 py-1.5 text-left app-hover disabled:opacity-40 disabled:cursor-not-allowed"
-        :class="{ 'text-red-600 hover:bg-red-50': item.danger }"
+        class="w-full flex items-center justify-between px-3 py-1.5 text-left transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+        :class="item.danger ? 'app-menu-danger' : 'app-hover'"
         @click="handleItemClick(item)"
       >
         <span class="flex items-center gap-2">

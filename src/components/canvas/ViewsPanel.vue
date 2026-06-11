@@ -2,6 +2,7 @@
 <!-- src/components/canvas/ViewsPanel.vue -->
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { Bookmark, X } from 'lucide-vue-next';
 import { useViewable } from '../../composables/traits';
 import { useViewport } from '../../composables/useViewport';
 
@@ -50,10 +51,12 @@ onBeforeUnmount(() => {
   <div class="views-panel relative">
     <button
       @click="isOpen = !isOpen"
-      class="px-3 py-1.5 text-sm app-btn rounded transition-colors"
+      class="px-3 py-1.5 text-sm rounded transition-colors duration-150 flex items-center gap-1.5"
+      :class="isOpen ? 'app-toggle-active' : 'app-btn'"
       title="Gérer les vues sauvegardées"
     >
-      🗂 Vues ({{ savedViews.length }})
+      <Bookmark :size="16" />
+      <span>Vues ({{ savedViews.length }})</span>
     </button>
 
     <div
@@ -87,11 +90,11 @@ onBeforeUnmount(() => {
             </div>
           </div>
           <button
-            class="opacity-0 group-hover:opacity-100 text-xs text-red-500 hover:text-red-700 ml-2 px-1"
+            class="opacity-0 group-hover:opacity-100 app-danger-link ml-2 px-1"
             title="Supprimer"
             @click="handleDelete($event, view.id)"
           >
-            ✕
+            <X :size="14" />
           </button>
         </li>
       </ul>

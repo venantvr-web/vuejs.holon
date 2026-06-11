@@ -2,6 +2,7 @@
 <!-- src/components/canvas/ValidationPanel.vue -->
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { CheckCircle2, Lightbulb, ShieldCheck, X } from 'lucide-vue-next';
 import { useValidatable, useSelectionState } from '../../composables/traits';
 import { useEdgeSelectionState } from '../../composables/useEdgeSelection';
 import type { ValidationIssue, ValidationSeverity } from '../../composables/traits/useValidatable';
@@ -42,19 +43,21 @@ defineExpose({ open: () => { isOpen.value = true; }, handleValidate });
   <div class="validation-wrapper">
     <button
       @click="handleValidate"
-      class="px-3 py-1.5 text-sm app-btn rounded transition-colors flex items-center gap-1"
+      class="px-3 py-1.5 text-sm rounded transition-colors duration-150 flex items-center gap-1.5"
+      :class="isOpen ? 'app-toggle-active' : 'app-btn'"
       title="Valider le graphe et afficher les problèmes"
     >
+      <ShieldCheck :size="16" />
       <span>Valider</span>
       <span
         v-if="errorCount > 0"
-        class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs rounded-full bg-red-500 text-white"
+        class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs rounded-full bg-[var(--danger-bg)] text-[var(--danger)] font-semibold"
       >
         {{ errorCount }}
       </span>
       <span
         v-else-if="warningCount > 0"
-        class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs rounded-full bg-amber-500 text-white"
+        class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs rounded-full bg-[var(--warning-bg)] text-[var(--warning)] font-semibold"
       >
         {{ warningCount }}
       </span>
@@ -82,16 +85,21 @@ defineExpose({ open: () => { isOpen.value = true; }, handleValidate });
             Revalider
           </button>
           <button
-            class="app-subtle hover:app-muted px-1"
+            class="app-subtle hover:text-[var(--fg)] transition-colors duration-150 px-1"
+            title="Fermer"
             @click="isOpen = false"
           >
-            ✕
+            <X :size="16" />
           </button>
         </div>
       </div>
 
-      <div v-if="issues.length === 0" class="p-4 text-sm text-green-700 text-center">
-        ✓ Aucun problème détecté — le graphe est valide.
+      <div
+        v-if="issues.length === 0"
+        class="p-4 text-sm text-[var(--success)] text-center flex items-center justify-center gap-1.5"
+      >
+        <CheckCircle2 :size="16" />
+        <span>Aucun problème détecté — le graphe est valide.</span>
       </div>
       <ul v-else class="overflow-y-auto divide-y divide-[var(--border)]">
         <li
@@ -109,8 +117,9 @@ defineExpose({ open: () => { isOpen.value = true; }, handleValidate });
             </span>
             <div class="flex-1 min-w-0">
               <div class="text-sm app-fg">{{ issue.message }}</div>
-              <div v-if="issue.suggestion" class="text-xs app-subtle mt-0.5">
-                💡 {{ issue.suggestion }}
+              <div v-if="issue.suggestion" class="text-xs app-subtle mt-0.5 flex items-center gap-1">
+                <Lightbulb :size="12" class="flex-shrink-0 text-[var(--warning)]" />
+                <span>{{ issue.suggestion }}</span>
               </div>
               <div class="text-xs app-subtle font-mono mt-0.5">{{ issue.ruleId }} · {{ issue.category }}</div>
             </div>

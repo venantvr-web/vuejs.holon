@@ -2,6 +2,7 @@
 <!-- src/components/inspectors/sections/PropertiesSection.vue -->
 <script setup lang="ts">
 import { ref, toRef } from 'vue';
+import { X } from 'lucide-vue-next';
 import { usePropertyable, type CustomProperty, type PropertyType } from '../../../composables/traits/usePropertyable';
 
 interface Props {
@@ -69,9 +70,9 @@ function inputTypeFor(type: PropertyType): string {
 </script>
 
 <template>
-  <section class="p-3 border-b">
+  <section class="p-3 border-b app-border">
     <div class="flex items-center justify-between mb-2">
-      <h3 class="text-sm font-semibold app-fg">Propriétés personnalisées</h3>
+      <h3 class="app-section-title">Propriétés personnalisées</h3>
       <button
         class="text-xs app-link"
         @click="adderOpen = !adderOpen"
@@ -90,7 +91,7 @@ function inputTypeFor(type: PropertyType): string {
         <div class="flex-1 min-w-0">
           <label class="block text-xs app-subtle truncate">
             {{ prop.label ?? prop.key }}
-            <span v-if="prop.required" class="text-red-500">*</span>
+            <span v-if="prop.required" class="app-danger-text">*</span>
           </label>
           <input
             v-if="prop.type === 'boolean'"
@@ -102,7 +103,7 @@ function inputTypeFor(type: PropertyType): string {
           <select
             v-else-if="prop.type === 'select'"
             :value="prop.value as string"
-            class="w-full px-2 py-1 text-sm border border-gray-300 rounded outline-none focus:border-blue-500"
+            class="app-input w-full px-2 py-1 text-sm"
             @change="updateProperty(prop.key, ($event.target as HTMLSelectElement).value)"
           >
             <option v-for="opt in prop.options ?? []" :key="opt" :value="opt">{{ opt }}</option>
@@ -111,16 +112,17 @@ function inputTypeFor(type: PropertyType): string {
             v-else
             :type="inputTypeFor(prop.type)"
             :value="prop.value as string"
-            class="w-full px-2 py-1 text-sm border border-gray-300 rounded outline-none focus:border-blue-500"
+            class="app-input w-full px-2 py-1 text-sm"
             @input="updateProperty(prop.key, prop.type === 'number' ? castNumber(($event.target as HTMLInputElement).value) : ($event.target as HTMLInputElement).value)"
           />
         </div>
         <button
-          class="opacity-0 group-hover:opacity-100 text-xs text-red-500 hover:text-red-700 mt-4"
+          class="opacity-0 group-hover:opacity-100 app-danger-link mt-4 transition-opacity duration-150"
           title="Supprimer la propriété"
+          aria-label="Supprimer la propriété"
           @click="removeProperty(prop.key)"
         >
-          ✕
+          <X :size="14" />
         </button>
       </div>
     </div>
@@ -141,28 +143,28 @@ function inputTypeFor(type: PropertyType): string {
     </div>
 
     <!-- Adder -->
-    <div v-if="adderOpen" class="border rounded bg-gray-50 p-2 space-y-2">
+    <div v-if="adderOpen" class="border app-border rounded app-surface-2 p-2 space-y-2">
       <input
         v-model="newKey"
         type="text"
         placeholder="Clé (ex. owner)"
-        class="w-full px-2 py-1 text-xs border border-gray-300 rounded outline-none focus:border-blue-500"
+        class="app-input w-full px-2 py-1 text-xs"
       />
       <input
         v-model="newLabel"
         type="text"
         placeholder="Libellé (optionnel)"
-        class="w-full px-2 py-1 text-xs border border-gray-300 rounded outline-none focus:border-blue-500"
+        class="app-input w-full px-2 py-1 text-xs"
       />
       <div class="flex items-center gap-2">
         <select
           v-model="newType"
-          class="flex-1 px-2 py-1 text-xs border border-gray-300 rounded outline-none focus:border-blue-500"
+          class="app-input flex-1 px-2 py-1 text-xs"
         >
           <option v-for="t in TYPES" :key="t.value" :value="t.value">{{ t.label }}</option>
         </select>
         <button
-          class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-40"
+          class="app-btn-primary px-2 py-1 text-xs rounded"
           :disabled="!newKey.trim()"
           @click="handleAdd"
         >

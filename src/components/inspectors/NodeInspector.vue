@@ -19,7 +19,7 @@ const typeLabel = computed(() => node.value?.type ?? '');
 <template>
   <div v-if="node" class="node-inspector">
     <header class="px-3 py-3 border-b app-surface-2 app-border">
-      <h2 class="text-sm font-bold app-fg">Propriétés du noeud</h2>
+      <h2 class="text-xs font-semibold uppercase tracking-wide app-muted">Propriétés du noeud</h2>
       <p class="text-xs app-subtle mt-0.5 font-mono">
         {{ typeLabel }} · {{ nodeId.substring(0, 8) }}…
       </p>

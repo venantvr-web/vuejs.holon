@@ -2,6 +2,7 @@
 <!-- src/components/layout/ExportMenu.vue -->
 <script setup lang="ts">
 import { ref } from 'vue';
+import { ChevronDown, Download, Loader2 } from 'lucide-vue-next';
 import { useExportable } from '../../composables/traits/useExportable';
 
 const {
@@ -73,42 +74,47 @@ function exportJson() {
     <button
       @click="isOpen = !isOpen"
       :disabled="isBusy"
-      class="px-3 py-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors disabled:opacity-40"
+      class="app-btn-primary px-3 py-1.5 text-sm rounded transition-colors duration-150 inline-flex items-center gap-1.5"
       title="Exporter le diagramme"
+      aria-label="Exporter le diagramme"
     >
-      <span v-if="isBusy">⟳</span>
-      <span v-else>Exporter ▾</span>
+      <Loader2 v-if="isBusy" :size="16" class="animate-spin" />
+      <template v-else>
+        <Download :size="16" />
+        <span>Exporter</span>
+        <ChevronDown :size="14" />
+      </template>
     </button>
     <div
       v-if="isOpen"
       class="absolute top-full right-0 mt-1 app-surface border app-border rounded shadow-lg py-1 w-64 z-40 text-sm"
       @mouseleave="isOpen = false"
     >
-      <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">Image raster</div>
-      <button class="w-full text-left px-3 py-1.5 app-hover" @click="exportPng(1, '96 DPI')">
+      <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase tracking-wide">Image raster</div>
+      <button class="w-full text-left px-3 py-1.5 app-hover transition-colors duration-150" @click="exportPng(1, '96 DPI')">
         PNG · Écran (96 DPI)
       </button>
-      <button class="w-full text-left px-3 py-1.5 app-hover" @click="exportPng(2, '200 DPI')">
+      <button class="w-full text-left px-3 py-1.5 app-hover transition-colors duration-150" @click="exportPng(2, '200 DPI')">
         PNG · Haute qualité (200 DPI)
       </button>
-      <button class="w-full text-left px-3 py-1.5 app-hover" @click="exportPng(3.125, '300 DPI')">
+      <button class="w-full text-left px-3 py-1.5 app-hover transition-colors duration-150" @click="exportPng(3.125, '300 DPI')">
         PNG · Impression (300 DPI)
       </button>
 
       <div class="my-1 border-t app-border"></div>
-      <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">Vectoriel / Document</div>
-      <button class="w-full text-left px-3 py-1.5 app-hover" @click="exportSvg">SVG</button>
-      <button class="w-full text-left px-3 py-1.5 app-hover" @click="exportPdf">PDF</button>
+      <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase tracking-wide">Vectoriel / Document</div>
+      <button class="w-full text-left px-3 py-1.5 app-hover transition-colors duration-150" @click="exportSvg">SVG</button>
+      <button class="w-full text-left px-3 py-1.5 app-hover transition-colors duration-150" @click="exportPdf">PDF</button>
 
       <div class="my-1 border-t app-border"></div>
-      <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">Données</div>
-      <button class="w-full text-left px-3 py-1.5 app-hover" @click="exportJson">
+      <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase tracking-wide">Données</div>
+      <button class="w-full text-left px-3 py-1.5 app-hover transition-colors duration-150" @click="exportJson">
         JSON (v1.0, avec métadonnées)
       </button>
     </div>
     <div
       v-if="status"
-      class="absolute top-full right-0 mt-1 px-3 py-1.5 text-xs bg-gray-800 text-white rounded shadow z-50 whitespace-nowrap"
+      class="app-status-pill absolute top-full right-0 mt-1 px-3 py-1.5 text-xs z-50 whitespace-nowrap"
     >
       {{ status }}
     </div>
