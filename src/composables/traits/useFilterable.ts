@@ -1,33 +1,8 @@
 // src/composables/traits/useFilterable.ts
-import { ref, computed, type Ref } from 'vue';
+import { ref, computed, watch, type Ref, type ComputedRef } from 'vue';
 import { useGraphStore } from '../../stores/graph';
-import type { Node } from '../../types';
-
-/**
- * Critère de filtrage pour les noeuds.
- */
-export interface FilterCriteria {
-  /**
-   * Identifiant unique du critère.
-   */
-  id: string;
-  /**
-   * Nom affiché du critère.
-   */
-  name: string;
-  /**
-   * Type de filtrage à appliquer.
-   */
-  type: 'type' | 'tag' | 'property' | 'layer' | 'custom';
-  /**
-   * Valeur du filtre (string, array ou fonction personnalisée).
-   */
-  value: string | string[] | ((node: Node) => boolean);
-  /**
-   * Opérateur de comparaison (défaut: 'equals').
-   */
-  operator?: 'equals' | 'contains' | 'startsWith' | 'endsWith' | 'regex';
-}
+import type { Node, Edge } from '../../types';
+import { parseFilterQuery } from './utils/filter-dsl';
 
 /**
  * Filtre sauvegardé pour réutilisation.
@@ -42,13 +17,17 @@ export interface SavedFilter {
    */
   name: string;
   /**
-   * Critères composant le filtre.
+   * Requête DSL du filtre (voir utils/filter-dsl.ts pour la grammaire).
    */
-  criteria: FilterCriteria[];
+  query: string;
   /**
-   * Mode de combinaison des critères (ET ou OU).
+   * Si vrai, les éléments correspondants sont masqués au lieu d'être conservés.
    */
-  mode: 'and' | 'or';
+  invert: boolean;
+  /**
+   * Mode d'affichage appliqué aux éléments écartés.
+   */
+  displayMode: FilterDisplayMode;
   /**
    * Timestamp de création.
    */
@@ -56,37 +35,69 @@ export interface SavedFilter {
 }
 
 /**
- * Mode d'affichage des noeuds filtrés.
+ * Mode d'affichage des noeuds écartés par le filtre.
+ * - hide : retirés du rendu
+ * - dim  : estompés (opacité réduite)
  */
-export type FilterDisplayMode = 'highlight' | 'hide' | 'dim';
+export type FilterDisplayMode = 'hide' | 'dim';
+
+const STORAGE_KEY = 'holon-saved-filters';
+
+// --- État global du filtre (partagé entre tous les composants) ---
+
+/** Requête DSL courante (chaîne vide = aucun filtre). */
+const query = ref('');
+/** Si vrai, la requête désigne les éléments à masquer plutôt qu'à conserver. */
+const invertQuery = ref(false);
+/** Mode d'affichage des éléments écartés. */
+const displayMode = ref<FilterDisplayMode>('dim');
+/** Filtres sauvegardés (persistés en localStorage). */
+const savedFilters = ref<SavedFilter[]>(loadSavedFilters());
+
+function loadSavedFilters(): SavedFilter[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+watch(
+  savedFilters,
+  (filters) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
+    } catch {
+      // Stockage indisponible (mode privé, quota) : non bloquant.
+    }
+  },
+  { deep: true }
+);
 
 /**
  * État réactif exposé par le trait Filterable.
  */
 export interface FilterableState {
-  /**
-   * Liste des critères de filtrage actifs.
-   */
-  activeFilters: Ref<FilterCriteria[]>;
-  /**
-   * Mode de combinaison des filtres (ET ou OU).
-   */
-  filterMode: Ref<'and' | 'or'>;
-  /**
-   * Mode d'affichage des noeuds filtrés.
-   */
+  /** Requête DSL courante. */
+  query: Ref<string>;
+  /** Erreur de syntaxe de la requête courante, ou null. */
+  queryError: ComputedRef<string | null>;
+  /** Si vrai, la requête désigne les éléments à masquer. */
+  invertQuery: Ref<boolean>;
+  /** Mode d'affichage des éléments écartés. */
   displayMode: Ref<FilterDisplayMode>;
-  /**
-   * Set des IDs de noeuds correspondant aux filtres.
-   */
-  filteredNodeIds: Ref<Set<string>>;
-  /**
-   * Set des IDs de noeuds cachés (inverse des filtrés en mode hide).
-   */
-  hiddenNodeIds: Ref<Set<string>>;
-  /**
-   * Liste des filtres sauvegardés.
-   */
+  /** Vrai si un filtre est actif et syntaxiquement valide. */
+  isFilterActive: ComputedRef<boolean>;
+  /** IDs des noeuds correspondant directement à la requête. */
+  matchedNodeIds: ComputedRef<Set<string>>;
+  /** IDs des noeuds écartés (fermeture hiérarchique incluse). */
+  excludedNodeIds: ComputedRef<Set<string>>;
+  /** Nombre de noeuds écartés par le filtre. */
+  excludedCount: ComputedRef<number>;
+  /** Filtres sauvegardés. */
   savedFilters: Ref<SavedFilter[]>;
 }
 
@@ -94,217 +105,138 @@ export interface FilterableState {
  * Handlers (actions) exposés par le trait Filterable.
  */
 export interface FilterableHandlers {
-  /**
-   * Ajoute un critère de filtrage.
-   * @param criteria - Critère à ajouter
-   */
-  addFilter: (criteria: FilterCriteria) => void;
-  /**
-   * Retire un critère de filtrage.
-   * @param criteriaId - ID du critère à retirer
-   */
-  removeFilter: (criteriaId: string) => void;
-  /**
-   * Vide tous les filtres actifs.
-   */
-  clearFilters: () => void;
-  /**
-   * Change le mode de combinaison des filtres.
-   * @param mode - 'and' ou 'or'
-   */
-  setFilterMode: (mode: 'and' | 'or') => void;
-  /**
-   * Change le mode d'affichage des noeuds filtrés.
-   * @param mode - Mode d'affichage
-   */
+  /** Applique une requête DSL. */
+  setQuery: (value: string) => void;
+  /** Réinitialise complètement le filtre. */
+  clearFilter: () => void;
+  /** Change le mode d'affichage des éléments écartés. */
   setDisplayMode: (mode: FilterDisplayMode) => void;
-  /**
-   * Sauvegarde la configuration de filtrage actuelle.
-   * @param name - Nom du filtre sauvegardé
-   * @returns Filtre sauvegardé
-   */
-  saveFilter: (name: string) => SavedFilter;
-  /**
-   * Charge un filtre sauvegardé.
-   * @param filterId - ID du filtre à charger
-   */
+  /** Sauvegarde la configuration de filtrage actuelle sous un nom. */
+  saveFilter: (name: string) => SavedFilter | null;
+  /** Charge un filtre sauvegardé. */
   loadFilter: (filterId: string) => void;
-  /**
-   * Supprime un filtre sauvegardé.
-   * @param filterId - ID du filtre à supprimer
-   */
+  /** Supprime un filtre sauvegardé. */
   deleteFilter: (filterId: string) => void;
-  /**
-   * Vérifie si un noeud est visible selon les filtres actifs.
-   * @param nodeId - ID du noeud
-   * @returns true si visible
-   */
-  isNodeVisible: (nodeId: string) => boolean;
-  /**
-   * Vérifie si un noeud est mis en évidence par les filtres.
-   * @param nodeId - ID du noeud
-   * @returns true si mis en évidence
-   */
-  isNodeHighlighted: (nodeId: string) => boolean;
-  /**
-   * Calcule l'opacité d'un noeud selon les filtres et le mode d'affichage.
-   * @param nodeId - ID du noeud
-   * @returns Valeur d'opacité (0-1)
-   */
-  getNodeOpacity: (nodeId: string) => number;
+  /** Vrai si le noeud doit être retiré du rendu (mode hide). */
+  isNodeHidden: (nodeId: string) => boolean;
+  /** Vrai si le noeud doit être estompé (mode dim). */
+  isNodeDimmed: (nodeId: string) => boolean;
+  /** Vrai si l'arête doit être retirée du rendu (mode hide). */
+  isEdgeHidden: (edge: Edge) => boolean;
+  /** Vrai si l'arête doit être estompée (mode dim). */
+  isEdgeDimmed: (edge: Edge) => boolean;
 }
 
-// État global des filtres
-const activeFilters = ref<FilterCriteria[]>([]);
-const filterMode = ref<'and' | 'or'>('and');
-const displayMode = ref<FilterDisplayMode>('highlight');
-const savedFilters = ref<SavedFilter[]>([]);
-
 /**
- * Trait permettant de filtrer les noeuds selon des critères multiples.
+ * Trait de filtrage des noeuds par requête DSL.
  *
- * Supporte différents types de filtres (type, tags, propriétés, layer) avec
- * plusieurs modes d'affichage (highlight, hide, dim) et sauvegarde des configurations.
+ * La requête sélectionne un ensemble de noeuds ; selon `invertQuery`, ces
+ * noeuds sont conservés (les autres sont écartés) ou masqués. La hiérarchie
+ * est respectée : les ancêtres d'un noeud conservé restent visibles pour
+ * préserver le contexte, et les descendants d'un noeud masqué sont masqués.
  *
- * @returns État réactif et handlers pour le filtrage
+ * Voir `utils/filter-dsl.ts` pour la grammaire complète du DSL.
  *
  * @example
  * ```typescript
- * const { addFilter, setDisplayMode, filteredNodeIds } = useFilterable();
- * addFilter(PRESET_FILTERS.byLayer('business'));
- * setDisplayMode('highlight');
+ * const { setQuery, invertQuery, isNodeHidden } = useFilterable();
+ * invertQuery.value = true;          // « masquer les correspondants »
+ * setQuery('couche:technology');     // cache l'infrastructure
  * ```
  */
 export function useFilterable(): FilterableState & FilterableHandlers {
   const graphStore = useGraphStore();
 
-  // Évalue si un noeud correspond à un critère
-  function matchesCriteria(node: Node, criteria: FilterCriteria): boolean {
-    if (typeof criteria.value === 'function') {
-      return criteria.value(node);
-    }
+  // Résultat d'analyse de la requête, recalculé à chaque frappe.
+  const parsed = computed(() => parseFilterQuery(query.value));
 
-    let targetValue: string | undefined;
+  const queryError = computed(() =>
+    parsed.value.ok ? null : parsed.value.error
+  );
 
-    switch (criteria.type) {
-      case 'type':
-        targetValue = node.data?.archimateType ?? node.type;
-        break;
-      case 'tag':
-        const tags = node.data?.tags as string[] | undefined;
-        if (Array.isArray(criteria.value)) {
-          return criteria.value.some(v => tags?.includes(v));
-        }
-        return tags?.includes(criteria.value as string) ?? false;
-      case 'layer':
-        targetValue = node.data?.layer;
-        break;
-      case 'property':
-        // Cherche dans data
-        const [key, val] = (criteria.value as string).split('=');
-        if (val !== undefined) {
-          return node.data?.[key] === val;
-        }
-        return node.data?.[key] !== undefined;
-      case 'custom':
-        // Pour les filtres personnalisés
-        targetValue = JSON.stringify(node);
-        break;
-    }
+  const isFilterActive = computed(
+    () => query.value.trim().length > 0 && parsed.value.ok
+  );
 
-    if (!targetValue) return false;
-
-    const compareValue = Array.isArray(criteria.value) ? criteria.value[0] : criteria.value;
-
-    switch (criteria.operator ?? 'equals') {
-      case 'equals':
-        return targetValue === compareValue;
-      case 'contains':
-        return targetValue.includes(compareValue);
-      case 'startsWith':
-        return targetValue.startsWith(compareValue);
-      case 'endsWith':
-        return targetValue.endsWith(compareValue);
-      case 'regex':
-        try {
-          return new RegExp(compareValue).test(targetValue);
-        } catch {
-          return false;
-        }
-    }
-  }
-
-  // Calcule les noeuds filtrés
-  const filteredNodeIds = computed(() => {
-    if (activeFilters.value.length === 0) {
-      return new Set(Object.keys(graphStore.nodes));
-    }
-
+  /** Noeuds correspondant directement à la requête (sans fermeture hiérarchique). */
+  const matchedNodeIds = computed(() => {
     const result = new Set<string>();
-
+    const parseResult = parsed.value;
+    if (!isFilterActive.value || !parseResult.ok) return result;
     for (const [id, node] of Object.entries(graphStore.nodes)) {
-      const matches = activeFilters.value.map(c => matchesCriteria(node, c));
-
-      const passes =
-        filterMode.value === 'and'
-          ? matches.every(Boolean)
-          : matches.some(Boolean);
-
-      if (passes) {
-        result.add(id);
-      }
+      if (parseResult.matches(node)) result.add(id);
     }
-
     return result;
   });
 
-  // Noeuds cachés (inverse des filtrés en mode hide)
-  const hiddenNodeIds = computed(() => {
-    if (displayMode.value !== 'hide') {
-      return new Set<string>();
-    }
+  /**
+   * Noeuds écartés par le filtre, avec fermeture hiérarchique :
+   * - mode « conserver » : tout noeud hors de (correspondants ∪ leurs ancêtres)
+   * - mode « masquer »   : correspondants ∪ leurs descendants
+   */
+  const excludedNodeIds = computed(() => {
+    const excluded = new Set<string>();
+    if (!isFilterActive.value) return excluded;
 
-    const hidden = new Set<string>();
-    for (const id of Object.keys(graphStore.nodes)) {
-      if (!filteredNodeIds.value.has(id)) {
-        hidden.add(id);
+    const matched = matchedNodeIds.value;
+    const nodes = graphStore.nodes;
+
+    if (invertQuery.value) {
+      // Masquer les correspondants et leurs descendants.
+      for (const id of matched) excluded.add(id);
+      // Un noeud dont un ancêtre est masqué est masqué.
+      for (const [id, node] of Object.entries(nodes)) {
+        if (excluded.has(id)) continue;
+        let current: Node | undefined = node;
+        while (current?.parentId) {
+          if (excluded.has(current.parentId)) {
+            excluded.add(id);
+            break;
+          }
+          current = nodes[current.parentId];
+        }
+      }
+    } else {
+      // Conserver les correspondants et leurs ancêtres (contexte).
+      const kept = new Set<string>(matched);
+      for (const id of matched) {
+        let current = nodes[id];
+        while (current?.parentId) {
+          kept.add(current.parentId);
+          current = nodes[current.parentId];
+        }
+      }
+      for (const id of Object.keys(nodes)) {
+        if (!kept.has(id)) excluded.add(id);
       }
     }
-    return hidden;
+
+    return excluded;
   });
 
-  function addFilter(criteria: FilterCriteria) {
-    // Éviter les doublons
-    const existing = activeFilters.value.findIndex(f => f.id === criteria.id);
-    if (existing !== -1) {
-      activeFilters.value[existing] = criteria;
-    } else {
-      activeFilters.value.push(criteria);
-    }
+  const excludedCount = computed(() => excludedNodeIds.value.size);
+
+  function setQuery(value: string) {
+    query.value = value;
   }
 
-  function removeFilter(criteriaId: string) {
-    activeFilters.value = activeFilters.value.filter(f => f.id !== criteriaId);
-  }
-
-  function clearFilters() {
-    activeFilters.value = [];
-  }
-
-  function setFilterMode(mode: 'and' | 'or') {
-    filterMode.value = mode;
+  function clearFilter() {
+    query.value = '';
+    invertQuery.value = false;
   }
 
   function setDisplayMode(mode: FilterDisplayMode) {
     displayMode.value = mode;
   }
 
-  function saveFilter(name: string): SavedFilter {
+  function saveFilter(name: string): SavedFilter | null {
+    if (!query.value.trim()) return null;
     const filter: SavedFilter = {
       id: `filter-${Date.now()}`,
       name,
-      criteria: [...activeFilters.value],
-      mode: filterMode.value,
+      query: query.value,
+      invert: invertQuery.value,
+      displayMode: displayMode.value,
       createdAt: Date.now(),
     };
     savedFilters.value.push(filter);
@@ -314,8 +246,9 @@ export function useFilterable(): FilterableState & FilterableHandlers {
   function loadFilter(filterId: string) {
     const filter = savedFilters.value.find(f => f.id === filterId);
     if (filter) {
-      activeFilters.value = [...filter.criteria];
-      filterMode.value = filter.mode;
+      query.value = filter.query;
+      invertQuery.value = filter.invert;
+      displayMode.value = filter.displayMode;
     }
   }
 
@@ -323,108 +256,59 @@ export function useFilterable(): FilterableState & FilterableHandlers {
     savedFilters.value = savedFilters.value.filter(f => f.id !== filterId);
   }
 
-  function isNodeVisible(nodeId: string): boolean {
-    if (activeFilters.value.length === 0) return true;
-    if (displayMode.value !== 'hide') return true;
-    return filteredNodeIds.value.has(nodeId);
+  function isNodeHidden(nodeId: string): boolean {
+    if (displayMode.value !== 'hide') return false;
+    return excludedNodeIds.value.has(nodeId);
   }
 
-  function isNodeHighlighted(nodeId: string): boolean {
-    if (activeFilters.value.length === 0) return false;
-    if (displayMode.value !== 'highlight') return false;
-    return filteredNodeIds.value.has(nodeId);
+  function isNodeDimmed(nodeId: string): boolean {
+    if (displayMode.value !== 'dim') return false;
+    return excludedNodeIds.value.has(nodeId);
   }
 
-  function getNodeOpacity(nodeId: string): number {
-    if (activeFilters.value.length === 0) return 1;
+  function isEdgeHidden(edge: Edge): boolean {
+    if (displayMode.value !== 'hide') return false;
+    const excluded = excludedNodeIds.value;
+    return excluded.has(edge.sourceId) || excluded.has(edge.targetId);
+  }
 
-    const isFiltered = filteredNodeIds.value.has(nodeId);
-
-    switch (displayMode.value) {
-      case 'hide':
-        return isFiltered ? 1 : 0;
-      case 'dim':
-        return isFiltered ? 1 : 0.3;
-      case 'highlight':
-        return 1; // L'opacité reste 1, le highlight est géré autrement
-      default:
-        return 1;
-    }
+  function isEdgeDimmed(edge: Edge): boolean {
+    if (displayMode.value !== 'dim') return false;
+    const excluded = excludedNodeIds.value;
+    return excluded.has(edge.sourceId) || excluded.has(edge.targetId);
   }
 
   return {
-    activeFilters,
-    filterMode,
+    query,
+    queryError,
+    invertQuery,
     displayMode,
-    filteredNodeIds,
-    hiddenNodeIds,
+    isFilterActive,
+    matchedNodeIds,
+    excludedNodeIds,
+    excludedCount,
     savedFilters,
-    addFilter,
-    removeFilter,
-    clearFilters,
-    setFilterMode,
+    setQuery,
+    clearFilter,
     setDisplayMode,
     saveFilter,
     loadFilter,
     deleteFilter,
-    isNodeVisible,
-    isNodeHighlighted,
-    getNodeOpacity,
+    isNodeHidden,
+    isNodeDimmed,
+    isEdgeHidden,
+    isEdgeDimmed,
   };
 }
 
-// Filtres prédéfinis helpers
-export const PRESET_FILTERS = {
-  byLayer: (layer: string): FilterCriteria => ({
-    id: `layer-${layer}`,
-    name: `Layer: ${layer}`,
-    type: 'layer',
-    value: layer,
-  }),
-
-  byType: (type: string): FilterCriteria => ({
-    id: `type-${type}`,
-    name: `Type: ${type}`,
-    type: 'type',
-    value: type,
-  }),
-
-  byTag: (tag: string): FilterCriteria => ({
-    id: `tag-${tag}`,
-    name: `Tag: ${tag}`,
-    type: 'tag',
-    value: tag,
-  }),
-
-  containers: (): FilterCriteria => ({
-    id: 'containers',
-    name: 'Containers only',
-    type: 'custom',
-    value: (node: Node) => node.type === 'container',
-  }),
-
-  withComments: (): FilterCriteria => ({
-    id: 'with-comments',
-    name: 'With comments',
-    type: 'custom',
-    value: (node: Node) => !!node.data?.comment,
-  }),
-
-  search: (query: string): FilterCriteria => ({
-    id: `search-${query}`,
-    name: `Search: ${query}`,
-    type: 'custom',
-    value: (node: Node) => {
-      const searchIn = [
-        node.data?.label,
-        node.data?.comment,
-        node.data?.archimateType,
-        ...(node.data?.tags ?? []),
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-      return searchIn.includes(query.toLowerCase());
-    },
-  }),
-};
+/**
+ * Requêtes prédéfinies, prêtes à appliquer via `setQuery`.
+ * Pensées pour les vues « exécutives » : isoler une couche, masquer la technique.
+ */
+export const PRESET_QUERIES: { label: string; query: string; invert?: boolean }[] = [
+  { label: 'Couche métier', query: 'couche:business' },
+  { label: 'Couche applicative', query: 'couche:application' },
+  { label: 'Infrastructure', query: 'couche:technology' },
+  { label: 'Masquer l’infra', query: 'couche:technology', invert: true },
+  { label: 'Conteneurs seuls', query: 'type:container' },
+];

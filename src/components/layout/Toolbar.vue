@@ -7,6 +7,7 @@ import type { LayoutAlgorithm } from '../../composables/traits';
 import { useViewport } from '../../composables/useViewport';
 import { getNodeAbsolutePosition } from '../../composables/traits/utils/trait-helpers';
 import ValidationPanel from '../canvas/ValidationPanel.vue';
+import FilterPanel from '../canvas/FilterPanel.vue';
 import VersionsPanel from '../canvas/VersionsPanel.vue';
 import ViewsPanel from '../canvas/ViewsPanel.vue';
 import SuggestionsPanel from '../canvas/SuggestionsPanel.vue';
@@ -17,6 +18,7 @@ import LanguagePicker from './LanguagePicker.vue';
 import ShortcutsHelp from './ShortcutsHelp.vue';
 import UserManualModal from './UserManualModal.vue';
 import { useI18n } from '../../composables/useI18n';
+import { Undo2, Redo2, LayoutGrid, Magnet, Maximize, Minus, Plus, Trash2, Loader2, ChevronDown } from 'lucide-vue-next';
 
 const { t } = useI18n();
 
@@ -120,7 +122,7 @@ function handleUngroup() {
   <header class="app-surface border-b app-border px-4 py-2 flex items-center justify-between">
     <button
       type="button"
-      class="text-lg font-semibold app-fg mr-6 hover:text-blue-500 transition-colors cursor-pointer"
+      class="text-lg font-semibold app-fg mr-6 hover:text-[var(--accent)] transition-colors cursor-pointer"
       title="Guide utilisateur (onboarding)"
       @click="manualOpen = true"
     >
@@ -132,25 +134,28 @@ function handleUngroup() {
       <div class="flex items-center app-surface-2 rounded">
         <button
           @click="zoomBy(1 / 1.2)"
-          class="px-2 py-1.5 text-sm app-hover rounded-l"
+          class="px-2 py-2 text-sm app-hover rounded-l"
           title="Zoom arrière"
+          aria-label="Zoom arrière"
         >
-          −
+          <Minus class="w-4 h-4" />
         </button>
         <span class="px-2 text-xs font-mono min-w-[44px] text-center app-fg">{{ zoomPercent }}%</span>
         <button
           @click="zoomBy(1.2)"
-          class="px-2 py-1.5 text-sm app-hover"
+          class="px-2 py-2 text-sm app-hover"
           title="Zoom avant"
+          aria-label="Zoom avant"
         >
-          +
+          <Plus class="w-4 h-4" />
         </button>
         <button
           @click="handleFit"
-          class="px-2 py-1.5 text-sm app-hover border-l app-border"
+          class="px-2 py-2 text-sm app-hover border-l app-border"
           title="Ajuster à la sélection (ou tout)"
+          aria-label="Ajuster la vue"
         >
-          ⛶
+          <Maximize class="w-4 h-4" />
         </button>
         <button
           @click="resetView"
@@ -170,7 +175,7 @@ function handleUngroup() {
         class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         :title="`${t('toolbar.undo')} (Ctrl+Z)`"
       >
-        ↶ {{ t('toolbar.undo') }}
+        <span class="inline-flex items-center gap-1.5"><Undo2 class="w-4 h-4" /> {{ t('toolbar.undo') }}</span>
       </button>
       <button
         @click="redo"
@@ -178,7 +183,7 @@ function handleUngroup() {
         class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         :title="`${t('toolbar.redo')} (Ctrl+Maj+Z)`"
       >
-        ↷ {{ t('toolbar.redo') }}
+        <span class="inline-flex items-center gap-1.5"><Redo2 class="w-4 h-4" /> {{ t('toolbar.redo') }}</span>
       </button>
 
       <span class="w-px h-5 bg-[var(--border)] mx-1"></span>
@@ -187,18 +192,18 @@ function handleUngroup() {
       <button
         @click="toggleGrid"
         class="px-2 py-1.5 text-sm rounded transition-colors"
-        :class="snapConfig.snapToGrid ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'app-btn'"
+        :class="snapConfig.snapToGrid ? 'app-toggle-active' : 'app-btn'"
         title="Afficher la grille et y aimanter (activé/désactivé)"
       >
-        ▦ Grille
+        <span class="inline-flex items-center gap-1.5"><LayoutGrid class="w-4 h-4" /> Grille</span>
       </button>
       <button
         @click="toggleNodeSnap"
         class="px-2 py-1.5 text-sm rounded transition-colors"
-        :class="snapConfig.snapToNodes ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'app-btn'"
+        :class="snapConfig.snapToNodes ? 'app-toggle-active' : 'app-btn'"
         title="Aimanter sur les autres noeuds (Alt pendant le drag désactive temporairement)"
       >
-        ⊹ Aimant
+        <span class="inline-flex items-center gap-1.5"><Magnet class="w-4 h-4" /> Aimant</span>
       </button>
 
       <span class="w-px h-5 bg-[var(--border)] mx-1"></span>
@@ -211,8 +216,8 @@ function handleUngroup() {
           class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40"
           title="Appliquer un algorithme de mise en page automatique"
         >
-          <span v-if="isLayouting">⟳ Mise en page…</span>
-          <span v-else>Layout ▾</span>
+          <span v-if="isLayouting" class="inline-flex items-center gap-1.5"><Loader2 class="w-4 h-4 animate-spin" /> Mise en page…</span>
+          <span v-else class="inline-flex items-center gap-1.5">Layout <ChevronDown class="w-3.5 h-3.5" /></span>
         </button>
         <div
           v-if="layoutMenuOpen"
@@ -224,7 +229,7 @@ function handleUngroup() {
             v-for="l in LAYOUTS"
             :key="l.value"
             class="w-full text-left px-3 py-1.5 app-hover"
-            :class="{ 'bg-blue-50 font-medium': currentAlgorithm === l.value }"
+            :class="{ 'app-selected font-medium': currentAlgorithm === l.value }"
             :title="l.hint"
             @click="runLayout(l.value)"
           >
@@ -242,7 +247,7 @@ function handleUngroup() {
           class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           title="Aligner et distribuer (2+ éléments requis)"
         >
-          Aligner ▾
+          <span class="inline-flex items-center gap-1.5">Aligner <ChevronDown class="w-3.5 h-3.5" /></span>
         </button>
         <div
           v-if="alignMenuOpen"
@@ -292,6 +297,9 @@ function handleUngroup() {
 
       <span class="w-px h-5 bg-[var(--border)] mx-1"></span>
 
+      <!-- Filtre DSL (masquer/estomper des sous-ensembles du modèle) -->
+      <FilterPanel />
+
       <!-- Validation -->
       <ValidationPanel />
 
@@ -322,10 +330,10 @@ function handleUngroup() {
       <!-- Bouton Effacer tout -->
       <button
         @click="handleClear"
-        class="px-3 py-1.5 text-sm bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors"
+        class="px-3 py-1.5 text-sm app-btn-danger rounded transition-colors"
         :title="t('toolbar.clear')"
       >
-        {{ t('toolbar.clear') }}
+        <span class="inline-flex items-center gap-1.5"><Trash2 class="w-4 h-4" /> {{ t('toolbar.clear') }}</span>
       </button>
     </div>
 

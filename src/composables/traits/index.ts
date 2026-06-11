@@ -83,13 +83,13 @@ export { useClipboardable, useClipboardState, type ClipboardData, type Clipboard
 // Filtrage
 export {
   useFilterable,
-  PRESET_FILTERS,
-  type FilterCriteria,
+  PRESET_QUERIES,
   type SavedFilter,
   type FilterDisplayMode,
   type FilterableState,
   type FilterableHandlers
 } from './useFilterable';
+export { parseFilterQuery, layerOfNode, type ParseResult } from './utils/filter-dsl';
 
 // === Traits de connexions (edges) ===
 
