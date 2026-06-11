@@ -1,5 +1,5 @@
 // src/composables/traits/useSearchable.ts
-import { ref, computed, type Ref } from 'vue';
+import { ref, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import Fuse from 'fuse.js';
 
@@ -148,45 +148,45 @@ export function useSearchable(): SearchableState & SearchableHandlers {
   const isSearching = ref(false);
   const currentResultIndex = ref(-1);
 
-  /**
-   * Configure Fuse pour les noeuds.
-   */
-  const nodeFuse = computed(() => {
-    const nodes = Object.values(graphStore.nodes);
-
-    return new Fuse(nodes, {
-      keys: [
-        { name: 'id', weight: 0.3 },
-        { name: 'data.name', weight: 1.0 },
-        { name: 'data.description', weight: 0.7 },
-        { name: 'data.archimateType', weight: 0.5 },
-        { name: 'type', weight: 0.2 },
-      ],
-      includeScore: true,
-      includeMatches: true,
-      threshold: 0.3,
-      minMatchCharLength: 1,
-    });
-  });
+  // Pondérations par défaut quand l'appelant ne fournit pas `fields`.
+  const DEFAULT_NODE_KEYS = [
+    { name: 'id', weight: 0.3 },
+    { name: 'data.name', weight: 1.0 },
+    { name: 'data.description', weight: 0.7 },
+    { name: 'data.archimateType', weight: 0.5 },
+    { name: 'type', weight: 0.2 },
+  ];
+  const DEFAULT_EDGE_KEYS = [
+    { name: 'id', weight: 0.3 },
+    { name: 'data.name', weight: 1.0 },
+    { name: 'data.relationType', weight: 0.7 },
+  ];
 
   /**
-   * Configure Fuse pour les arêtes.
+   * Construit l'index Fuse en honorant les options de l'appelant.
+   * Les index sont reconstruits à chaque recherche : c'est le prix pour que
+   * `fields`/`fuzzy`/`threshold` soient réellement appliqués (l'ancienne
+   * version figeait threshold à 0.3 et ignorait les deux autres options).
+   * `ignoreLocation` rend le score indépendant de la position du match,
+   * ce qui permet à `fuzzy: false` (threshold 0) d'équivaloir à une
+   * recherche de sous-chaîne exacte.
    */
-  const edgeFuse = computed(() => {
-    const edges = Object.values(graphStore.edges);
-
-    return new Fuse(edges, {
-      keys: [
-        { name: 'id', weight: 0.3 },
-        { name: 'data.name', weight: 1.0 },
-        { name: 'data.relationType', weight: 0.7 },
-      ],
+  function buildFuse<T>(
+    items: T[],
+    defaultKeys: Array<{ name: string; weight: number }>,
+    fields: string[] | undefined,
+    fuzzy: boolean,
+    threshold: number
+  ): Fuse<T> {
+    return new Fuse(items, {
+      keys: fields ?? defaultKeys,
       includeScore: true,
       includeMatches: true,
-      threshold: 0.3,
+      threshold: fuzzy ? threshold : 0,
+      ignoreLocation: true,
       minMatchCharLength: 1,
     });
-  });
+  }
 
   /**
    * Effectue la recherche.
@@ -195,6 +195,7 @@ export function useSearchable(): SearchableState & SearchableHandlers {
     const {
       query,
       scope = 'all',
+      fields,
       fuzzy = true,
       threshold = 0.3,
     } = options;
@@ -211,12 +212,17 @@ export function useSearchable(): SearchableState & SearchableHandlers {
 
     // Rechercher dans les noeuds
     if (scope === 'nodes' || scope === 'all') {
-      const nodeResults = nodeFuse.value.search(query, {
-        limit: fuzzy ? 50 : 20,
-      });
+      const nodeFuse = buildFuse(
+        Object.values(graphStore.nodes),
+        DEFAULT_NODE_KEYS,
+        fields,
+        fuzzy,
+        threshold
+      );
+      const nodeResults = nodeFuse.search(query, { limit: 50 });
 
       for (const result of nodeResults) {
-        if (result.score !== undefined && result.score <= threshold) {
+        if (result.score !== undefined) {
           results.push({
             nodeId: result.item.id,
             type: 'node',
@@ -233,12 +239,17 @@ export function useSearchable(): SearchableState & SearchableHandlers {
 
     // Rechercher dans les arêtes
     if (scope === 'edges' || scope === 'all') {
-      const edgeResults = edgeFuse.value.search(query, {
-        limit: fuzzy ? 50 : 20,
-      });
+      const edgeFuse = buildFuse(
+        Object.values(graphStore.edges),
+        DEFAULT_EDGE_KEYS,
+        fields,
+        fuzzy,
+        threshold
+      );
+      const edgeResults = edgeFuse.search(query, { limit: 50 });
 
       for (const result of edgeResults) {
-        if (result.score !== undefined && result.score <= threshold) {
+        if (result.score !== undefined) {
           results.push({
             edgeId: result.item.id,
             type: 'edge',

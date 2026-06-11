@@ -1,5 +1,6 @@
 // src/composables/useGeometry.ts
 import { useGraphStore } from '../stores/graph';
+import { useViewport } from './useViewport';
 import {
   getNodeAbsolutePosition,
   getNodeDepth as getNodeDepthHelper,
@@ -11,9 +12,17 @@ import {
  */
 export function useGeometry() {
   const graphStore = useGraphStore();
+  const { pan, zoomLevel } = useViewport();
 
   /**
-   * Convertit les coordonnées de l'écran en coordonnées locales SVG.
+   * Convertit les coordonnées de l'écran en coordonnées du graphe :
+   * monde si `targetParentId` est null, locales au parent sinon.
+   *
+   * Le point SVG brut est exprimé dans le repère du viewport ; la
+   * transformation pan/zoom vit sur le `<g>` interne du canevas, il faut
+   * donc la défaire AVANT de soustraire la position absolue du parent
+   * (qui est en espace monde). L'ancienne version mélangeait les deux
+   * repères et n'était correcte qu'à pan (0,0) et zoom 1.
    */
   function screenToLocalCoordinates(
     screenX: number,
@@ -32,16 +41,20 @@ export function useGeometry() {
     pt.y = screenY;
     const svgPoint = pt.matrixTransform(inverseCtm);
 
+    // Repère viewport → repère monde (défaire pan puis zoom).
+    const worldX = (svgPoint.x - pan.value.x) / zoomLevel.value;
+    const worldY = (svgPoint.y - pan.value.y) / zoomLevel.value;
+
     if (targetParentId === null) {
-      return { x: svgPoint.x, y: svgPoint.y };
+      return { x: worldX, y: worldY };
     }
 
     const parentAbsolutePos = getNodeAbsolutePosition(targetParentId);
-    if (!parentAbsolutePos) return { x: svgPoint.x, y: svgPoint.y };
+    if (!parentAbsolutePos) return { x: worldX, y: worldY };
 
     return {
-      x: svgPoint.x - parentAbsolutePos.x,
-      y: svgPoint.y - parentAbsolutePos.y,
+      x: worldX - parentAbsolutePos.x,
+      y: worldY - parentAbsolutePos.y,
     };
   }
 
