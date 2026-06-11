@@ -1,5 +1,5 @@
 // src/composables/traits/useSnappable.ts
-import { ref, computed, type Ref } from 'vue';
+import { ref, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 
 /**

@@ -1,7 +1,6 @@
 // src/composables/traits/useSuggestable.ts
 import { ref, computed, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
-import type { Node, Edge } from '../../types';
 import { ArchimateType } from './useTypeable';
 import { RelationType } from './useRelationTypeable';
 

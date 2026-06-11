@@ -1,5 +1,5 @@
 // src/composables/traits/useVersionable.ts
-import { ref, computed, type Ref } from 'vue';
+import { ref, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import type { Node, Edge } from '../../types';
 import { nanoid } from 'nanoid';

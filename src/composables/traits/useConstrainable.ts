@@ -246,7 +246,7 @@ const PATTERNS: GraphPattern[] = [
     id: 'GOD_OBJECT',
     name: 'God Object',
     description: 'Élément avec trop de relations (> 15)',
-    detect: (nodes, edges) => {
+    detect: (_nodes, edges) => {
       const matches: Array<{ nodeIds: string[]; edgeIds: string[] }> = [];
       const relationCounts = new Map<string, string[]>();
 
@@ -340,8 +340,6 @@ const PATTERNS: GraphPattern[] = [
     description: 'Dépendance inverse entre couches (ex: Business → Technology)',
     detect: (nodes, edges) => {
       const matches: Array<{ nodeIds: string[]; edgeIds: string[] }> = [];
-      const layerOrder = ['technology', 'application', 'business'];
-
       const getLayerIndex = (type: ArchimateType): number => {
         if (type.startsWith('technology-')) return 0;
         if (type.startsWith('application-')) return 1;

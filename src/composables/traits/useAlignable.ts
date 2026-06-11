@@ -1,5 +1,4 @@
 // src/composables/traits/useAlignable.ts
-import { computed } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import { useSelectionState } from './useSelectable';
 

@@ -148,7 +148,7 @@ export function useExportable(): ExportableHandlers {
   /**
    * Export SVG natif.
    */
-  async function exportAsSVG(options: ExportOptions = {}): Promise<Blob> {
+  async function exportAsSVG(_options: ExportOptions = {}): Promise<Blob> {
     const svgElement = findSVGElement();
     if (!svgElement) {
       throw new Error('Élément SVG du canvas non trouvé');

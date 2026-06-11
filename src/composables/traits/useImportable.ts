@@ -134,7 +134,7 @@ const EdgeSchema = z.object({
   id: z.string().min(1),
   sourceId: z.string().min(1),
   targetId: z.string().min(1),
-  routing: z.enum(['straight', 'orthogonal']).default('straight'),
+  routing: z.enum(['straight', 'orthogonal', 'curved', 'bezier']).default('straight'),
   data: z.record(z.string(), z.unknown()).optional(),
 });
 
