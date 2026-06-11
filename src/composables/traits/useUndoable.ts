@@ -76,9 +76,25 @@ export function useUndoable(options: UndoableOptions = {}): UndoableState & Undo
   function snapshot() {
     if (isUndoRedoAction.value) return;
 
+    const nodesJson = JSON.stringify(graphStore.nodes);
+    const edgesJson = JSON.stringify(graphStore.edges);
+
+    // Idempotence : si l'état n'a pas changé depuis le snapshot courant, ne
+    // rien faire. Indispensable car l'auto-snapshot est débouncé (500 ms) et
+    // se déclenche APRÈS la levée du drapeau isUndoRedoAction : sans cette
+    // garde, chaque undo poussait un doublon et détruisait la pile de redo.
+    const current = history.value[currentIndex.value];
+    if (
+      current &&
+      JSON.stringify(current.nodes) === nodesJson &&
+      JSON.stringify(current.edges) === edgesJson
+    ) {
+      return;
+    }
+
     const snap: GraphSnapshot = {
-      nodes: JSON.parse(JSON.stringify(graphStore.nodes)),
-      edges: JSON.parse(JSON.stringify(graphStore.edges)),
+      nodes: JSON.parse(nodesJson),
+      edges: JSON.parse(edgesJson),
       timestamp: Date.now(),
     };
 

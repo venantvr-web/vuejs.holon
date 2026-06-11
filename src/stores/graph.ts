@@ -104,10 +104,10 @@ export const useGraphStore = defineStore('graph', () => {
     // Vérifier que les noeuds existent
     if (!nodes.value[sourceId] || !nodes.value[targetId]) return null;
 
-    // Vérifier qu'une arête n'existe pas déjà
+    // Vérifier qu'une arête identique (même sens) n'existe pas déjà.
+    // Le sens compte : A→B et B→A sont deux relations distinctes en Archimate.
     const exists = Object.values(edges.value).some(
-      e => (e.sourceId === sourceId && e.targetId === targetId) ||
-           (e.sourceId === targetId && e.targetId === sourceId)
+      e => e.sourceId === sourceId && e.targetId === targetId
     );
     if (exists) return null;
 
