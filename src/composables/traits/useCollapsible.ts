@@ -1,5 +1,5 @@
 // src/composables/traits/useCollapsible.ts
-import { ref, computed, type Ref } from 'vue';
+import { computed, type Ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 
 /**

@@ -48,8 +48,6 @@ export interface SelectableHandlers {
  * @returns État réactif et gestionnaires pour la sélection et le focus
  */
 export function useSelectable(options: SelectableOptions): SelectableState & SelectableHandlers {
-  const graphStore = useGraphStore();
-
   const isSelected = computed(() => selectedNodeIds.value.has(options.nodeId.value));
   const isFocused = computed(() => focusedNodeId.value === options.nodeId.value);
 

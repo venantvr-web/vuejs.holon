@@ -1,7 +1,7 @@
 
 <!-- src/components/inspectors/sections/StyleSection.vue -->
 <script setup lang="ts">
-import { toRef, ref, computed } from 'vue';
+import { toRef, computed } from 'vue';
 import { useStyleable, PRESET_COLORS } from '../../../composables/traits/useStyleable';
 import { useTypeable } from '../../../composables/traits/useTypeable';
 import { useGraphStore } from '../../../stores/graph';

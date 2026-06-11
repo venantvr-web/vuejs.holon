@@ -40,7 +40,7 @@ describe('useAnchorable', () => {
   describe('getNodeCenter', () => {
     it('calcule le centre d\'un noeud simple', async () => {
       const node = await graphStore.createNode(
-        { label: 'Node', type: 'box', geometry: { x: 100, y: 50, w: 80, h: 60 }, data: {} },
+        { type: 'shape', geometry: { x: 100, y: 50, w: 80, h: 60 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Node' } },
         null
       );
 
@@ -52,12 +52,12 @@ describe('useAnchorable', () => {
 
     it('calcule le centre absolu d\'un noeud enfant', async () => {
       const parent = await graphStore.createNode(
-        { label: 'Parent', type: 'container', geometry: { x: 100, y: 100, w: 200, h: 200 }, data: {} },
+        { type: 'container', geometry: { x: 100, y: 100, w: 200, h: 200 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Parent' } },
         null
       );
 
       const child = await graphStore.createNode(
-        { label: 'Child', type: 'box', geometry: { x: 20, y: 30, w: 40, h: 40 }, data: {} },
+        { type: 'shape', geometry: { x: 20, y: 30, w: 40, h: 40 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child' } },
         parent.id
       );
 
@@ -70,17 +70,17 @@ describe('useAnchorable', () => {
 
     it('calcule le centre pour une hiérarchie profonde', async () => {
       const grandParent = await graphStore.createNode(
-        { label: 'GrandParent', type: 'container', geometry: { x: 50, y: 50, w: 300, h: 300 }, data: {} },
+        { type: 'container', geometry: { x: 50, y: 50, w: 300, h: 300 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'GrandParent' } },
         null
       );
 
       const parent = await graphStore.createNode(
-        { label: 'Parent', type: 'container', geometry: { x: 30, y: 30, w: 200, h: 200 }, data: {} },
+        { type: 'container', geometry: { x: 30, y: 30, w: 200, h: 200 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Parent' } },
         grandParent.id
       );
 
       const child = await graphStore.createNode(
-        { label: 'Child', type: 'box', geometry: { x: 10, y: 10, w: 20, h: 20 }, data: {} },
+        { type: 'shape', geometry: { x: 10, y: 10, w: 20, h: 20 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child' } },
         parent.id
       );
 
@@ -95,7 +95,7 @@ describe('useAnchorable', () => {
   describe('calculateEdgeIntersection', () => {
     it('calcule l\'intersection sur le bord droit', async () => {
       const node = await graphStore.createNode(
-        { label: 'Node', type: 'box', geometry: { x: 0, y: 0, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 0, y: 0, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Node' } },
         null
       );
 
@@ -108,7 +108,7 @@ describe('useAnchorable', () => {
 
     it('calcule l\'intersection sur le bord gauche', async () => {
       const node = await graphStore.createNode(
-        { label: 'Node', type: 'box', geometry: { x: 100, y: 0, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 100, y: 0, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Node' } },
         null
       );
 
@@ -121,7 +121,7 @@ describe('useAnchorable', () => {
 
     it('calcule l\'intersection sur le bord haut', async () => {
       const node = await graphStore.createNode(
-        { label: 'Node', type: 'box', geometry: { x: 0, y: 100, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 0, y: 100, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Node' } },
         null
       );
 
@@ -134,7 +134,7 @@ describe('useAnchorable', () => {
 
     it('calcule l\'intersection sur le bord bas', async () => {
       const node = await graphStore.createNode(
-        { label: 'Node', type: 'box', geometry: { x: 0, y: 0, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 0, y: 0, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Node' } },
         null
       );
 
@@ -147,7 +147,7 @@ describe('useAnchorable', () => {
 
     it('calcule l\'intersection en diagonale (coin)', async () => {
       const node = await graphStore.createNode(
-        { label: 'Node', type: 'box', geometry: { x: 0, y: 0, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 0, y: 0, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Node' } },
         null
       );
 
@@ -161,7 +161,7 @@ describe('useAnchorable', () => {
 
     it('retourne le centre si la cible est au centre', async () => {
       const node = await graphStore.createNode(
-        { label: 'Node', type: 'box', geometry: { x: 0, y: 0, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 0, y: 0, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Node' } },
         null
       );
 
@@ -176,7 +176,7 @@ describe('useAnchorable', () => {
   describe('useAnchorable composable', () => {
     it('retourne tous les points d\'ancrage', async () => {
       const node = await graphStore.createNode(
-        { label: 'Node', type: 'box', geometry: { x: 0, y: 0, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 0, y: 0, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Node' } },
         null
       );
 
@@ -204,7 +204,7 @@ describe('useAnchorable', () => {
 
     it('trouve l\'ancre la plus proche', async () => {
       const node = await graphStore.createNode(
-        { label: 'Node', type: 'box', geometry: { x: 0, y: 0, w: 100, h: 100 }, data: {} },
+        { type: 'shape', geometry: { x: 0, y: 0, w: 100, h: 100 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Node' } },
         null
       );
 
@@ -222,7 +222,7 @@ describe('useAnchorable', () => {
 
     it('getAnchorPoint retourne le bon point', async () => {
       const node = await graphStore.createNode(
-        { label: 'Node', type: 'box', geometry: { x: 100, y: 100, w: 80, h: 60 }, data: {} },
+        { type: 'shape', geometry: { x: 100, y: 100, w: 80, h: 60 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Node' } },
         null
       );
 
