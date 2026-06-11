@@ -134,7 +134,7 @@ const EdgeSchema = z.object({
   id: z.string().min(1),
   sourceId: z.string().min(1),
   targetId: z.string().min(1),
-  routing: z.enum(['straight', 'orthogonal']).default('straight'),
+  routing: z.enum(['straight', 'orthogonal', 'curved', 'bezier']).default('straight'),
   data: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -226,6 +226,16 @@ export function useImportable(): ImportableHandlers {
       }
     }).filter((n): n is Node => n !== null);
 
+    // Remapper les parentId vers les IDs renommés : sans cela, les enfants
+    // d'un conteneur renommé restaient rattachés au noeud PRÉ-EXISTANT du
+    // graphe (hiérarchie silencieusement corrompue au ré-import).
+    const reparentedNodes = resolvedNodes.map((node) => {
+      if (node.parentId && idMapping.has(node.parentId)) {
+        return { ...node, parentId: idMapping.get(node.parentId)! };
+      }
+      return node;
+    });
+
     // Traiter les arêtes avec mise à jour des références
     const resolvedEdges = edges.map((edge) => {
       let updatedEdge = { ...edge };
@@ -256,7 +266,7 @@ export function useImportable(): ImportableHandlers {
       return updatedEdge;
     }).filter((e): e is Edge => e !== null);
 
-    return { nodes: resolvedNodes, edges: resolvedEdges, warnings };
+    return { nodes: reparentedNodes, edges: resolvedEdges, warnings };
   }
 
   /**

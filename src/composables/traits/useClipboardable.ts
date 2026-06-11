@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useGraphStore } from '../../stores/graph';
 import { useSelectionState } from './useSelectable';
+import { getNodeAbsolutePosition } from './utils/trait-helpers';
 import { nanoid } from 'nanoid';
 import type { Node, Edge } from '../../types';
 
@@ -130,6 +131,20 @@ export function useClipboardable(): ClipboardableHandlers {
     const nodes = collectNodesWithDescendants(ids);
     const nodeIdSet = new Set(nodes.map(n => n.id));
     const edges = collectEdges(nodeIdSet);
+
+    // Re-baser en coordonnées monde les racines du clipboard dont le parent
+    // n'est pas copié : leur géométrie est relative à ce parent, et paste()
+    // les rattache à la racine du canevas. Sans conversion, les coordonnées
+    // locales étaient interprétées comme mondiales (collage téléporté).
+    for (const node of nodes) {
+      if (node.parentId && !nodeIdSet.has(node.parentId)) {
+        const abs = getNodeAbsolutePosition(node.id);
+        if (abs) {
+          node.geometry.x = abs.x;
+          node.geometry.y = abs.y;
+        }
+      }
+    }
 
     clipboard.value = {
       nodes,

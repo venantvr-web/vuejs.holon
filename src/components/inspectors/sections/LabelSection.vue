@@ -37,8 +37,8 @@ const comment = computed({
 </script>
 
 <template>
-  <div class="label-section p-3 border-b">
-    <h3 class="text-sm font-semibold mb-3 app-fg">Libellé</h3>
+  <div class="label-section p-3 border-b app-border">
+    <h3 class="app-section-title mb-3">Libellé</h3>
 
     <label class="block text-xs app-muted mb-1" for="edge-name">Nom</label>
     <input
@@ -46,7 +46,7 @@ const comment = computed({
       v-model="name"
       type="text"
       placeholder="ex. implémente, utilise, flux de données…"
-      class="w-full px-2 py-1 text-sm border border-gray-300 rounded outline-none focus:border-blue-500 mb-3"
+      class="app-input w-full px-2 py-1 text-sm mb-3"
     />
 
     <label class="block text-xs app-muted mb-1" for="edge-comment">Commentaire</label>
@@ -55,7 +55,7 @@ const comment = computed({
       v-model="comment"
       rows="3"
       placeholder="Description libre, notes, justification…"
-      class="w-full px-2 py-1 text-sm border border-gray-300 rounded outline-none focus:border-blue-500 resize-y"
+      class="app-input w-full px-2 py-1 text-sm resize-y"
     />
   </div>
 </template>

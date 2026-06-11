@@ -167,5 +167,5 @@ cython_debug/
 # IDE files
 .idx/
 
-# TypeDoc generated documentation
-docs/
+# TypeDoc generated documentation (racine uniquement — ne pas ignorer src/docs)
+/docs/

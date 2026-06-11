@@ -246,7 +246,7 @@ const PATTERNS: GraphPattern[] = [
     id: 'GOD_OBJECT',
     name: 'God Object',
     description: 'Élément avec trop de relations (> 15)',
-    detect: (nodes, edges) => {
+    detect: (_nodes, edges) => {
       const matches: Array<{ nodeIds: string[]; edgeIds: string[] }> = [];
       const relationCounts = new Map<string, string[]>();
 
@@ -281,8 +281,8 @@ const PATTERNS: GraphPattern[] = [
       const matches: Array<{ nodeIds: string[]; edgeIds: string[] }> = [];
       const dependencyEdges = Object.values(edges).filter(
         (e) =>
-          e.data?.relationType === RelationType.SERVING ||
-          e.data?.relationType === RelationType.REALIZATION
+          e.data?.relationType === RelationType.Serving ||
+          e.data?.relationType === RelationType.Realization
       );
 
       // Build adjacency list
@@ -340,8 +340,6 @@ const PATTERNS: GraphPattern[] = [
     description: 'Dépendance inverse entre couches (ex: Business → Technology)',
     detect: (nodes, edges) => {
       const matches: Array<{ nodeIds: string[]; edgeIds: string[] }> = [];
-      const layerOrder = ['technology', 'application', 'business'];
-
       const getLayerIndex = (type: ArchimateType): number => {
         if (type.startsWith('technology-')) return 0;
         if (type.startsWith('application-')) return 1;
@@ -366,7 +364,7 @@ const PATTERNS: GraphPattern[] = [
           sourceLayer !== -1 &&
           targetLayer !== -1 &&
           sourceLayer > targetLayer &&
-          edge.data?.relationType === RelationType.SERVING
+          edge.data?.relationType === RelationType.Serving
         ) {
           matches.push({
             nodeIds: [edge.sourceId, edge.targetId],

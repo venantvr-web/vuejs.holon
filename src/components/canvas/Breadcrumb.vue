@@ -2,6 +2,7 @@
 <!-- src/components/canvas/Breadcrumb.vue -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { ChevronRight } from 'lucide-vue-next';
 import { useGraphStore } from '../../stores/graph';
 import { useSelectionState } from '../../composables/traits';
 import { useViewport } from '../../composables/useViewport';
@@ -70,9 +71,9 @@ function focusCrumb(crumb: Crumb) {
     class="breadcrumb absolute top-3 left-3 z-10 app-surface border app-border rounded shadow-md px-3 py-1.5 text-xs flex items-center gap-1 max-w-[60%] overflow-hidden"
   >
     <template v-for="(crumb, i) in crumbs" :key="crumb.id ?? 'root'">
-      <span v-if="i > 0" class="app-subtle">›</span>
+      <ChevronRight v-if="i > 0" :size="12" class="app-subtle flex-shrink-0" />
       <button
-        class="truncate max-w-[160px] hover:app-link"
+        class="truncate max-w-[160px] hover:text-[var(--accent)] transition-colors duration-150"
         :class="{ 'font-semibold app-fg': i === crumbs.length - 1, 'app-muted': i !== crumbs.length - 1 }"
         :title="crumb.label"
         @click="focusCrumb(crumb)"

@@ -52,7 +52,7 @@ describe('useDraggable', () => {
   describe('handleDragStart', () => {
     it('initialise le drag avec les bonnes valeurs', async () => {
       const node = await graphStore.createNode(
-        { label: 'Node', type: 'box', geometry: { x: 100, y: 100, w: 80, h: 60 }, data: {} },
+        { type: 'shape', geometry: { x: 100, y: 100, w: 80, h: 60 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Node' } },
         null
       );
 
@@ -76,7 +76,7 @@ describe('useDraggable', () => {
 
     it('ignore les clics non-gauches', async () => {
       const node = await graphStore.createNode(
-        { label: 'Node', type: 'box', geometry: { x: 100, y: 100, w: 80, h: 60 }, data: {} },
+        { type: 'shape', geometry: { x: 100, y: 100, w: 80, h: 60 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Node' } },
         null
       );
 
@@ -97,7 +97,7 @@ describe('useDraggable', () => {
 
     it('appelle le callback onDragStart', async () => {
       const node = await graphStore.createNode(
-        { label: 'Node', type: 'box', geometry: { x: 100, y: 100, w: 80, h: 60 }, data: {} },
+        { type: 'shape', geometry: { x: 100, y: 100, w: 80, h: 60 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Node' } },
         null
       );
 
@@ -117,12 +117,12 @@ describe('useDraggable', () => {
   describe('notifyParentAutosize', () => {
     it('émet un événement child-moved à la fin du drag pour un noeud enfant', async () => {
       const parent = await graphStore.createNode(
-        { label: 'Parent', type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, data: {} },
+        { type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Parent' } },
         null
       );
 
       const child = await graphStore.createNode(
-        { label: 'Child', type: 'box', geometry: { x: 20, y: 20, w: 50, h: 40 }, data: {} },
+        { type: 'shape', geometry: { x: 20, y: 20, w: 50, h: 40 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child' } },
         parent.id
       );
 
@@ -136,7 +136,7 @@ describe('useDraggable', () => {
 
       // Simuler mouseup
       const mouseupHandler = addEventListenerSpy.mock.calls.find(
-        call => call[0] === 'mouseup'
+        (call: unknown[]) => call[0] === 'mouseup'
       )?.[1] as EventListener;
 
       mouseupHandler(new MouseEvent('mouseup'));
@@ -155,7 +155,7 @@ describe('useDraggable', () => {
 
     it('n\'émet pas d\'événement pour un noeud racine', async () => {
       const node = await graphStore.createNode(
-        { label: 'Node', type: 'box', geometry: { x: 100, y: 100, w: 80, h: 60 }, data: {} },
+        { type: 'shape', geometry: { x: 100, y: 100, w: 80, h: 60 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Node' } },
         null
       );
 
@@ -168,7 +168,7 @@ describe('useDraggable', () => {
 
       // Simuler mouseup
       const mouseupHandler = addEventListenerSpy.mock.calls.find(
-        call => call[0] === 'mouseup'
+        (call: unknown[]) => call[0] === 'mouseup'
       )?.[1] as EventListener;
 
       mouseupHandler(new MouseEvent('mouseup'));
@@ -183,12 +183,12 @@ describe('useDraggable', () => {
 
     it('peut être désactivé avec notifyParentOnMove=false', async () => {
       const parent = await graphStore.createNode(
-        { label: 'Parent', type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, data: {} },
+        { type: 'container', geometry: { x: 0, y: 0, w: 200, h: 200 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Parent' } },
         null
       );
 
       const child = await graphStore.createNode(
-        { label: 'Child', type: 'box', geometry: { x: 20, y: 20, w: 50, h: 40 }, data: {} },
+        { type: 'shape', geometry: { x: 20, y: 20, w: 50, h: 40 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Child' } },
         parent.id
       );
 
@@ -201,7 +201,7 @@ describe('useDraggable', () => {
 
       // Simuler mouseup
       const mouseupHandler = addEventListenerSpy.mock.calls.find(
-        call => call[0] === 'mouseup'
+        (call: unknown[]) => call[0] === 'mouseup'
       )?.[1] as EventListener;
 
       mouseupHandler(new MouseEvent('mouseup'));
@@ -214,7 +214,7 @@ describe('useDraggable', () => {
   describe('zoom level', () => {
     it('ajuste le déplacement selon le niveau de zoom', async () => {
       const node = await graphStore.createNode(
-        { label: 'Node', type: 'box', geometry: { x: 100, y: 100, w: 80, h: 60 }, data: {} },
+        { type: 'shape', geometry: { x: 100, y: 100, w: 80, h: 60 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'Node' } },
         null
       );
 
@@ -229,7 +229,7 @@ describe('useDraggable', () => {
 
       // Simuler mousemove de 100px en écran
       const mousemoveHandler = addEventListenerSpy.mock.calls.find(
-        call => call[0] === 'mousemove'
+        (call: unknown[]) => call[0] === 'mousemove'
       )?.[1] as EventListener;
 
       mousemoveHandler(new MouseEvent('mousemove', { clientX: 240, clientY: 230 }));

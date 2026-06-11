@@ -63,8 +63,8 @@ const FLOW_VALUES: Array<{ value: 'information' | 'material' | 'money' | 'energy
 </script>
 
 <template>
-  <section class="p-3 border-b">
-    <h3 class="text-sm font-semibold mb-2 app-fg">Type de relation</h3>
+  <section class="p-3 border-b app-border">
+    <h3 class="app-section-title mb-2">Type de relation</h3>
 
     <!-- Résumé -->
     <div class="text-xs app-muted mb-2">
@@ -75,13 +75,13 @@ const FLOW_VALUES: Array<{ value: 'information' | 'material' | 'money' | 'energy
     <!-- Sélecteur groupé par catégorie -->
     <div class="space-y-2 mb-3">
       <div v-for="(items, category) in grouped" :key="category">
-        <div class="text-xs font-semibold app-subtle uppercase mb-1">{{ CATEGORY_LABELS[category as RelationCategory] }}</div>
+        <div class="text-xs font-semibold app-subtle uppercase tracking-wide mb-1">{{ CATEGORY_LABELS[category as RelationCategory] }}</div>
         <div class="grid grid-cols-2 gap-1">
           <button
             v-for="item in items"
             :key="item.type"
-            class="px-2 py-1 text-xs border rounded text-left hover:bg-gray-100 transition-colors"
-            :class="{ 'bg-blue-100 border-blue-500 text-blue-800': relationType === item.type }"
+            class="app-toggle px-2 py-1 text-xs text-left"
+            :class="{ 'app-toggle-active': relationType === item.type }"
             :title="RELATION_CONFIGS[item.type].description"
             @click="setRelationType(item.type)"
           >
@@ -98,8 +98,8 @@ const FLOW_VALUES: Array<{ value: 'information' | 'material' | 'money' | 'energy
         <button
           v-for="v in ACCESS_VALUES"
           :key="v.value"
-          class="flex-1 px-2 py-1 text-xs border rounded hover:bg-gray-100"
-          :class="{ 'bg-blue-100 border-blue-500': accessType === v.value }"
+          class="app-toggle flex-1 px-2 py-1 text-xs"
+          :class="{ 'app-toggle-active': accessType === v.value }"
           @click="setAccessType(v.value)"
         >
           {{ v.label }}
@@ -113,8 +113,8 @@ const FLOW_VALUES: Array<{ value: 'information' | 'material' | 'money' | 'energy
         <button
           v-for="v in INFLUENCE_VALUES"
           :key="v"
-          class="py-1 text-xs font-mono border rounded hover:bg-gray-100"
-          :class="{ 'bg-blue-100 border-blue-500': influenceStrength === v }"
+          class="app-toggle py-1 text-xs font-mono"
+          :class="{ 'app-toggle-active': influenceStrength === v }"
           @click="setInfluenceStrength(v as any)"
         >
           {{ v }}
@@ -128,8 +128,8 @@ const FLOW_VALUES: Array<{ value: 'information' | 'material' | 'money' | 'energy
         <button
           v-for="v in FLOW_VALUES"
           :key="v.value"
-          class="px-2 py-1 text-xs border rounded hover:bg-gray-100"
-          :class="{ 'bg-blue-100 border-blue-500': flowType === v.value }"
+          class="app-toggle px-2 py-1 text-xs"
+          :class="{ 'app-toggle-active': flowType === v.value }"
           @click="setFlowType(v.value)"
         >
           {{ v.label }}

@@ -430,9 +430,13 @@ export function useHistorable(options: HistorableOptions = {}): HistorableState 
     objectType: 'node' | 'edge',
     eventType: EventType,
     eventId: string,
-    before?: unknown,
-    after?: unknown
+    beforeRaw?: unknown,
+    afterRaw?: unknown
   ) {
+    // Les snapshots sont des objets de données arbitraires : on les indexe par
+    // clé pour le diff, d'où le typage Record plutôt que unknown opaque.
+    const before = beforeRaw as Record<string, unknown> | undefined;
+    const after = afterRaw as Record<string, unknown> | undefined;
     let lineage = lineages.value.get(objectId);
 
     // Créer le lignage si nouveau
@@ -443,7 +447,7 @@ export function useHistorable(options: HistorableOptions = {}): HistorableState 
         createdAt: Date.now(),
         origin: {
           type: eventType === EventType.NodeCloned ? 'cloned' : 'created',
-          sourceId: after?.clonedFrom,
+          sourceId: after?.clonedFrom as string | undefined,
         },
         versions: [],
         descendants: [],
@@ -470,7 +474,7 @@ export function useHistorable(options: HistorableOptions = {}): HistorableState 
     });
 
     // Si c'est un clone, enregistrer dans le parent
-    if (after?.clonedFrom) {
+    if (typeof after?.clonedFrom === 'string') {
       const parentLineage = lineages.value.get(after.clonedFrom);
       if (parentLineage && !parentLineage.descendants.includes(objectId)) {
         parentLineage.descendants.push(objectId);

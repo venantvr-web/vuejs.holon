@@ -5,6 +5,18 @@ import { db } from '../db';
 import type { Node, Edge } from '../types';
 import { nanoid } from 'nanoid';
 
+/**
+ * Copie profonde « déproxifiée » pour l'écriture IndexedDB.
+ *
+ * Les valeurs lues depuis l'état réactif contiennent des proxys Vue imbriqués
+ * (ex. un tableau `tags` dans node.data) ; le structured clone d'IndexedDB ne
+ * sait pas cloner un Proxy et levait DataCloneError dès qu'on persistait un
+ * noeud porteur de données non primitives (repli d'un conteneur taggé, etc.).
+ */
+function toPlain<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value));
+}
+
 export const useGraphStore = defineStore('graph', () => {
   // --- STATE ---
   const nodes = ref<Record<string, Node>>({});
@@ -50,7 +62,7 @@ export const useGraphStore = defineStore('graph', () => {
       parentId,
     };
     nodes.value[id] = newNode;
-    await db.nodes.put(newNode);
+    await db.nodes.put(toPlain(newNode));
     return newNode;
   }
 
@@ -61,7 +73,7 @@ export const useGraphStore = defineStore('graph', () => {
     if (nodes.value[id]) {
       const updatedNode = { ...nodes.value[id], ...updates };
       nodes.value[id] = updatedNode;
-      await db.nodes.update(id, updates);
+      await db.nodes.update(id, toPlain(updates));
     }
   }
 
@@ -104,17 +116,17 @@ export const useGraphStore = defineStore('graph', () => {
     // Vérifier que les noeuds existent
     if (!nodes.value[sourceId] || !nodes.value[targetId]) return null;
 
-    // Vérifier qu'une arête n'existe pas déjà
+    // Vérifier qu'une arête identique (même sens) n'existe pas déjà.
+    // Le sens compte : A→B et B→A sont deux relations distinctes en Archimate.
     const exists = Object.values(edges.value).some(
-      e => (e.sourceId === sourceId && e.targetId === targetId) ||
-           (e.sourceId === targetId && e.targetId === sourceId)
+      e => e.sourceId === sourceId && e.targetId === targetId
     );
     if (exists) return null;
 
     const id = nanoid();
     const newEdge: Edge = { id, sourceId, targetId, routing };
     edges.value[id] = newEdge;
-    await db.edges.put(newEdge);
+    await db.edges.put(toPlain(newEdge));
     return newEdge;
   }
 
@@ -125,7 +137,7 @@ export const useGraphStore = defineStore('graph', () => {
     if (edges.value[id]) {
       const updatedEdge = { ...edges.value[id], ...updates };
       edges.value[id] = updatedEdge;
-      await db.edges.update(id, updates);
+      await db.edges.update(id, toPlain(updates));
     }
   }
 
@@ -166,7 +178,7 @@ export const useGraphStore = defineStore('graph', () => {
    */
   async function importNode(node: Node) {
     nodes.value[node.id] = { ...node };
-    await db.nodes.put({ ...node });
+    await db.nodes.put(toPlain(node));
   }
 
   /**
@@ -174,7 +186,7 @@ export const useGraphStore = defineStore('graph', () => {
    */
   async function importEdge(edge: Edge) {
     edges.value[edge.id] = { ...edge };
-    await db.edges.put({ ...edge });
+    await db.edges.put(toPlain(edge));
   }
 
   /**
@@ -188,8 +200,8 @@ export const useGraphStore = defineStore('graph', () => {
     await db.transaction('rw', db.nodes, db.edges, async () => {
       await db.nodes.clear();
       await db.edges.clear();
-      await db.nodes.bulkPut(Object.values(newNodes));
-      await db.edges.bulkPut(Object.values(newEdges));
+      await db.nodes.bulkPut(Object.values(newNodes).map(toPlain));
+      await db.edges.bulkPut(Object.values(newEdges).map(toPlain));
     });
   }
 

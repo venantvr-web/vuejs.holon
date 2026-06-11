@@ -9,7 +9,7 @@ interface ArrowTypeSelectorProps {
   showCategories?: boolean;
 }
 
-const props = withDefaults(defineProps<ArrowTypeSelectorProps>(), {
+withDefaults(defineProps<ArrowTypeSelectorProps>(), {
   position: 'end',
   showCategories: true,
 });
@@ -66,7 +66,7 @@ function handleChange(event: Event) {
 <template>
   <div class="arrow-type-selector">
     <!-- Label optionnel -->
-    <label v-if="label" class="block text-xs font-medium text-gray-600 mb-1">
+    <label v-if="label" class="block text-xs font-medium app-muted mb-1">
       {{ label }}
     </label>
 
@@ -74,7 +74,7 @@ function handleChange(event: Event) {
     <select
       :value="modelValue"
       @change="handleChange"
-      class="w-full px-2 py-1.5 border app-border rounded text-xs focus:border-blue-500 focus:outline-none"
+      class="app-input w-full px-2 py-1.5 text-xs"
     >
       <template v-if="showCategories">
         <!-- Avec catégories (optgroups) -->

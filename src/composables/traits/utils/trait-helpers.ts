@@ -230,11 +230,13 @@ export function getNodeDescendants(nodeId: string): Node[] {
  */
 export function isAncestorOf(ancestorId: string, descendantId: string): boolean {
   const graphStore = useGraphStore();
-  let currentNode = graphStore.nodes[descendantId];
+  let currentNode = graphStore.nodes[descendantId] as
+    | (typeof graphStore.nodes)[string]
+    | undefined;
 
   while (currentNode) {
     if (currentNode.parentId === ancestorId) return true;
-    currentNode = currentNode.parentId ? graphStore.nodes[currentNode.parentId] : null;
+    currentNode = currentNode.parentId ? graphStore.nodes[currentNode.parentId] : undefined;
   }
 
   return false;

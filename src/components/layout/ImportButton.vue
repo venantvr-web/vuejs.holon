@@ -2,6 +2,7 @@
 <!-- src/components/layout/ImportButton.vue -->
 <script setup lang="ts">
 import { ref } from 'vue';
+import { Upload } from 'lucide-vue-next';
 import { useImportable } from '../../composables/traits/useImportable';
 import type { ConflictStrategy, MergeStrategy } from '../../composables/traits/useImportable';
 
@@ -81,16 +82,18 @@ function cancelDialog() {
     <button
       @click="openPicker"
       :disabled="isBusy"
-      class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40"
+      class="px-3 py-1.5 text-sm app-btn rounded transition-colors duration-150 inline-flex items-center gap-1.5"
       title="Importer un fichier JSON versionné"
+      aria-label="Importer un fichier JSON versionné"
     >
-      Importer
+      <Upload :size="16" />
+      <span>Importer</span>
     </button>
 
     <!-- Dialogue d'options -->
     <div
       v-if="showDialog"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
+      class="app-overlay fixed inset-0 z-50 flex items-center justify-center"
       @click.self="cancelDialog"
     >
       <div class="app-surface border app-border rounded-lg shadow-xl w-[420px] p-4">
@@ -100,7 +103,7 @@ function cancelDialog() {
           <label class="block text-xs font-medium app-muted mb-1">Stratégie de fusion</label>
           <select
             v-model="mergeStrategy"
-            class="w-full px-2 py-1 text-sm border app-border rounded outline-none focus:border-blue-500"
+            class="app-input w-full px-2 py-1 text-sm"
           >
             <option value="append">Ajouter au graphe existant</option>
             <option value="replace">Remplacer tout le graphe</option>
@@ -112,7 +115,7 @@ function cancelDialog() {
           <label class="block text-xs font-medium app-muted mb-1">En cas de conflit d'ID</label>
           <select
             v-model="conflictStrategy"
-            class="w-full px-2 py-1 text-sm border app-border rounded outline-none focus:border-blue-500"
+            class="app-input w-full px-2 py-1 text-sm"
           >
             <option value="rename">Renommer (sûr, recommandé)</option>
             <option value="skip">Ignorer les éléments en conflit</option>
@@ -127,13 +130,13 @@ function cancelDialog() {
         <div class="flex justify-end gap-2">
           <button
             @click="cancelDialog"
-            class="px-3 py-1.5 text-sm app-muted app-hover rounded"
+            class="px-3 py-1.5 text-sm app-muted app-hover rounded transition-colors duration-150"
           >
             Annuler
           </button>
           <button
             @click="confirmImport"
-            class="px-3 py-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded"
+            class="app-btn-primary px-3 py-1.5 text-sm rounded"
           >
             Importer
           </button>
@@ -143,7 +146,7 @@ function cancelDialog() {
 
     <div
       v-if="status"
-      class="absolute top-full right-0 mt-1 px-3 py-1.5 text-xs bg-gray-800 text-white rounded shadow z-50 whitespace-nowrap"
+      class="app-status-pill absolute top-full right-0 mt-1 px-3 py-1.5 text-xs z-50 whitespace-nowrap"
     >
       {{ status }}
     </div>
