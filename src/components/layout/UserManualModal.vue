@@ -1,6 +1,7 @@
 <!-- src/components/layout/UserManualModal.vue -->
 <script setup lang="ts">
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
+import { ChevronLeft, ChevronRight, X } from 'lucide-vue-next';
 import manualSource from '../../docs/user-manual.md?raw';
 
 const emit = defineEmits<{ (e: 'close'): void }>();
@@ -125,23 +126,23 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey));
 
 <template>
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+    class="app-overlay fixed inset-0 z-50 flex items-center justify-center"
     @click.self="emit('close')"
   >
     <div class="app-surface border app-border rounded-lg shadow-xl w-[760px] max-h-[85vh] flex flex-col">
       <!-- Header -->
       <header class="px-4 py-3 border-b app-border flex items-center justify-between">
         <div>
-          <div class="text-xs app-subtle">Guide utilisateur · onboarding</div>
+          <div class="text-xs font-semibold uppercase tracking-wide app-subtle">Guide utilisateur · onboarding</div>
           <h2 class="text-lg font-semibold app-fg">{{ current?.title }}</h2>
         </div>
         <button
           @click="emit('close')"
-          class="app-subtle hover:app-muted text-xl leading-none"
+          class="app-subtle hover:app-muted transition-colors duration-150"
           aria-label="Fermer"
           title="Fermer (Échap)"
         >
-          ✕
+          <X :size="18" />
         </button>
       </header>
 
@@ -169,19 +170,21 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey));
         <button
           @click="prev"
           :disabled="!canPrev"
-          class="app-btn px-3 py-1.5 rounded text-sm flex items-center gap-1"
+          class="app-btn px-3 py-1.5 rounded text-sm flex items-center gap-1 transition-colors duration-150"
         >
-          ← Précédent
+          <ChevronLeft :size="16" />
+          Précédent
         </button>
-        <span class="text-xs app-subtle">
+        <span class="text-xs app-subtle font-mono">
           {{ index + 1 }} / {{ total }}
         </span>
         <button
           @click="next"
           :disabled="!canNext"
-          class="app-btn px-3 py-1.5 rounded text-sm flex items-center gap-1"
+          class="app-btn px-3 py-1.5 rounded text-sm flex items-center gap-1 transition-colors duration-150"
         >
-          Suivant →
+          Suivant
+          <ChevronRight :size="16" />
         </button>
       </footer>
     </div>
