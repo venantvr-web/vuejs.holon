@@ -22,6 +22,11 @@ vi.mock('../../../db', () => ({
       clear: vi.fn(),
       toArray: vi.fn().mockResolvedValue([]),
     },
+    // batchedUpdateNodes regroupe les écritures dans une transaction ; le mock
+    // exécute la fonction passée en argument pour préserver la sémantique.
+    transaction: vi.fn(async (_mode, _t1, fnOrT2, fn) =>
+      typeof fnOrT2 === 'function' ? fnOrT2() : (fn as () => Promise<unknown>)()
+    ),
   },
 }))
 
@@ -75,8 +80,9 @@ describe('useDraggable', () => {
 
       expect(isDragging.value).toBe(true)
       expect(event.stopPropagation).toHaveBeenCalled()
-      expect(addEventListenerSpy).toHaveBeenCalledWith('mousemove', expect.any(Function))
-      expect(addEventListenerSpy).toHaveBeenCalledWith('mouseup', expect.any(Function))
+      // Migré vers Pointer Events pour supporter souris + tactile + stylet.
+      expect(addEventListenerSpy).toHaveBeenCalledWith('pointermove', expect.any(Function))
+      expect(addEventListenerSpy).toHaveBeenCalledWith('pointerup', expect.any(Function))
     })
 
     it('ignore les clics non-gauches', async () => {
@@ -159,12 +165,12 @@ describe('useDraggable', () => {
       mousedown.stopPropagation = vi.fn()
       handleDragStart(mousedown)
 
-      // Simuler mouseup
+      // Simuler pointerup (Pointer Events unifiés)
       const mouseupHandler = addEventListenerSpy.mock.calls.find(
-        (call: unknown[]) => call[0] === 'mouseup'
+        (call: unknown[]) => call[0] === 'pointerup'
       )?.[1] as EventListener
 
-      mouseupHandler(new MouseEvent('mouseup'))
+      mouseupHandler(new MouseEvent('pointerup'))
 
       // Vérifier que l'événement a été émis
       expect(dispatchEventSpy).toHaveBeenCalledWith(
@@ -196,12 +202,12 @@ describe('useDraggable', () => {
       mousedown.stopPropagation = vi.fn()
       handleDragStart(mousedown)
 
-      // Simuler mouseup
+      // Simuler pointerup (Pointer Events unifiés)
       const mouseupHandler = addEventListenerSpy.mock.calls.find(
-        (call: unknown[]) => call[0] === 'mouseup'
+        (call: unknown[]) => call[0] === 'pointerup'
       )?.[1] as EventListener
 
-      mouseupHandler(new MouseEvent('mouseup'))
+      mouseupHandler(new MouseEvent('pointerup'))
 
       // Pas d'événement child-moved pour un noeud racine
       expect(dispatchEventSpy).not.toHaveBeenCalledWith(
@@ -239,12 +245,12 @@ describe('useDraggable', () => {
       mousedown.stopPropagation = vi.fn()
       handleDragStart(mousedown)
 
-      // Simuler mouseup
+      // Simuler pointerup (Pointer Events unifiés)
       const mouseupHandler = addEventListenerSpy.mock.calls.find(
-        (call: unknown[]) => call[0] === 'mouseup'
+        (call: unknown[]) => call[0] === 'pointerup'
       )?.[1] as EventListener
 
-      mouseupHandler(new MouseEvent('mouseup'))
+      mouseupHandler(new MouseEvent('pointerup'))
 
       // Pas d'événement car désactivé
       expect(dispatchEventSpy).not.toHaveBeenCalled()
@@ -274,10 +280,14 @@ describe('useDraggable', () => {
 
       // Simuler mousemove de 100px en écran
       const mousemoveHandler = addEventListenerSpy.mock.calls.find(
-        (call: unknown[]) => call[0] === 'mousemove'
+        (call: unknown[]) => call[0] === 'pointermove'
       )?.[1] as EventListener
 
       mousemoveHandler(new MouseEvent('mousemove', { clientX: 240, clientY: 230 }))
+
+      // Le handler est désormais throttle via requestAnimationFrame ; il faut
+      // donc laisser passer une frame avant d'observer les effets sur le store.
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)))
 
       // À zoom x2, un déplacement de 100px écran = 50px dans le canvas
       expect(dragDelta.value.x).toBe(50)

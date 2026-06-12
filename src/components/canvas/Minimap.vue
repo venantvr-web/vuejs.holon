@@ -4,6 +4,7 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useGraphStore } from '../../stores/graph'
 import { useViewport } from '../../composables/useViewport'
 import { getNodeAbsolutePosition } from '../../composables/traits/utils/trait-helpers'
+import { rafThrottle } from '../../composables/traits/utils/raf-throttle'
 
 interface Props {
   /** Largeur écran du canevas principal pour calculer la viewport visible. */
@@ -148,24 +149,29 @@ function handleMouseDown(event: MouseEvent) {
   if (coords) panToMini(coords.x, coords.y)
 }
 
-function handleMouseMove(event: MouseEvent) {
+function handleMouseMoveRaw(event: MouseEvent) {
   if (!isDragging.value) return
   const coords = getMiniCoords(event)
   if (coords) panToMini(coords.x, coords.y)
 }
 
+// Pan via la mini-map : un évènement par frame suffit largement.
+const handleMouseMove = rafThrottle(handleMouseMoveRaw)
+
 function handleMouseUp() {
   isDragging.value = false
+  handleMouseMove.cancel()
 }
 
 onMounted(() => {
-  window.addEventListener('mousemove', handleMouseMove)
-  window.addEventListener('mouseup', handleMouseUp)
+  window.addEventListener('pointermove', handleMouseMove)
+  window.addEventListener('pointerup', handleMouseUp)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('mousemove', handleMouseMove)
-  window.removeEventListener('mouseup', handleMouseUp)
+  handleMouseMove.cancel()
+  window.removeEventListener('pointermove', handleMouseMove)
+  window.removeEventListener('pointerup', handleMouseUp)
 })
 </script>
 
@@ -175,7 +181,7 @@ onUnmounted(() => {
     class="minimap app-surface border app-border rounded shadow-md cursor-pointer select-none"
     :width="MINIMAP_W"
     :height="MINIMAP_H"
-    @mousedown="handleMouseDown"
+    @pointerdown="handleMouseDown"
   >
     <!-- Noeuds miniatures -->
     <rect

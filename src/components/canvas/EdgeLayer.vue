@@ -424,6 +424,10 @@ function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean
       :key="edge.id"
       class="edge-group"
       :opacity="edge.dimmed ? 0.25 : undefined"
+      role="button"
+      tabindex="0"
+      :aria-label="edge.label ? `Relation : ${edge.label}` : `Relation entre noeuds`"
+      :aria-selected="selectedEdgeId === edge.id"
       @click="selectEdge(edge.id, $event)"
       @contextmenu="handleEdgeContextMenu(edge.id, $event)"
     >
