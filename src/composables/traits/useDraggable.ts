@@ -4,6 +4,8 @@ import { useGraphStore } from '../../stores/graph'
 import { useSelectionState } from './useSelectable'
 import { useSnappable, useSnapState } from './useSnappable'
 import { isAncestorOf } from './utils/trait-helpers'
+import { rafThrottle } from './utils/raf-throttle'
+import type { Node } from '../../types'
 
 /**
  * Options de configuration pour le trait Draggable.
@@ -95,6 +97,9 @@ export function useDraggable(options: DraggableOptions): DraggableState & Dragga
   const companionsInitial = ref<Map<string, { x: number; y: number }>>(new Map())
 
   function handleDragStart(event: MouseEvent) {
+    // PointerEvent étend MouseEvent : la même signature accepte la souris,
+    // le tactile et le stylet sans branchement. `button = 0` vaut « bouton
+    // principal » dans tous les cas.
     if (event.button !== 0) return
 
     const node = graphStore.nodes[options.nodeId.value]
@@ -129,8 +134,10 @@ export function useDraggable(options: DraggableOptions): DraggableState & Dragga
 
     options.onDragStart?.()
 
-    window.addEventListener('mousemove', handleDragMove)
-    window.addEventListener('mouseup', handleDragEnd)
+    // Pointer Events au lieu de mouse* pour supporter souris + tactile + stylet.
+    window.addEventListener('pointermove', throttledDragMove)
+    window.addEventListener('pointerup', handleDragEnd)
+    window.addEventListener('pointercancel', handleDragEnd)
   }
 
   function handleDragMove(event: MouseEvent) {
@@ -165,29 +172,46 @@ export function useDraggable(options: DraggableOptions): DraggableState & Dragga
 
     dragDelta.value = { x: effectiveDx, y: effectiveDy }
 
-    graphStore.updateNode(options.nodeId.value, {
-      geometry: {
-        ...node.geometry,
-        x: initialPos.value.x + effectiveDx,
-        y: initialPos.value.y + effectiveDy,
+    // Toutes les mutations d'un même tick de drag tiennent dans une seule
+    // transaction IndexedDB pour garantir l'atomicité (pas de demi-drag
+    // persisté) et réduire l'overhead.
+    const patches: Array<{ id: string; updates: Partial<Node> }> = [
+      {
+        id: options.nodeId.value,
+        updates: {
+          geometry: {
+            ...node.geometry,
+            x: initialPos.value.x + effectiveDx,
+            y: initialPos.value.y + effectiveDy,
+          },
+        },
       },
-    })
+    ]
 
-    // Déplacer les compagnons (multi-sélection) avec le même delta.
     for (const [id, start] of companionsInitial.value) {
       const companion = graphStore.nodes[id]
       if (!companion) continue
-      graphStore.updateNode(id, {
-        geometry: {
-          ...companion.geometry,
-          x: start.x + effectiveDx,
-          y: start.y + effectiveDy,
+      patches.push({
+        id,
+        updates: {
+          geometry: {
+            ...companion.geometry,
+            x: start.x + effectiveDx,
+            y: start.y + effectiveDy,
+          },
         },
       })
     }
 
+    graphStore.batchedUpdateNodes(patches)
+
     options.onDragMove?.(effectiveDx, effectiveDy)
   }
+
+  // Throttle à 1 fois par frame : les MouseEvent peuvent arriver à 120+ Hz
+  // alors que le rendu est plafonné à 60–120. Inutile de mettre à jour le
+  // store plus souvent que l'écran ne rafraîchit.
+  const throttledDragMove = rafThrottle(handleDragMove)
 
   function handleDragEnd() {
     isDragging.value = false
@@ -205,8 +229,12 @@ export function useDraggable(options: DraggableOptions): DraggableState & Dragga
 
     options.onDragEnd?.()
 
-    window.removeEventListener('mousemove', handleDragMove)
-    window.removeEventListener('mouseup', handleDragEnd)
+    // Annuler une frame déjà planifiée (peut survivre au pointerup si le
+    // dernier pointermove est arrivé juste avant).
+    throttledDragMove.cancel()
+    window.removeEventListener('pointermove', throttledDragMove)
+    window.removeEventListener('pointerup', handleDragEnd)
+    window.removeEventListener('pointercancel', handleDragEnd)
   }
 
   /** Notifie le parent que cet enfant a bougé, pour déclencher l'autosize */

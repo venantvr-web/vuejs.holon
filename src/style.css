@@ -482,6 +482,14 @@ textarea::placeholder {
   color: var(--fg-subtle);
 }
 
+/* Sur tactile et stylet, empêcher le navigateur d'interpréter le drag du
+   canevas et de ses noeuds comme un scroll/zoom natif. Indispensable pour
+   que pointermove arrive bien au handler de drag. */
+svg.graph-canvas,
+svg.graph-canvas g.holon-node {
+  touch-action: none;
+}
+
 /* Ombre portée légère sur les noeuds. */
 g.holon-node > rect:first-of-type,
 g.holon-node > path:first-of-type {

@@ -8,12 +8,40 @@ import { ref, computed } from 'vue'
  */
 const pan = ref({ x: 0, y: 0 })
 const zoomLevel = ref(1)
+/**
+ * Taille en pixels écran du conteneur du canevas. Renseignée par GraphCanvas
+ * via `setCanvasSize` au montage et sur ResizeObserver. Sert au culling
+ * (savoir quel rectangle monde est visible).
+ */
+const canvasSize = ref({ w: 800, h: 600 })
 
 const MIN_ZOOM = 0.1
 const MAX_ZOOM = 5
 
 export function useViewport() {
   const zoomPercent = computed(() => Math.round(zoomLevel.value * 100))
+
+  /**
+   * Rectangle visible en coordonnées monde.
+   *
+   * La transformation canevas est `translate(pan) scale(zoom)`, donc un point
+   * écran (sx, sy) correspond au point monde `((sx − panX) / zoom, …)`. On
+   * applique cette inversion aux deux coins du conteneur pour obtenir le
+   * rectangle monde courant.
+   */
+  const visibleWorldRect = computed(() => {
+    const z = zoomLevel.value
+    return {
+      x: -pan.value.x / z,
+      y: -pan.value.y / z,
+      w: canvasSize.value.w / z,
+      h: canvasSize.value.h / z,
+    }
+  })
+
+  function setCanvasSize(w: number, h: number) {
+    canvasSize.value = { w, h }
+  }
 
   function clampZoom(z: number) {
     return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z))
@@ -68,6 +96,8 @@ export function useViewport() {
     pan,
     zoomLevel,
     zoomPercent,
+    canvasSize,
+    visibleWorldRect,
     MIN_ZOOM,
     MAX_ZOOM,
     setZoom,
@@ -75,5 +105,6 @@ export function useViewport() {
     resetView,
     zoomAroundScreenPoint,
     fitWorldBox,
+    setCanvasSize,
   }
 }

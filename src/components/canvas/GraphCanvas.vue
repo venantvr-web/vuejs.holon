@@ -11,6 +11,8 @@ import {
 } from '../../composables/traits'
 import { useLibraryStore } from '../../stores/library'
 import { useViewport } from '../../composables/useViewport'
+import { isNodeVisible } from '../../composables/traits/utils/culling'
+import { rafThrottle } from '../../composables/traits/utils/raf-throttle'
 import NodeRenderer from './NodeRenderer.vue'
 import EdgeLayer from './EdgeLayer.vue'
 import Minimap from './Minimap.vue'
@@ -28,7 +30,7 @@ const { screenToLocalCoordinates, getNodeAbsolutePosition } = useGeometry()
 const { selectedNodeIds, clearSelection } = useSelectionState()
 const { groups, createGroupFromSelection, dissolveGroup } = useGroupState()
 const { copy, cut, paste, duplicate, canPaste } = useClipboardable()
-const { pan, zoomLevel, zoomAroundScreenPoint } = useViewport()
+const { pan, zoomLevel, zoomAroundScreenPoint, visibleWorldRect, setCanvasSize } = useViewport()
 // Facteur inverse du zoom pour les textes d'étiquette (halos de groupe, etc.)
 // qui doivent garder une taille écran constante.
 const fontMul = computed(() => 1 / zoomLevel.value)
@@ -115,7 +117,13 @@ const transform = computed(
 )
 
 // Source de vérité O(1) : l'index parent → enfants tenu par le store.
-const rootNodes = computed(() => graphStore.rootNodes)
+// Le rectangle visible (monde) sert au culling : on ne rend pas les noeuds
+// racines complètement hors du viewport (avec hystérésis pour absorber le pan).
+const rootNodes = computed(() => {
+  const visible = visibleWorldRect.value
+  const allNodes = graphStore.nodes as Record<string, import('../../types').Node>
+  return graphStore.rootNodes.filter((n) => isNodeVisible(n, allNodes, visible))
+})
 
 // --- Drop depuis la sidebar ---
 function handleDrop(event: DragEvent) {
@@ -184,7 +192,7 @@ function handleMouseDown(event: MouseEvent) {
   }
 }
 
-function handleMouseMove(event: MouseEvent) {
+function handleMouseMoveRaw(event: MouseEvent) {
   if (isPanning.value) {
     const dx = event.clientX - lastMousePos.value.x
     const dy = event.clientY - lastMousePos.value.y
@@ -209,6 +217,11 @@ function handleMouseMove(event: MouseEvent) {
     )
   }
 }
+
+// Tous les coûts visuels du mousemove (pan, marquee, aperçu de connexion) se
+// matérialisent au rendu suivant. Throttler à 1 fois par frame divise par 2 à 4
+// le nombre de mutations sans perte de fluidité perçue.
+const handleMouseMove = rafThrottle(handleMouseMoveRaw)
 
 function handleMouseUp(event: MouseEvent) {
   isPanning.value = false
@@ -479,19 +492,28 @@ function handleSvgContextMenu(event: MouseEvent) {
 }
 
 // --- Mode connexion ---
+// Message diffusé aux lecteurs d'écran via aria-live, mis à jour aux
+// transitions de mode importantes.
+const liveAnnouncement = ref('')
+
 function startConnection(nodeId: string) {
   connectionMode.value = true
   connectionSource.value = nodeId
+  liveAnnouncement.value = t('canvas.connectionStarted') || 'Mode connexion activé'
 }
 
 function finishConnection(targetId: string) {
   if (connectionSource.value && connectionSource.value !== targetId) {
     graphStore.createEdge(connectionSource.value, targetId)
+    liveAnnouncement.value = t('canvas.connectionCreated') || 'Connexion créée'
   }
   cancelConnection()
 }
 
 function cancelConnection() {
+  if (connectionMode.value) {
+    liveAnnouncement.value = t('canvas.connectionCancelled') || 'Mode connexion annulé'
+  }
   connectionMode.value = false
   connectionSource.value = null
   connectionPreview.value = null
@@ -547,11 +569,14 @@ function updateContainerSize() {
   if (!container.value) return
   const rect = container.value.getBoundingClientRect()
   containerSize.value = { w: rect.width, h: rect.height }
+  // Publier la taille au viewport pour que tout le monde (notamment le culling
+  // des noeuds dans NodeRenderer) accède au rectangle visible monde.
+  setCanvasSize(rect.width, rect.height)
 }
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
-  window.addEventListener('mouseup', handleMouseUp)
+  window.addEventListener('pointerup', handleMouseUp)
   updateContainerSize()
   if (container.value && 'ResizeObserver' in window) {
     resizeObserver = new ResizeObserver(updateContainerSize)
@@ -561,7 +586,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
-  window.removeEventListener('mouseup', handleMouseUp)
+  window.removeEventListener('pointerup', handleMouseUp)
   resizeObserver?.disconnect()
 })
 
@@ -580,8 +605,15 @@ defineExpose({ svgRoot, pan, zoomLevel })
     <div
       v-if="connectionMode"
       class="absolute top-2 left-1/2 -translate-x-1/2 bg-blue-500 text-white px-3 py-1 rounded-full text-sm z-10"
+      role="status"
     >
       {{ t('canvas.connectionMode') }}
+    </div>
+
+    <!-- Région ARIA live pour annonces aux lecteurs d'écran (changement de
+         mode, raccourcis...). Visuellement masquée, lue par AT. -->
+    <div aria-live="polite" aria-atomic="true" class="sr-only">
+      {{ liveAnnouncement }}
     </div>
 
     <svg
@@ -591,8 +623,8 @@ defineExpose({ svgRoot, pan, zoomLevel })
       role="application"
       aria-label="Canevas d'édition de graphe"
       @wheel="handleWheel"
-      @mousedown="handleMouseDown"
-      @mousemove="handleMouseMove"
+      @pointerdown="handleMouseDown"
+      @pointermove="handleMouseMove"
       @contextmenu="handleSvgContextMenu"
       :class="['graph-canvas', { 'cursor-grab': !isPanning, 'cursor-grabbing': isPanning }]"
     >

@@ -179,6 +179,50 @@ export const useGraphStore = defineStore('graph', () => {
   }
 
   /**
+   * Met à jour plusieurs noeuds dans une *unique* transaction IndexedDB.
+   *
+   * Utilisé par le drag multi-sélection : déplacer N noeuds émettait jusqu'ici
+   * N `db.nodes.update` indépendants par frame. En les regroupant dans
+   * `db.transaction`, on garantit l'atomicité (pas de demi-déplacement
+   * persisté en cas de crash) et on réduit l'overhead transactionnel.
+   *
+   * L'état en mémoire est appliqué synchroniquement comme dans `updateNode`,
+   * seul le commit DB est groupé.
+   */
+  async function batchedUpdateNodes(
+    patches: Array<{ id: string; updates: Partial<Node> }>
+  ): Promise<void> {
+    if (patches.length === 0) return
+
+    let positionAffected = false
+    const dbOps: Array<{ id: string; updates: Partial<Node> }> = []
+
+    for (const { id, updates } of patches) {
+      const previous = nodes.value[id]
+      if (!previous) continue
+      const updatedNode = { ...previous, ...updates }
+      nodes.value[id] = updatedNode
+      if ('parentId' in updates && previous.parentId !== updatedNode.parentId) {
+        indexRemove(id, previous.parentId)
+        indexAdd(id, updatedNode.parentId)
+      }
+      if (patchAffectsAbsolutePosition(updates)) {
+        positionAffected = true
+      }
+      dbOps.push({ id, updates })
+    }
+
+    if (positionAffected) invalidatePositionCache()
+    if (dbOps.length > 0) bump()
+
+    await db.transaction('rw', db.nodes, async () => {
+      for (const { id, updates } of dbOps) {
+        await db.nodes.update(id, toPlain(updates))
+      }
+    })
+  }
+
+  /**
    * Supprime un noeud et tous ses enfants récursivement.
    */
   async function deleteNode(id: string) {
@@ -357,6 +401,7 @@ export const useGraphStore = defineStore('graph', () => {
     loadFromDB,
     createNode,
     updateNode,
+    batchedUpdateNodes,
     deleteNode,
     createEdge,
     updateEdge,

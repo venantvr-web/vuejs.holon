@@ -4,6 +4,9 @@ import { computed, defineAsyncComponent, ref, toRef } from 'vue'
 import { useGraphStore } from '../../stores/graph'
 import { useLibraryStore } from '../../stores/library'
 import { useI18n } from '../../composables/useI18n'
+import { useViewport } from '../../composables/useViewport'
+import { isNodeVisible } from '../../composables/traits/utils/culling'
+import type { Node } from '../../types'
 import {
   useDraggable,
   useResizable,
@@ -161,13 +164,19 @@ function handleOpenTypePicker(event: MouseEvent) {
 // Pour la récursion
 const ChildNodeRenderer = defineAsyncComponent(() => import('./NodeRenderer.vue'))
 
+const { visibleWorldRect } = useViewport()
+
 const children = computed(() => {
   if (node.value?.type !== 'container' && node.value?.type !== 'shape') return []
   if (collapsible.isCollapsed.value) return [] // Ne pas afficher les enfants si collapsed
   // Lookup O(k) via l'index parent → enfants ; tri stable par z-index.
-  return [...graphStore.getChildren(props.nodeId)].sort(
-    (a, b) => (a.data?.zIndex ?? 0) - (b.data?.zIndex ?? 0)
-  )
+  // Culling : on retire les enfants entièrement hors du viewport (avec
+  // hystérésis), évitant de remonter inutilement leur sous-arbre.
+  const visible = visibleWorldRect.value
+  const allNodes = graphStore.nodes as Record<string, Node>
+  return [...graphStore.getChildren(props.nodeId)]
+    .filter((n) => isNodeVisible(n, allNodes, visible))
+    .sort((a, b) => (a.data?.zIndex ?? 0) - (b.data?.zIndex ?? 0))
 })
 
 const transform = computed(
@@ -351,12 +360,12 @@ async function addToLibrary() {
     v-if="node && !isFilteredOut"
     :transform="transform"
     :opacity="filterDimOpacity"
-    @mousedown="handleMouseDown"
+    @pointerdown="handleMouseDown"
     @dblclick="handleDoubleClick"
     @keydown="handleKeyDown"
     @contextmenu="handleContextMenu"
-    @mouseenter="handleMouseEnter"
-    @mouseleave="handleMouseLeave"
+    @pointerenter="handleMouseEnter"
+    @pointerleave="handleMouseLeave"
     tabindex="0"
     role="button"
     :aria-label="`${typeable.typeLabel.value || node.type} ${displayValue}`"
@@ -875,11 +884,22 @@ async function addToLibrary() {
 </template>
 
 <style scoped>
-/* Anneau de focus visible pour accessibilité clavier (WCAG 2.4.7). */
+/* Anneau de focus visible pour accessibilité clavier (WCAG 2.4.7, 2.4.11).
+   `outline` n'est pas peint sur les éléments SVG ; on substitue un stroke
+   épais et un drop-shadow lumineux pour assurer un contraste >= 3:1 sur
+   les fonds clairs comme sombres. */
+g.holon-node:focus-visible {
+  outline: none;
+}
 g.holon-node:focus-visible > rect:first-of-type,
 g.holon-node:focus-visible > path:first-of-type {
   stroke: #2563eb;
   stroke-width: 3;
-  filter: drop-shadow(0 0 4px rgba(37, 99, 235, 0.6));
+  filter: drop-shadow(0 0 4px rgba(37, 99, 235, 0.6)) drop-shadow(0 0 1px rgba(255, 255, 255, 0.9));
+}
+.dark g.holon-node:focus-visible > rect:first-of-type,
+.dark g.holon-node:focus-visible > path:first-of-type {
+  stroke: #93c5fd;
+  filter: drop-shadow(0 0 6px rgba(147, 197, 253, 0.8)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.9));
 }
 </style>
