@@ -204,7 +204,8 @@ export interface DockableHandlers {
  */
 export function useDockable(options: DockableOptions): DockableState & DockableHandlers {
   const graphStore = useGraphStore()
-  const { getNodeAbsolutePosition, findContainerAtPoint, convertCoordinates } = useGeometry()
+  const { getNodeAbsolutePosition, findContainerAtPoint, convertCoordinates, isPointInsideNode } =
+    useGeometry()
 
   const potentialParent = ref<string | null>(null)
   const dockingError = ref<string | null>(null)
@@ -468,14 +469,32 @@ export function useDockable(options: DockableOptions): DockableState & DockableH
 
   // Valide le docking à la fin du drag
   function commitDocking() {
-    if (potentialParent.value === null) {
+    const node = graphStore.nodes[options.nodeId.value]
+    if (!node) {
       potentialParent.value = null
       dockingError.value = null
       return
     }
 
-    const node = graphStore.nodes[options.nodeId.value]
-    if (!node) return
+    // Cas 1 : aucun parent potentiel détecté. L'utilisateur a soit laché le
+    // noeud dans le vide, soit hors d'un container valide. On vérifie quand
+    // même si le noeud est sorti GEOMETRIQUEMENT de son parent actuel : si
+    // oui, on le dissocie automatiquement (sinon l'autosize du parent va le
+    // « ré-engloutir » au prochain tick, c'est exactement la régression que
+    // l'utilisateur décrit comme « ça revient toujours dans la box »).
+    if (potentialParent.value === null) {
+      const currentParentId = node.parentId
+      if (currentParentId) {
+        const absPos = getNodeAbsolutePosition(options.nodeId.value)
+        const centerX = absPos.x + node.geometry.w / 2
+        const centerY = absPos.y + node.geometry.h / 2
+        if (!isPointInsideNode(currentParentId, centerX, centerY)) {
+          undockFromParent()
+        }
+      }
+      dockingError.value = null
+      return
+    }
 
     // Double vérification des règles
     const check = canDockInto(potentialParent.value)
