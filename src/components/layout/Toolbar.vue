@@ -40,13 +40,17 @@ import {
   Trash2,
   Loader2,
   ChevronDown,
+  Volume2,
+  VolumeX,
 } from 'lucide-vue-next'
+import { useSound } from '../../composables/useSound'
 
 const { t } = useI18n()
 
 const manualOpen = ref(false)
 const showHistoryPanel = ref(false)
 const showLayersPanel = ref(false)
+const { isMuted, toggleMute } = useSound()
 
 const graphStore = useGraphStore()
 const { selectedNodeIds } = useSelectionState()
@@ -462,10 +466,19 @@ function handleUngroup() {
 
       <span class="w-px h-5 bg-[var(--border)] mx-1"></span>
 
-      <!-- Thème / Langue / Aide -->
+      <!-- Thème / Langue / Aide / Son -->
       <ThemePicker />
       <LanguagePicker />
       <ShortcutsHelp />
+      <button
+        @click="toggleMute"
+        class="px-2 py-1.5 text-sm app-btn rounded transition-colors"
+        :title="isMuted ? 'Activer les sons d\'interface' : 'Couper les sons d\'interface'"
+        :aria-pressed="!isMuted"
+        :aria-label="isMuted ? 'Sons coupés' : 'Sons activés'"
+      >
+        <component :is="isMuted ? VolumeX : Volume2" class="w-4 h-4" aria-hidden="true" />
+      </button>
 
       <!-- Bouton Effacer tout -->
       <button

@@ -2,6 +2,7 @@
 import { ref, computed, type Ref } from 'vue'
 import { useGraphStore } from '../../stores/graph'
 import { useGeometry } from '../useGeometry'
+import { playSound } from '../useSound'
 import type { Node } from '../../types'
 
 /**
@@ -522,6 +523,7 @@ export function useDockable(options: DockableOptions): DockableState & DockableH
           y: newCoords.y,
         },
       })
+      playSound('snap')
     }
 
     potentialParent.value = null

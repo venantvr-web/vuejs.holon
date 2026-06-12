@@ -1,6 +1,7 @@
 // src/composables/traits/useUndoable.ts
 import { ref, computed, watch, type Ref } from 'vue'
 import { useGraphStore } from '../../stores/graph'
+import { playSound } from '../useSound'
 import type { Node, Edge } from '../../types'
 
 /**
@@ -154,6 +155,7 @@ export function useUndoable(options: UndoableOptions = {}): UndoableState & Undo
     const snap = history.value[currentIndex.value]
     if (snap) {
       restoreSnapshot(snap)
+      playSound('undo')
     }
   }
 
@@ -164,6 +166,7 @@ export function useUndoable(options: UndoableOptions = {}): UndoableState & Undo
     const snap = history.value[currentIndex.value]
     if (snap) {
       restoreSnapshot(snap)
+      playSound('redo')
     }
   }
 

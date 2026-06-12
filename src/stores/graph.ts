@@ -8,6 +8,7 @@ import {
   invalidatePositionCache,
   clearPositionCache,
 } from '../composables/traits/utils/position-cache'
+import { playSound } from '../composables/useSound'
 
 /**
  * Indique si un patch `Partial<Node>` modifie la position absolue d'un noeud
@@ -155,6 +156,7 @@ export const useGraphStore = defineStore('graph', () => {
     indexAdd(id, parentId)
     invalidatePositionCache()
     bump()
+    playSound('create')
     await db.nodes.put(toPlain(newNode))
     return newNode
   }
@@ -259,7 +261,10 @@ export const useGraphStore = defineStore('graph', () => {
       await db.nodes.delete(nodeId)
     }
     invalidatePositionCache()
-    if (toDelete.length > 0 || edgesToDelete.length > 0) bump()
+    if (toDelete.length > 0 || edgesToDelete.length > 0) {
+      bump()
+      playSound('delete')
+    }
   }
 
   /**
@@ -284,6 +289,7 @@ export const useGraphStore = defineStore('graph', () => {
     const newEdge: Edge = { id, sourceId, targetId, routing }
     edges.value[id] = newEdge
     bump()
+    playSound('connect')
     await db.edges.put(toPlain(newEdge))
     return newEdge
   }
