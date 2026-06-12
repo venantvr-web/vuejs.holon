@@ -43,6 +43,49 @@ export function useViewport() {
     canvasSize.value = { w, h }
   }
 
+  /**
+   * Interpole pan et zoom vers une cible sur `duration` millisecondes via
+   * requestAnimationFrame. Easing « ease-out cubic » pour une décélération
+   * naturelle. Annule toute animation précédente en cours.
+   *
+   * Utilisé pour les transitions « drill-down » (zoom dans un conteneur) et
+   * « recadrage » (zoom-to-fit, zoom-to-selection).
+   */
+  let animationFrameId = 0
+  function animateViewport(
+    targetPan: { x: number; y: number },
+    targetZoom: number,
+    duration = 300
+  ): void {
+    if (animationFrameId) cancelAnimationFrame(animationFrameId)
+    if (duration <= 0) {
+      pan.value = targetPan
+      zoomLevel.value = clampZoom(targetZoom)
+      return
+    }
+
+    const startPan = { x: pan.value.x, y: pan.value.y }
+    const startZoom = zoomLevel.value
+    const endZoom = clampZoom(targetZoom)
+    const t0 = performance.now()
+
+    function step(now: number) {
+      const t = Math.min(1, (now - t0) / duration)
+      const eased = 1 - Math.pow(1 - t, 3)
+      pan.value = {
+        x: startPan.x + (targetPan.x - startPan.x) * eased,
+        y: startPan.y + (targetPan.y - startPan.y) * eased,
+      }
+      zoomLevel.value = startZoom + (endZoom - startZoom) * eased
+      if (t < 1) {
+        animationFrameId = requestAnimationFrame(step)
+      } else {
+        animationFrameId = 0
+      }
+    }
+    animationFrameId = requestAnimationFrame(step)
+  }
+
   function clampZoom(z: number) {
     return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z))
   }
@@ -55,9 +98,21 @@ export function useViewport() {
     zoomLevel.value = clampZoom(zoomLevel.value * factor)
   }
 
-  function resetView() {
-    zoomLevel.value = 1
-    pan.value = { x: 0, y: 0 }
+  /**
+   * Réinitialise pan = (0, 0) et zoom = 1 avec animation rAF.
+   *
+   * Le paramètre `animate` accepte aussi un `MouseEvent` car Vue passe
+   * l'évènement comme premier argument quand on lie `@click="resetView"` ;
+   * dans ce cas on anime (sémantique par défaut). Pour un saut instantané,
+   * passer explicitement `false`.
+   */
+  function resetView(animate: boolean | Event = true) {
+    if (animate !== false) {
+      animateViewport({ x: 0, y: 0 }, 1)
+    } else {
+      zoomLevel.value = 1
+      pan.value = { x: 0, y: 0 }
+    }
   }
 
   /** Zoom centré sur un point écran (conserve la position du point sous la souris). */
@@ -71,12 +126,18 @@ export function useViewport() {
     zoomLevel.value = newZoom
   }
 
-  /** Centre et ajuste le zoom pour faire tenir une bbox monde dans le viewport écran. */
+  /**
+   * Centre et ajuste le zoom pour faire tenir une bbox monde dans le
+   * viewport écran. Animation rAF par défaut (« drill-down » fluide) ;
+   * passer `animate = false` pour un saut instantané (utile aux tests et
+   * aux recadrages automatiques en chaîne).
+   */
   function fitWorldBox(
     box: { x: number; y: number; w: number; h: number },
     viewportW: number,
     viewportH: number,
-    padding = 40
+    padding = 40,
+    animate = true
   ) {
     if (box.w <= 0 || box.h <= 0) return
     const scale = Math.min(
@@ -85,10 +146,15 @@ export function useViewport() {
       MAX_ZOOM
     )
     const z = Math.max(MIN_ZOOM, scale)
-    zoomLevel.value = z
-    pan.value = {
+    const targetPan = {
       x: viewportW / 2 - (box.x + box.w / 2) * z,
       y: viewportH / 2 - (box.y + box.h / 2) * z,
+    }
+    if (animate) {
+      animateViewport(targetPan, z)
+    } else {
+      zoomLevel.value = z
+      pan.value = targetPan
     }
   }
 
@@ -105,6 +171,7 @@ export function useViewport() {
     resetView,
     zoomAroundScreenPoint,
     fitWorldBox,
+    animateViewport,
     setCanvasSize,
   }
 }

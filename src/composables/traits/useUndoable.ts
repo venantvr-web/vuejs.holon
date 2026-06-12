@@ -50,6 +50,11 @@ export interface UndoableHandlers {
   clearHistory: () => void
   /** Crée un snapshot de l'état actuel du graphe */
   snapshot: () => void
+  /**
+   * Saute directement à un état donné de l'historique (par son index).
+   * Permet la navigation via un panneau visuel sans enchaîner des undo/redo.
+   */
+  jumpTo: (index: number) => void
 }
 
 interface GraphSnapshot {
@@ -162,6 +167,14 @@ export function useUndoable(options: UndoableOptions = {}): UndoableState & Undo
     }
   }
 
+  function jumpTo(index: number): void {
+    if (index < 0 || index >= history.value.length) return
+    if (index === currentIndex.value) return
+    currentIndex.value = index
+    const snap = history.value[index]
+    if (snap) restoreSnapshot(snap)
+  }
+
   function clearHistory() {
     history.value = []
     currentIndex.value = -1
@@ -178,6 +191,7 @@ export function useUndoable(options: UndoableOptions = {}): UndoableState & Undo
     redo,
     clearHistory,
     snapshot,
+    jumpTo,
   }
 }
 
