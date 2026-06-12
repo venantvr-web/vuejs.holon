@@ -298,38 +298,25 @@ console.log(`Ajouts: ${diff.stats.nodesAdded} nodes`)
 console.log(`Modifications: ${diff.stats.nodesModified} nodes`)
 ```
 
-## 📁 Structure du Projet
+## Structure du projet
 
-```
-src/
-- types/
-  - index.ts                    # Interfaces TypeScript
-- db/
-  - index.ts                    # Configuration Dexie.js
-- stores/
-  - graph.ts                    # Store Pinia (dual-state)
-  - library.ts                  # Store templates
-- composables/
-  - useGeometry.ts              # Logique mathématique
-  - traits/                     # 45+ traits
-  - index.ts                # Exports centralisés
-  - useDraggable.ts
-  - useResizable.ts
-  - useValidatable.ts       # Validation Archimate
-  - useConstrainable.ts     # Anti-patterns
-  - useSuggestable.ts       # IA suggestions
-  - useVersionable.ts       # Gestion versions
-  - ...                     # 40+ autres traits
-- components/
-  - layout/
-    - Sidebar.vue
-  - canvas/
-  - GraphCanvas.vue         # Point d'entrée SVG
-  - NodeRenderer.vue        # Composant récursif
-  - EdgeLayer.vue           # Calque global arêtes
-- services/
-    - markdown.ts
-```
+- `src/types/` — interfaces TypeScript partagées (`index.ts`).
+- `src/db/` — configuration Dexie.js (`index.ts`).
+- `src/stores/` — stores Pinia : `graph.ts` (état du graphe, dual-state) et
+  `library.ts` (modèles réutilisables).
+- `src/composables/`
+  - `useGeometry.ts` — logique mathématique des trois espaces de coordonnées.
+  - `traits/` — plus de 45 composables réactifs (`index.ts` regroupe les
+    exports). Principaux : `useDraggable`, `useResizable`, `useValidatable`
+    (validation Archimate), `useConstrainable` (détection d'anti-patterns),
+    `useSuggestable` (suggestions assistées), `useVersionable` (gestion des
+    versions), et environ quarante autres.
+- `src/components/`
+  - `layout/Sidebar.vue` — barre latérale principale.
+  - `canvas/` — `GraphCanvas.vue` (point d'entrée SVG), `NodeRenderer.vue`
+    (composant récursif rendant un noeud et ses enfants), `EdgeLayer.vue`
+    (calque global des arêtes).
+- `src/services/markdown.ts` — utilitaires de parsing Markdown.
 
 ## 🏗️ Architecture & Décisions Techniques
 

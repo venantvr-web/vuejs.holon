@@ -38,11 +38,10 @@ flowchart LR
     World --> Screen[Espace écran]
 ```
 
-Exemple à proscrire :
-
-```
-<!-- Schéma ASCII converti en description : Local → World → Screen -->
-```
+À proscrire formellement : tout schéma dessiné avec des caractères ASCII ou
+des caractères de dessin de boîte (`+---+`, `|`, `-->`, `├──`, `│`, `═`, etc.).
+Même un arbre de fichiers doit être rendu sous forme de liste Markdown
+imbriquée plutôt que via les caractères `├──` et `│`.
 
 ### Gestion de la Complexité Géométrique
 
