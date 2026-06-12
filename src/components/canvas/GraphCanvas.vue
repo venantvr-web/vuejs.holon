@@ -8,6 +8,7 @@ import {
   useGroupState,
   useClipboardable,
   useSnapState,
+  useFocusedNodeState,
 } from '../../composables/traits'
 import { useLibraryStore } from '../../stores/library'
 import { useViewport } from '../../composables/useViewport'
@@ -30,6 +31,7 @@ const { screenToLocalCoordinates, getNodeAbsolutePosition } = useGeometry()
 const { selectedNodeIds, clearSelection } = useSelectionState()
 const { groups, createGroupFromSelection, dissolveGroup } = useGroupState()
 const { copy, cut, paste, duplicate, canPaste } = useClipboardable()
+const { focusInDirection } = useFocusedNodeState()
 const { pan, zoomLevel, zoomAroundScreenPoint, visibleWorldRect, setCanvasSize } = useViewport()
 // Facteur inverse du zoom pour les textes d'étiquette (halos de groupe, etc.)
 // qui doivent garder une taille écran constante.
@@ -542,6 +544,28 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 
   if (isEditingText) return
+
+  // Navigation spatiale (WCAG 2.1.1 + 2.1.2) : flèches déplacent le focus
+  // vers le voisin le plus proche dans la direction donnée. Aucune
+  // modification de sélection ; combinables avec Espace/Enter pour activer.
+  if (
+    event.key === 'ArrowUp' ||
+    event.key === 'ArrowDown' ||
+    event.key === 'ArrowLeft' ||
+    event.key === 'ArrowRight'
+  ) {
+    const direction =
+      event.key === 'ArrowUp'
+        ? 'up'
+        : event.key === 'ArrowDown'
+          ? 'down'
+          : event.key === 'ArrowLeft'
+            ? 'left'
+            : 'right'
+    event.preventDefault()
+    focusInDirection(direction)
+    return
+  }
 
   // Ctrl+G : grouper la sélection. Ctrl+Shift+G : dégrouper.
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'g') {

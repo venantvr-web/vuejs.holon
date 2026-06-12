@@ -368,10 +368,14 @@ export {
 export {
   useFocusable,
   useFocusTrap,
+  useFocusedNodeState,
   type FocusableOptions,
   type FocusableState,
   type FocusableHandlers,
+  type SpatialDirection,
 } from './useFocusable'
+
+export { useLayerVisibility, isNodeLayerHidden, getArchimateLayers } from './useLayerVisibility'
 
 // === Données et Layout (Sprint 6) ===
 

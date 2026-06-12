@@ -19,6 +19,7 @@ import VersionsPanel from '../canvas/VersionsPanel.vue'
 import ViewsPanel from '../canvas/ViewsPanel.vue'
 import SuggestionsPanel from '../canvas/SuggestionsPanel.vue'
 import HistoryPanel from '../canvas/HistoryPanel.vue'
+import LayersPanel from '../canvas/LayersPanel.vue'
 import ExportMenu from './ExportMenu.vue'
 import ImportButton from './ImportButton.vue'
 import ThemePicker from './ThemePicker.vue'
@@ -30,6 +31,7 @@ import {
   Undo2,
   Redo2,
   History as HistoryIcon,
+  Layers as LayersIcon,
   LayoutGrid,
   Magnet,
   Maximize,
@@ -44,6 +46,7 @@ const { t } = useI18n()
 
 const manualOpen = ref(false)
 const showHistoryPanel = ref(false)
+const showLayersPanel = ref(false)
 
 const graphStore = useGraphStore()
 const { selectedNodeIds } = useSelectionState()
@@ -237,6 +240,29 @@ function handleUngroup() {
           class="absolute right-0 top-full mt-1 z-20"
         >
           <HistoryPanel :visible="showHistoryPanel" @close="showHistoryPanel = false" />
+        </div>
+      </div>
+
+      <!-- Bascule panneau Couches Archimate (visibilité par layer) -->
+      <div class="relative">
+        <button
+          @click="showLayersPanel = !showLayersPanel"
+          class="px-2 py-1.5 text-sm app-btn rounded transition-colors"
+          :class="{ 'app-toggle-active': showLayersPanel }"
+          title="Afficher / masquer les couches Archimate"
+          :aria-expanded="showLayersPanel"
+          aria-controls="layers-panel-popover"
+        >
+          <span class="inline-flex items-center gap-1.5"
+            ><LayersIcon class="w-4 h-4" /> Couches</span
+          >
+        </button>
+        <div
+          v-if="showLayersPanel"
+          id="layers-panel-popover"
+          class="absolute right-0 top-full mt-1 z-20"
+        >
+          <LayersPanel :visible="showLayersPanel" @close="showLayersPanel = false" />
         </div>
       </div>
 

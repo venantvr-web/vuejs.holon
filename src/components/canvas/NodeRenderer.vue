@@ -6,6 +6,7 @@ import { useLibraryStore } from '../../stores/library'
 import { useI18n } from '../../composables/useI18n'
 import { useViewport } from '../../composables/useViewport'
 import { isNodeVisible } from '../../composables/traits/utils/culling'
+import { isNodeLayerHidden } from '../../composables/traits/useLayerVisibility'
 import type { Node } from '../../types'
 import {
   useDraggable,
@@ -182,7 +183,9 @@ const transform = computed(
 // Chaque noeud s'auto-masque : la récursion suffit alors à cacher les
 // descendants d'un conteneur masqué sans filtrage explicite des enfants.
 const filterable = useFilterable()
-const isFilteredOut = computed(() => filterable.isNodeHidden(props.nodeId))
+const isFilteredOut = computed(
+  () => filterable.isNodeHidden(props.nodeId) || isNodeLayerHidden(node.value)
+)
 // L'opacité d'estompage n'est appliquée qu'au plus haut noeud estompé de la
 // branche : les <g> SVG composent les opacités, on évite le double estompage.
 const filterDimOpacity = computed(() => {
@@ -537,7 +540,14 @@ async function addToLibrary() {
       v-if="node.type === 'container' && collapsible.canCollapse.value && (isHovered || isSelected)"
       class="cursor-pointer"
       @click.stop="collapsible.toggle"
+      role="button"
+      :aria-label="
+        collapsible.isCollapsed.value ? 'Développer le conteneur' : 'Replier le conteneur'
+      "
     >
+      <!-- Hit area invisible 44 px (WCAG 2.5.5) — gobe les clics sur tout le
+           halo, le visuel reste compact. -->
+      <circle :cx="node.geometry.w / 2" :cy="-12 * fontMul" :r="22 * fontMul" fill="transparent" />
       <circle
         :cx="node.geometry.w / 2"
         :cy="-12 * fontMul"
@@ -545,6 +555,7 @@ async function addToLibrary() {
         fill="var(--surface-3)"
         stroke="var(--border)"
         stroke-width="1"
+        pointer-events="none"
       />
       <text
         :x="node.geometry.w / 2"
@@ -567,7 +578,16 @@ async function addToLibrary() {
       @click.stop="tooltip.startEditComment"
       @mouseenter="tooltip.showTooltip"
       @mouseleave="tooltip.hideTooltip"
+      role="button"
+      :aria-label="tooltip.hasComment.value ? 'Modifier le commentaire' : 'Ajouter un commentaire'"
     >
+      <!-- Hit area invisible 44 px (WCAG 2.5.5) -->
+      <circle
+        :cx="node.geometry.w - 12 * fontMul"
+        :cy="12 * fontMul"
+        :r="22 * fontMul"
+        fill="transparent"
+      />
       <circle
         :cx="node.geometry.w - 12 * fontMul"
         :cy="12 * fontMul"
@@ -575,6 +595,7 @@ async function addToLibrary() {
         :fill="tooltip.hasComment.value ? '#fbbf24' : 'var(--surface-3)'"
         :stroke="tooltip.hasComment.value ? '#f59e0b' : 'var(--border)'"
         stroke-width="1"
+        pointer-events="none"
       />
       <text
         :x="node.geometry.w - 12 * fontMul"
@@ -658,16 +679,29 @@ async function addToLibrary() {
       </div>
     </foreignObject>
 
-    <!-- Point de connexion -->
-    <circle
+    <!-- Point de connexion (hit area 44 px, visuel compact) -->
+    <g
       v-if="!connectionMode && (isHovered || isSelected)"
-      :cx="node.geometry.w"
-      :cy="node.geometry.h / 2"
-      :r="6 * fontMul"
-      fill="var(--accent-selected)"
-      class="cursor-crosshair hover:r-8 transition-all"
+      class="cursor-crosshair"
       @pointerdown.stop.prevent="$emit('start-connection', nodeId)"
-    />
+      role="button"
+      aria-label="Démarrer une connexion depuis ce noeud"
+    >
+      <circle
+        :cx="node.geometry.w"
+        :cy="node.geometry.h / 2"
+        :r="22 * fontMul"
+        fill="transparent"
+      />
+      <circle
+        :cx="node.geometry.w"
+        :cy="node.geometry.h / 2"
+        :r="6 * fontMul"
+        fill="var(--accent-selected)"
+        class="transition-all"
+        pointer-events="none"
+      />
+    </g>
 
     <!-- Sélecteur de type Archimate (top-right, aligné sur la rangée
          du chip commentaire, à gauche de lui). Émet vers GraphCanvas qui
@@ -676,7 +710,16 @@ async function addToLibrary() {
       v-if="(isHovered || isSelected) && !isResizing"
       class="cursor-pointer"
       @click="handleOpenTypePicker"
+      role="button"
+      :aria-label="`Type Archimate : ${typeable.typeLabel.value || 'aucun'} (cliquer pour changer)`"
     >
+      <!-- Hit area invisible 44 px (WCAG 2.5.5) -->
+      <circle
+        :cx="node.geometry.w - 32 * fontMul"
+        :cy="12 * fontMul"
+        :r="22 * fontMul"
+        fill="transparent"
+      />
       <circle
         :cx="node.geometry.w - 32 * fontMul"
         :cy="12 * fontMul"
@@ -685,6 +728,7 @@ async function addToLibrary() {
         stroke="#9ca3af"
         stroke-width="1"
         vector-effect="non-scaling-stroke"
+        pointer-events="none"
       />
       <text
         :x="node.geometry.w - 32 * fontMul"

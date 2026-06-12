@@ -1,6 +1,13 @@
 // src/composables/traits/useFocusable.ts
 import { ref, computed, type Ref } from 'vue'
 import { useGraphStore } from '../../stores/graph'
+import { getCachedAbsolutePosition } from './utils/position-cache'
+import type { Node } from '../../types'
+
+/**
+ * Directions cardinales utilisées pour la navigation spatiale au clavier.
+ */
+export type SpatialDirection = 'up' | 'down' | 'left' | 'right'
 
 /**
  * Options de configuration pour le trait Focusable.
@@ -60,6 +67,12 @@ export interface FocusableHandlers {
    * Focus sur le noeud précédent (Shift+Tab).
    */
   focusPrevious: () => void
+  /**
+   * Déplace le focus sur le noeud le plus proche dans la direction indiquée
+   * (haut, bas, gauche, droite). Pondère la distance par l'écart à l'axe
+   * pour préférer un voisin réellement aligné.
+   */
+  focusInDirection: (direction: SpatialDirection) => void
   /**
    * Définit l'index de tabulation.
    * @param index - Nouvel index
@@ -185,6 +198,81 @@ export function useFocusable(options: FocusableOptions): FocusableState & Focusa
   }
 
   /**
+   * Navigation spatiale : trouve le noeud le plus proche dans la direction
+   * indiquée et lui donne le focus.
+   *
+   * Heuristique :
+   * 1. On calcule le centre absolu du noeud courant et de tous les candidats.
+   * 2. On garde uniquement les noeuds dont le centre est *strictement* du
+   *    bon côté (par exemple, à droite pour `direction = 'right'`).
+   * 3. Parmi eux, on minimise une distance pondérée :
+   *      d = écart_axial + 2 × écart_perpendiculaire
+   *    qui pénalise les voisins peu alignés avec le couloir directionnel.
+   */
+  function focusInDirection(direction: SpatialDirection): void {
+    const currentNode = graphStore.nodes[options.nodeId.value]
+    if (!currentNode) return
+    const currentPos = getCachedAbsolutePosition(
+      currentNode.id,
+      graphStore.nodes as Record<string, Node>
+    )
+    if (!currentPos) return
+    const cx = currentPos.x + currentNode.geometry.w / 2
+    const cy = currentPos.y + currentNode.geometry.h / 2
+
+    let best: { id: string; score: number } | null = null
+    for (const candidate of Object.values(graphStore.nodes) as Node[]) {
+      if (candidate.id === currentNode.id) continue
+      if (candidate.data?.locked) continue
+      const pos = getCachedAbsolutePosition(candidate.id, graphStore.nodes as Record<string, Node>)
+      if (!pos) continue
+      const px = pos.x + candidate.geometry.w / 2
+      const py = pos.y + candidate.geometry.h / 2
+      const dx = px - cx
+      const dy = py - cy
+
+      // Couloir directionnel : on ne considère que les voisins du bon côté.
+      // Une marge de 1 px évite les zéros qui mèneraient à des incertitudes.
+      let axial: number
+      let perp: number
+      switch (direction) {
+        case 'right':
+          // Cône 45° : on n'accepte un voisin que s'il est davantage à droite
+          // qu'en haut ou en bas (sinon une flèche → choisirait un nœud bien
+          // au-dessus mais à peine décalé).
+          if (dx <= 1 || dx < Math.abs(dy)) continue
+          axial = dx
+          perp = Math.abs(dy)
+          break
+        case 'left':
+          if (dx >= -1 || -dx < Math.abs(dy)) continue
+          axial = -dx
+          perp = Math.abs(dy)
+          break
+        case 'down':
+          if (dy <= 1 || dy < Math.abs(dx)) continue
+          axial = dy
+          perp = Math.abs(dx)
+          break
+        case 'up':
+          if (dy >= -1 || -dy < Math.abs(dx)) continue
+          axial = -dy
+          perp = Math.abs(dx)
+          break
+      }
+
+      const score = axial + 2 * perp
+      if (!best || score < best.score) {
+        best = { id: candidate.id, score }
+      }
+    }
+
+    if (!best) return
+    globalFocusedNodeId.value = best.id
+    window.dispatchEvent(new CustomEvent('node-focused', { detail: { nodeId: best.id } }))
+  }
+
+  /**
    * Set tab index.
    */
   function setTabIndex(index: number): void {
@@ -210,8 +298,90 @@ export function useFocusable(options: FocusableOptions): FocusableState & Focusa
     blur,
     focusNext,
     focusPrevious,
+    focusInDirection,
     setTabIndex,
     setFocusable,
+  }
+}
+
+/**
+ * Composable global pour interroger / piloter l'état de focus sans avoir à
+ * instancier `useFocusable` pour un noeud spécifique.
+ *
+ * Utilisé par `GraphCanvas` pour câbler les flèches du clavier au noeud
+ * actuellement focalisé, peu importe lequel.
+ */
+export function useFocusedNodeState() {
+  const graphStore = useGraphStore()
+
+  function focusInDirection(direction: SpatialDirection): void {
+    const sourceId = globalFocusedNodeId.value
+    if (!sourceId) return
+    const source = graphStore.nodes[sourceId] as Node | undefined
+    if (!source) return
+    const sourcePos = getCachedAbsolutePosition(sourceId, graphStore.nodes as Record<string, Node>)
+    if (!sourcePos) return
+    const cx = sourcePos.x + source.geometry.w / 2
+    const cy = sourcePos.y + source.geometry.h / 2
+
+    let best: { id: string; score: number } | null = null
+    for (const candidate of Object.values(graphStore.nodes) as Node[]) {
+      if (candidate.id === sourceId) continue
+      if (candidate.data?.locked) continue
+      const pos = getCachedAbsolutePosition(candidate.id, graphStore.nodes as Record<string, Node>)
+      if (!pos) continue
+      const px = pos.x + candidate.geometry.w / 2
+      const py = pos.y + candidate.geometry.h / 2
+      const dx = px - cx
+      const dy = py - cy
+
+      let axial: number
+      let perp: number
+      switch (direction) {
+        case 'right':
+          // Cône 45° : on n'accepte un voisin que s'il est davantage à droite
+          // qu'en haut ou en bas (sinon une flèche → choisirait un nœud bien
+          // au-dessus mais à peine décalé).
+          if (dx <= 1 || dx < Math.abs(dy)) continue
+          axial = dx
+          perp = Math.abs(dy)
+          break
+        case 'left':
+          if (dx >= -1 || -dx < Math.abs(dy)) continue
+          axial = -dx
+          perp = Math.abs(dy)
+          break
+        case 'down':
+          if (dy <= 1 || dy < Math.abs(dx)) continue
+          axial = dy
+          perp = Math.abs(dx)
+          break
+        case 'up':
+          if (dy >= -1 || -dy < Math.abs(dx)) continue
+          axial = -dy
+          perp = Math.abs(dx)
+          break
+      }
+
+      const score = axial + 2 * perp
+      if (!best || score < best.score) {
+        best = { id: candidate.id, score }
+      }
+    }
+
+    if (!best) return
+    globalFocusedNodeId.value = best.id
+    window.dispatchEvent(new CustomEvent('node-focused', { detail: { nodeId: best.id } }))
+  }
+
+  function clearFocus(): void {
+    globalFocusedNodeId.value = null
+  }
+
+  return {
+    focusedNodeId: computed(() => globalFocusedNodeId.value),
+    focusInDirection,
+    clearFocus,
   }
 }
 
