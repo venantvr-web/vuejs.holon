@@ -168,5 +168,7 @@ cython_debug/
 # IDE files
 .idx/
 
-# TypeDoc generated documentation (racine uniquement — ne pas ignorer src/docs)
-/docs/
+# TypeDoc generated documentation — limité au sous-dossier réellement
+# produit par `npm run docs`. La documentation manuelle (docs/deployment.md,
+# ADR, etc.) reste versionnée.
+/docs/api/
