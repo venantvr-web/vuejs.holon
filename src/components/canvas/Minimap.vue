@@ -149,6 +149,29 @@ function handleMouseDown(event: MouseEvent) {
   if (coords) panToMini(coords.x, coords.y)
 }
 
+/**
+ * Zoom à la molette sur la mini-map. La sémantique attendue par l'utilisateur
+ * est « zoom du canevas principal », pas « zoom de la mini-map elle-même » :
+ * on ajuste donc le zoom du viewport en gardant centré le point monde sous
+ * le curseur dans la mini-map.
+ */
+function handleWheel(event: WheelEvent) {
+  event.preventDefault()
+  const coords = getMiniCoords(event)
+  if (!coords) return
+  const world = miniToWorld(coords.x, coords.y)
+  const factor = event.deltaY < 0 ? 1.1 : 1 / 1.1
+  const newZoom = Math.max(0.1, Math.min(5, zoomLevel.value * factor))
+  if (newZoom === zoomLevel.value) return
+  // On déplace le pan pour que le point monde reste au centre du viewport
+  // principal, ce qui matche l'intuition « molette = zoom autour de la cible ».
+  pan.value = {
+    x: -world.x * newZoom + props.canvasWidth / 2,
+    y: -world.y * newZoom + props.canvasHeight / 2,
+  }
+  zoomLevel.value = newZoom
+}
+
 function handleMouseMoveRaw(event: MouseEvent) {
   if (!isDragging.value) return
   const coords = getMiniCoords(event)
@@ -182,6 +205,7 @@ onUnmounted(() => {
     :width="MINIMAP_W"
     :height="MINIMAP_H"
     @pointerdown="handleMouseDown"
+    @wheel.prevent="handleWheel"
   >
     <!-- Noeuds miniatures -->
     <rect

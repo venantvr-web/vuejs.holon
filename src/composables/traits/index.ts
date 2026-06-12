@@ -377,6 +377,14 @@ export {
 
 export { useLayerVisibility, isNodeLayerHidden, getArchimateLayers } from './useLayerVisibility'
 
+export {
+  useBackupable,
+  useBackupState,
+  type BackupableOptions,
+  type BackupableState,
+  type BackupableHandlers,
+} from './useBackupable'
+
 // === Données et Layout (Sprint 6) ===
 
 // Propriétés personnalisées

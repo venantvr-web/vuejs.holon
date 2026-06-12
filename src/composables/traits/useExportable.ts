@@ -2,6 +2,8 @@
 import { useGraphStore } from '../../stores/graph'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
+import { ARCHIMATE_TYPES, type ArchimateLayer } from './useTypeable'
+import type { Node } from '../../types'
 
 /**
  * Formats d'export disponibles.
@@ -31,6 +33,31 @@ export interface ExportOptions {
    * Nom du fichier pour le téléchargement.
    */
   filename?: string
+  /**
+   * Titre du document, utilisé pour la page de couverture du PDF et les
+   * en-têtes Archimate. Si omis, on utilise « Holon Architecture Model ».
+   */
+  title?: string
+  /**
+   * Auteur du document, utilisé en couverture PDF et métadonnées XMP.
+   */
+  author?: string
+  /**
+   * Inclure une table des matières dans le PDF (page 2 après la couverture).
+   * @default true
+   */
+  includeTOC?: boolean
+  /**
+   * Inclure une page « vue d'ensemble » avec le diagramme complet en image.
+   * @default true
+   */
+  includeOverview?: boolean
+  /**
+   * Inclure une section par couche Archimate listant les éléments
+   * appartenant à cette couche.
+   * @default true
+   */
+  includeLayerSections?: boolean
 }
 
 /**
@@ -172,44 +199,248 @@ export function useExportable(): ExportableHandlers {
   }
 
   /**
-   * Export PDF en utilisant jsPDF.
+   * Construit l'index inverse type Archimate → couche. Mémoïsé par appel
+   * (peu coûteux).
    */
-  async function exportAsPDF(options: ExportOptions = {}): Promise<Blob> {
-    const { quality = 0.95, scale = 2 } = options
+  function buildTypeToLayerMap(): Map<string, ArchimateLayer> {
+    const map = new Map<string, ArchimateLayer>()
+    for (const [layerKey, layer] of Object.entries(ARCHIMATE_TYPES)) {
+      for (const typeKey of Object.keys(layer.types)) {
+        map.set(typeKey, layerKey as ArchimateLayer)
+      }
+    }
+    return map
+  }
 
-    // D'abord, obtenir l'image PNG
-    const pngBlob = await exportAsPNG({ quality, scale })
-    const pngUrl = URL.createObjectURL(pngBlob)
-
+  /**
+   * Charge un PNG en `<img>` HTML pour pouvoir l'injecter dans jsPDF
+   * (qui prend un HTMLImageElement déjà chargé).
+   */
+  function loadImageFromBlob(blob: Blob): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(blob)
       const img = new Image()
       img.onload = () => {
-        try {
-          // Créer le PDF avec les dimensions de l'image
-          const pdf = new jsPDF({
-            orientation: img.width > img.height ? 'landscape' : 'portrait',
-            unit: 'px',
-            format: [img.width, img.height],
-          })
-
-          // Ajouter l'image au PDF
-          pdf.addImage(img, 'PNG', 0, 0, img.width, img.height)
-
-          // Convertir en blob
-          const pdfBlob = pdf.output('blob')
-          URL.revokeObjectURL(pngUrl)
-          resolve(pdfBlob)
-        } catch (error) {
-          URL.revokeObjectURL(pngUrl)
-          reject(error)
-        }
+        URL.revokeObjectURL(url)
+        resolve(img)
       }
       img.onerror = () => {
-        URL.revokeObjectURL(pngUrl)
-        reject(new Error("Échec du chargement de l'image pour le PDF"))
+        URL.revokeObjectURL(url)
+        reject(new Error("Échec du chargement de l'image PNG pour le PDF"))
       }
-      img.src = pngUrl
+      img.src = url
     })
+  }
+
+  /**
+   * Export PDF multi-pages structuré en utilisant jsPDF :
+   *
+   * 1. Page de couverture (titre, auteur, date, totaux)
+   * 2. Table des matières (numéros de page calculés après coup)
+   * 3. Vue d'ensemble (diagramme complet en image, ajusté à la page)
+   * 4. Une section par couche Archimate présente dans le graphe
+   *
+   * Toutes les pages reçoivent un en-tête (titre) et un pied (numéro / total).
+   */
+  async function exportAsPDF(options: ExportOptions = {}): Promise<Blob> {
+    const {
+      quality = 0.95,
+      scale = 2,
+      title = 'Holon Architecture Model',
+      author,
+      includeTOC = true,
+      includeOverview = true,
+      includeLayerSections = true,
+    } = options
+
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    const pageW = pdf.internal.pageSize.getWidth()
+    const pageH = pdf.internal.pageSize.getHeight()
+    const margin = 18
+    const contentW = pageW - margin * 2
+
+    const nodes = Object.values(graphStore.nodes) as Node[]
+    const edges = Object.values(graphStore.edges)
+    const typeToLayer = buildTypeToLayerMap()
+
+    // Pré-grouper les noeuds par couche Archimate pour les sections.
+    const nodesByLayer = new Map<ArchimateLayer, Node[]>()
+    for (const node of nodes) {
+      const t = node.data?.archimateType as string | undefined
+      if (!t) continue
+      const layer = typeToLayer.get(t)
+      if (!layer) continue
+      const bucket = nodesByLayer.get(layer) ?? []
+      bucket.push(node)
+      nodesByLayer.set(layer, bucket)
+    }
+
+    // Pré-capture éventuelle de l'image de vue d'ensemble.
+    let overviewImage: HTMLImageElement | null = null
+    if (includeOverview) {
+      try {
+        const pngBlob = await exportAsPNG({ quality, scale })
+        overviewImage = await loadImageFromBlob(pngBlob)
+      } catch {
+        // On continue sans page « Vue d'ensemble » plutôt que d'annuler tout
+        // l'export ; l'utilisateur garde au moins le TOC et les sections.
+        overviewImage = null
+      }
+    }
+
+    // --- Page 1 : couverture ---
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(28)
+    pdf.text(title, pageW / 2, 80, { align: 'center' })
+
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(12)
+    pdf.setTextColor(90)
+    const dateText = new Date().toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+    pdf.text(`Exporté le ${dateText}`, pageW / 2, 100, { align: 'center' })
+    if (author) pdf.text(`Par ${author}`, pageW / 2, 108, { align: 'center' })
+
+    pdf.setFontSize(11)
+    pdf.setTextColor(120)
+    pdf.text(`${nodes.length} noeud${nodes.length > 1 ? 's' : ''}`, pageW / 2, 124, {
+      align: 'center',
+    })
+    pdf.text(`${edges.length} relation${edges.length > 1 ? 's' : ''}`, pageW / 2, 132, {
+      align: 'center',
+    })
+    pdf.setTextColor(0)
+
+    // --- Table des matières (placeholder ; remplie après) ---
+    let tocPageNumber = 0
+    if (includeTOC) {
+      pdf.addPage()
+      tocPageNumber = pdf.getNumberOfPages()
+    }
+
+    // --- Vue d'ensemble ---
+    let overviewPageNumber = 0
+    if (overviewImage) {
+      pdf.addPage()
+      overviewPageNumber = pdf.getNumberOfPages()
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(18)
+      pdf.text("Vue d'ensemble", margin, margin + 8)
+      pdf.setDrawColor(200)
+      pdf.line(margin, margin + 12, pageW - margin, margin + 12)
+
+      // Ajuster l'image dans la zone disponible (contentW × contentH).
+      const availH = pageH - margin * 2 - 20
+      const ratio = overviewImage.height / overviewImage.width
+      let drawW = contentW
+      let drawH = drawW * ratio
+      if (drawH > availH) {
+        drawH = availH
+        drawW = drawH / ratio
+      }
+      const drawX = margin + (contentW - drawW) / 2
+      const drawY = margin + 20
+      pdf.addImage(overviewImage, 'PNG', drawX, drawY, drawW, drawH)
+    }
+
+    // --- Sections par couche ---
+    const layerSections: Array<{ label: string; page: number }> = []
+    if (includeLayerSections) {
+      for (const [layerKey, layerNodes] of nodesByLayer) {
+        const layer = ARCHIMATE_TYPES[layerKey]
+        pdf.addPage()
+        layerSections.push({ label: layer.label, page: pdf.getNumberOfPages() })
+
+        // En-tête de section avec pastille couleur.
+        pdf.setFillColor(layer.color)
+        pdf.rect(margin, margin + 2, 6, 6, 'F')
+        pdf.setFont('helvetica', 'bold')
+        pdf.setFontSize(18)
+        pdf.text(`Couche ${layer.label}`, margin + 10, margin + 8)
+        pdf.setDrawColor(200)
+        pdf.line(margin, margin + 12, pageW - margin, margin + 12)
+
+        pdf.setFont('helvetica', 'normal')
+        pdf.setFontSize(10)
+        pdf.setTextColor(120)
+        pdf.text(
+          `${layerNodes.length} élément${layerNodes.length > 1 ? 's' : ''}`,
+          margin,
+          margin + 18
+        )
+        pdf.setTextColor(0)
+
+        // Liste des éléments, paginée si nécessaire.
+        const tableTop = margin + 24
+        const lineHeight = 6
+        let y = tableTop
+        pdf.setFontSize(10)
+        for (const node of layerNodes) {
+          if (y > pageH - margin - lineHeight) {
+            pdf.addPage()
+            y = margin + 8
+          }
+          const name = (node.data?.name as string) || node.id
+          const archimateType = (node.data?.archimateType as string) || ''
+          // Les `types` de chaque couche sont typés en union restreinte ;
+          // pour la lookup générique, on assoupli à `Record<string, …>`.
+          const types = layer.types as Record<string, { label: string; icon: string }>
+          const typeLabel = types[archimateType]?.label ?? archimateType
+          pdf.setFont('helvetica', 'bold')
+          pdf.text(name, margin, y)
+          pdf.setFont('helvetica', 'normal')
+          pdf.setTextColor(120)
+          pdf.text(typeLabel, margin + 80, y)
+          pdf.setTextColor(0)
+          y += lineHeight
+        }
+      }
+    }
+
+    // --- Remplir la TOC maintenant que tous les numéros de page sont connus ---
+    if (includeTOC) {
+      pdf.setPage(tocPageNumber)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(18)
+      pdf.text('Table des matières', margin, margin + 8)
+      pdf.setDrawColor(200)
+      pdf.line(margin, margin + 12, pageW - margin, margin + 12)
+
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(11)
+      let y = margin + 24
+      const entries: Array<{ label: string; page: number }> = []
+      if (overviewPageNumber > 0) {
+        entries.push({ label: "Vue d'ensemble", page: overviewPageNumber })
+      }
+      entries.push(...layerSections)
+      for (const entry of entries) {
+        pdf.text(entry.label, margin, y)
+        pdf.text(String(entry.page), pageW - margin, y, { align: 'right' })
+        // Pointillés de remplissage (rendus comme une simple ligne pour rester
+        // lisible avec n'importe quelle police PDF).
+        pdf.setDrawColor(220)
+        pdf.line(margin + pdf.getTextWidth(entry.label) + 2, y - 1, pageW - margin - 6, y - 1)
+        y += 8
+      }
+    }
+
+    // --- En-tête et numéros de page sur toutes les pages sauf la couverture ---
+    const totalPages = pdf.getNumberOfPages()
+    for (let p = 2; p <= totalPages; p++) {
+      pdf.setPage(p)
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(8)
+      pdf.setTextColor(140)
+      pdf.text(title, margin, 8)
+      pdf.text(`${p} / ${totalPages}`, pageW - margin, 8, { align: 'right' })
+      pdf.setTextColor(0)
+    }
+
+    return pdf.output('blob')
   }
 
   /**

@@ -23,7 +23,9 @@ async function doExport(fn: () => Promise<void> | void, label: string) {
     await fn()
     status.value = `✓ ${label} exporté`
   } catch (e) {
-    console.error(e)
+    // L'erreur est déjà remontée à l'utilisateur via `status` ; on garde une
+    // trace dans la console navigateur pour le diagnostic, avec préfixe.
+    console.error('[ExportMenu] échec export', e)
     status.value = `✗ Erreur : ${(e as Error).message}`
   } finally {
     isBusy.value = false

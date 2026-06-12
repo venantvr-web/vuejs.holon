@@ -534,8 +534,11 @@ export function useSuggestable(): SuggestableState & SuggestableHandlers {
           confidence: 0.8,
           nodeIds: [nodeId],
           apply: () => {
-            // Logique de décomposition (simplifié)
-            console.log(`Décomposer ${nodeId}`)
+            // TODO : implémenter la décomposition automatique du « God Object »
+            // (extraire un sous-ensemble cohérent des relations vers un nouveau
+            // composant). Pour l'instant, on signale au journal navigateur que
+            // l'action est un placeholder, sans muter le graphe.
+            console.warn(`[useSuggestable] Décomposer ${nodeId} : action non implémentée`)
           },
           dismiss: () => {
             dismissSuggestion(suggestions[suggestions.length - 1].id)
@@ -569,7 +572,11 @@ export function useSuggestable(): SuggestableState & SuggestableHandlers {
           confidence: 0.6,
           nodeIds,
           apply: () => {
-            console.log(`Regrouper ${nodeIds.length} noeuds`)
+            // TODO : implémenter le regroupement automatique des éléments
+            // suggérés. Placeholder pour l'instant.
+            console.warn(
+              `[useSuggestable] Regrouper ${nodeIds.length} noeuds : action non implémentée`
+            )
           },
           dismiss: () => {
             dismissSuggestion(suggestions[suggestions.length - 1].id)
@@ -721,8 +728,11 @@ export function useSuggestable(): SuggestableState & SuggestableHandlers {
         reasoning: pattern.description,
         confidence: 0.7,
         apply: () => {
-          console.log(`Appliquer pattern: ${pattern.name}`)
-          // Logique d'application du pattern
+          // TODO : appliquer le pattern (ajouter / réorganiser les noeuds
+          // correspondant au template). Placeholder pour l'instant.
+          console.warn(
+            `[useSuggestable] Appliquer pattern « ${pattern.name} » : action non implémentée`
+          )
         },
         dismiss: () => {
           dismissSuggestion(allSuggestions[allSuggestions.length - 1].id)
