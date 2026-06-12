@@ -1,10 +1,9 @@
-
 <!-- src/components/layout/ThemePicker.vue -->
 <script setup lang="ts">
-import { Moon, Sun } from 'lucide-vue-next';
-import { useThemeable } from '../../composables/traits/useThemeable';
+import { Moon, Sun } from 'lucide-vue-next'
+import { useThemeable } from '../../composables/traits/useThemeable'
 
-const { isDarkMode, toggleDarkMode } = useThemeable();
+const { isDarkMode, toggleDarkMode } = useThemeable()
 </script>
 
 <template>

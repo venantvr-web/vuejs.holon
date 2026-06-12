@@ -1,5 +1,5 @@
 // src/composables/useI18n.ts
-import { ref, computed } from 'vue';
+import { ref, computed } from 'vue'
 
 /**
  * Composable i18n léger, sans dépendance externe.
@@ -11,9 +11,9 @@ import { ref, computed } from 'vue';
  * signature `t(key)` est identique.
  */
 
-export type Locale = 'fr' | 'en';
+export type Locale = 'fr' | 'en'
 
-type Messages = Record<Locale, Record<string, string>>;
+type Messages = Record<Locale, Record<string, string>>
 
 const messages: Messages = {
   fr: {
@@ -115,42 +115,48 @@ const messages: Messages = {
     'search.placeholder': 'Search a node or a relation…',
     'search.noResults': 'No results',
   },
-};
+}
 
-const STORAGE_KEY = 'holon.locale';
+const STORAGE_KEY = 'holon.locale'
 
 function loadLocale(): Locale {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'fr' || stored === 'en') return stored;
-  } catch { /* ignore */ }
-  return 'fr';
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored === 'fr' || stored === 'en') return stored
+  } catch {
+    /* ignore */
+  }
+  return 'fr'
 }
 
-const currentLocale = ref<Locale>(loadLocale());
+const currentLocale = ref<Locale>(loadLocale())
 
 export const AVAILABLE_LOCALES: Array<{ value: Locale; label: string; flag: string }> = [
   { value: 'fr', label: 'Français', flag: '🇫🇷' },
   { value: 'en', label: 'English', flag: '🇬🇧' },
-];
+]
 
 export function useI18n() {
   function t(key: string): string {
-    return messages[currentLocale.value]?.[key] ?? messages.fr[key] ?? key;
+    return messages[currentLocale.value]?.[key] ?? messages.fr[key] ?? key
   }
 
   function setLocale(locale: Locale) {
-    currentLocale.value = locale;
-    try { localStorage.setItem(STORAGE_KEY, locale); } catch { /* ignore */ }
-    document.documentElement.setAttribute('lang', locale);
+    currentLocale.value = locale
+    try {
+      localStorage.setItem(STORAGE_KEY, locale)
+    } catch {
+      /* ignore */
+    }
+    document.documentElement.setAttribute('lang', locale)
   }
 
   return {
     t,
     locale: computed(() => currentLocale.value),
     setLocale,
-  };
+  }
 }
 
 // Appliquer l'attribut lang au démarrage.
-document.documentElement.setAttribute('lang', currentLocale.value);
+document.documentElement.setAttribute('lang', currentLocale.value)

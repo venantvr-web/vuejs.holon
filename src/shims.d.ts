@@ -2,6 +2,6 @@
 
 // Permet `import md from 'chemin.md?raw'` avec typage string.
 declare module '*.md?raw' {
-  const content: string;
-  export default content;
+  const content: string
+  export default content
 }

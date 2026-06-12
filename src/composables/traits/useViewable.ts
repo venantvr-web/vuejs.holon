@@ -1,23 +1,23 @@
 // src/composables/traits/useViewable.ts
-import { ref, watch, type Ref } from 'vue';
-import { nanoid } from 'nanoid';
+import { ref, watch, type Ref } from 'vue'
+import { nanoid } from 'nanoid'
 
-const STORAGE_KEY = 'holon.savedViews';
+const STORAGE_KEY = 'holon.savedViews'
 
 function loadFromStorage(): SavedView[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
   } catch {
-    return [];
+    return []
   }
 }
 
 function saveToStorage(views: SavedView[]) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(views));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(views))
   } catch {
     // localStorage indisponible ou quota dépassé — ignorer silencieusement
   }
@@ -30,42 +30,42 @@ export interface SavedView {
   /**
    * Identifiant unique de la vue.
    */
-  id: string;
+  id: string
   /**
    * Nom descriptif de la vue.
    */
-  name: string;
+  name: string
   /**
    * Niveau de zoom (1 = 100%).
    */
-  zoom: number;
+  zoom: number
   /**
    * Position du pan (translation du viewport).
    */
   pan: {
-    x: number;
-    y: number;
-  };
+    x: number
+    y: number
+  }
   /**
    * Filtres actifs dans cette vue.
    */
-  filters?: string[];
+  filters?: string[]
   /**
    * IDs des noeuds sélectionnés.
    */
-  selection?: string[];
+  selection?: string[]
   /**
    * IDs des noeuds repliés.
    */
-  collapsed?: string[];
+  collapsed?: string[]
   /**
    * Timestamp de création.
    */
-  timestamp: number;
+  timestamp: number
   /**
    * Description optionnelle.
    */
-  description?: string;
+  description?: string
 }
 
 /**
@@ -75,11 +75,11 @@ export interface ViewableState {
   /**
    * Liste de toutes les vues sauvegardées.
    */
-  savedViews: Ref<SavedView[]>;
+  savedViews: Ref<SavedView[]>
   /**
    * Vue actuellement active (null si aucune).
    */
-  activeView: Ref<SavedView | null>;
+  activeView: Ref<SavedView | null>
 }
 
 /**
@@ -95,43 +95,43 @@ export interface ViewableHandlers {
   saveView: (
     name: string,
     currentState: {
-      zoom: number;
-      pan: { x: number; y: number };
-      filters?: string[];
-      selection?: string[];
-      collapsed?: string[];
+      zoom: number
+      pan: { x: number; y: number }
+      filters?: string[]
+      selection?: string[]
+      collapsed?: string[]
     }
-  ) => string;
+  ) => string
   /**
    * Restaure une vue sauvegardée par son ID.
    * @param viewId - ID de la vue à restaurer
    * @param animate - Animer la transition (défaut: false)
    * @returns Vue restaurée ou null si introuvable
    */
-  restoreView: (viewId: string, animate?: boolean) => SavedView | null;
+  restoreView: (viewId: string, animate?: boolean) => SavedView | null
   /**
    * Supprime une vue sauvegardée.
    * @param viewId - ID de la vue à supprimer
    * @returns true si supprimé avec succès
    */
-  deleteView: (viewId: string) => boolean;
+  deleteView: (viewId: string) => boolean
   /**
    * Met à jour une vue existante.
    * @param viewId - ID de la vue à mettre à jour
    * @param updates - Propriétés à mettre à jour
    */
-  updateView: (viewId: string, updates: Partial<SavedView>) => void;
+  updateView: (viewId: string, updates: Partial<SavedView>) => void
   /**
    * Exporte toutes les vues en JSON.
    * @returns String JSON des vues
    */
-  exportViews: () => string;
+  exportViews: () => string
   /**
    * Importe des vues depuis JSON.
    * @param json - String JSON à importer
    * @returns Nombre de vues importées
    */
-  importViews: (json: string) => number;
+  importViews: (json: string) => number
 }
 
 /**
@@ -158,28 +158,27 @@ export interface ViewableHandlers {
  * ```
  */
 // État global des vues sauvegardées (partagé entre toutes les instances).
-const savedViews = ref<SavedView[]>(loadFromStorage());
-const activeView = ref<SavedView | null>(null);
+const savedViews = ref<SavedView[]>(loadFromStorage())
+const activeView = ref<SavedView | null>(null)
 
 // Persiste automatiquement les vues en localStorage à chaque modification.
-watch(savedViews, (views) => saveToStorage(views), { deep: true });
+watch(savedViews, (views) => saveToStorage(views), { deep: true })
 
 export function useViewable(): ViewableState & ViewableHandlers {
-
   /**
    * Sauvegarde la vue actuelle.
    */
   function saveView(
     name: string,
     currentState: {
-      zoom: number;
-      pan: { x: number; y: number };
-      filters?: string[];
-      selection?: string[];
-      collapsed?: string[];
+      zoom: number
+      pan: { x: number; y: number }
+      filters?: string[]
+      selection?: string[]
+      collapsed?: string[]
     }
   ): string {
-    const id = nanoid();
+    const id = nanoid()
 
     const newView: SavedView = {
       id,
@@ -190,26 +189,26 @@ export function useViewable(): ViewableState & ViewableHandlers {
       selection: currentState.selection ? [...currentState.selection] : undefined,
       collapsed: currentState.collapsed ? [...currentState.collapsed] : undefined,
       timestamp: Date.now(),
-    };
+    }
 
-    savedViews.value.push(newView);
-    activeView.value = newView;
+    savedViews.value.push(newView)
+    activeView.value = newView
 
-    return id;
+    return id
   }
 
   /**
    * Restaure une vue sauvegardée.
    */
   function restoreView(viewId: string, animate: boolean = false): SavedView | null {
-    const view = savedViews.value.find((v) => v.id === viewId);
+    const view = savedViews.value.find((v) => v.id === viewId)
 
     if (!view) {
-      console.warn(`Vue ${viewId} non trouvée`);
-      return null;
+      console.warn(`Vue ${viewId} non trouvée`)
+      return null
     }
 
-    activeView.value = view;
+    activeView.value = view
 
     // Émettre un événement personnalisé pour notifier le composant de canvas
     const event = new CustomEvent('restore-view', {
@@ -217,48 +216,48 @@ export function useViewable(): ViewableState & ViewableHandlers {
         view,
         animate,
       },
-    });
-    window.dispatchEvent(event);
+    })
+    window.dispatchEvent(event)
 
-    return view;
+    return view
   }
 
   /**
    * Supprime une vue.
    */
   function deleteView(viewId: string): boolean {
-    const index = savedViews.value.findIndex((v) => v.id === viewId);
+    const index = savedViews.value.findIndex((v) => v.id === viewId)
 
     if (index === -1) {
-      return false;
+      return false
     }
 
-    savedViews.value.splice(index, 1);
+    savedViews.value.splice(index, 1)
 
     // Si c'était la vue active, la réinitialiser
     if (activeView.value?.id === viewId) {
-      activeView.value = null;
+      activeView.value = null
     }
 
-    return true;
+    return true
   }
 
   /**
    * Met à jour une vue existante.
    */
   function updateView(viewId: string, updates: Partial<SavedView>): void {
-    const view = savedViews.value.find((v) => v.id === viewId);
+    const view = savedViews.value.find((v) => v.id === viewId)
 
     if (!view) {
-      console.warn(`Vue ${viewId} non trouvée`);
-      return;
+      console.warn(`Vue ${viewId} non trouvée`)
+      return
     }
 
-    Object.assign(view, updates);
+    Object.assign(view, updates)
 
     // Mettre à jour activeView si c'est la vue active
     if (activeView.value?.id === viewId) {
-      activeView.value = { ...view };
+      activeView.value = { ...view }
     }
   }
 
@@ -274,7 +273,7 @@ export function useViewable(): ViewableState & ViewableHandlers {
       },
       null,
       2
-    );
+    )
   }
 
   /**
@@ -282,28 +281,28 @@ export function useViewable(): ViewableState & ViewableHandlers {
    */
   function importViews(json: string): number {
     try {
-      const data = JSON.parse(json);
+      const data = JSON.parse(json)
 
       if (!data.views || !Array.isArray(data.views)) {
-        throw new Error('Format JSON invalide : propriété "views" manquante');
+        throw new Error('Format JSON invalide : propriété "views" manquante')
       }
 
-      let imported = 0;
+      let imported = 0
 
       for (const view of data.views) {
         // Vérifier que l'ID n'existe pas déjà
-        const exists = savedViews.value.some((v) => v.id === view.id);
+        const exists = savedViews.value.some((v) => v.id === view.id)
 
         if (!exists) {
-          savedViews.value.push(view);
-          imported++;
+          savedViews.value.push(view)
+          imported++
         }
       }
 
-      return imported;
+      return imported
     } catch (error) {
-      console.error('Erreur lors de l\'import des vues:', error);
-      return 0;
+      console.error("Erreur lors de l'import des vues:", error)
+      return 0
     }
   }
 
@@ -316,5 +315,5 @@ export function useViewable(): ViewableState & ViewableHandlers {
     updateView,
     exportViews,
     importViews,
-  };
+  }
 }

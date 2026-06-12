@@ -102,18 +102,18 @@ Cette application fournit un canevas infini où chaque nœud peut contenir d'aut
 
 ## 🛠️ Stack Technique
 
-* **Framework** : Vue 3 (Composition API, `<script setup>`)
-* **Langage** : TypeScript (Strict, 0 `any` non justifiés)
-* **State Management** : Pinia avec dual-state (Pinia + IndexedDB)
-* **Persistance** : Dexie.js (wrapper IndexedDB)
-* **Rendu** : SVG Natif avec transformations optimisées
-* **Styling** : Tailwind CSS
-* **Layout** : d3-force (force-directed), d3-hierarchy (tree)
-* **Recherche** : Fuse.js (fuzzy search)
-* **Validation** : Zod (schemas)
-* **Export** : html2canvas (PNG), jspdf (PDF)
-* **Tests** : Vitest + happy-dom (42 tests, 4 suites)
-* **Documentation** : TypeDoc + JSDoc complet
+- **Framework** : Vue 3 (Composition API, `<script setup>`)
+- **Langage** : TypeScript (Strict, 0 `any` non justifiés)
+- **State Management** : Pinia avec dual-state (Pinia + IndexedDB)
+- **Persistance** : Dexie.js (wrapper IndexedDB)
+- **Rendu** : SVG Natif avec transformations optimisées
+- **Styling** : Tailwind CSS
+- **Layout** : d3-force (force-directed), d3-hierarchy (tree)
+- **Recherche** : Fuse.js (fuzzy search)
+- **Validation** : Zod (schemas)
+- **Export** : html2canvas (PNG), jspdf (PDF)
+- **Tests** : Vitest + happy-dom (42 tests, 4 suites)
+- **Documentation** : TypeDoc + JSDoc complet
 
 ## 📦 Traits Implémentés (45+)
 
@@ -214,88 +214,88 @@ Le projet utilise une **architecture basée sur des traits** (composables Vue) p
 ### Validation Archimate Complète
 
 ```typescript
-import { useValidatable } from '@/composables/traits';
+import { useValidatable } from '@/composables/traits'
 
-const { validateGraph, lastValidationResult } = useValidatable();
+const { validateGraph, lastValidationResult } = useValidatable()
 
 // Valider le graphe complet
-const result = validateGraph();
+const result = validateGraph()
 
-console.log(`✅ Valid: ${result.valid}`);
-console.log(`❌ ${result.stats.errors} errors`);
-console.log(`⚠️ ${result.stats.warnings} warnings`);
+console.log(`✅ Valid: ${result.valid}`)
+console.log(`❌ ${result.stats.errors} errors`)
+console.log(`⚠️ ${result.stats.warnings} warnings`)
 
 // Afficher les violations
-result.issues.forEach(issue => {
-  console.log(`[${issue.severity}] ${issue.message}`);
+result.issues.forEach((issue) => {
+  console.log(`[${issue.severity}] ${issue.message}`)
   if (issue.suggestion) {
-    console.log(`  💡 ${issue.suggestion}`);
+    console.log(`  💡 ${issue.suggestion}`)
   }
-});
+})
 ```
 
 ### Suggestions Intelligentes
 
 ```typescript
-import { useSuggestable } from '@/composables/traits';
+import { useSuggestable } from '@/composables/traits'
 
-const { generateSuggestions, applySuggestion } = useSuggestable();
+const { generateSuggestions, applySuggestion } = useSuggestable()
 
 // Générer toutes les suggestions contextuelles
 const suggestions = generateSuggestions({
-  selectedNodeId: 'node-123'
-});
+  selectedNodeId: 'node-123',
+})
 
-console.log(`${suggestions.length} suggestions disponibles`);
+console.log(`${suggestions.length} suggestions disponibles`)
 
 // Filtrer par priorité
-const highPriority = suggestions.filter(s => s.priority === 'high');
+const highPriority = suggestions.filter((s) => s.priority === 'high')
 
 // Appliquer une suggestion
 if (highPriority.length > 0) {
-  applySuggestion(highPriority[0].id);
+  applySuggestion(highPriority[0].id)
 }
 ```
 
 ### Layout Automatique
 
 ```typescript
-import { useLayoutable } from '@/composables/traits';
+import { useLayoutable } from '@/composables/traits'
 
-const { applyLayout } = useLayoutable();
+const { applyLayout } = useLayoutable()
 
 // Force-directed layout avec d3-force
 await applyLayout('force', {
   chargeStrength: -500,
   linkDistance: 150,
   collisionRadius: 60,
-  animate: true
-});
+  animate: true,
+})
 
 // Tree layout avec d3-hierarchy
 await applyLayout('tree', {
   spacing: 120,
-  animate: true
-});
+  animate: true,
+})
 ```
 
 ### Gestion de Versions
 
 ```typescript
-import { useVersionable } from '@/composables/traits';
+import { useVersionable } from '@/composables/traits'
 
-const { createSnapshot, compareSnapshots, createBranch } = useVersionable();
+const { createSnapshot, compareSnapshots, createBranch } = useVersionable()
 
 // Créer un snapshot
-const v1 = createSnapshot('Version 1.0', 'Architecture initiale', 'v1.0.0');
+const v1 = createSnapshot('Version 1.0', 'Architecture initiale', 'v1.0.0')
 
 // Créer une branche expérimentale
-createBranch('experimental', 'Tests de nouvelles idées');
+createBranch('experimental', 'Tests de nouvelles idées')
 
 // Comparer les versions
-const diff = compareSnapshots(v1.id, v2.id);
-console.log(`Ajouts: ${diff.stats.nodesAdded} nodes`);
-console.log(`Modifications: ${diff.stats.nodesModified} nodes`);
+const diff = compareSnapshots(v1.id, v2.id)
+console.log(`Ajouts: ${diff.stats.nodesAdded} nodes`)
+console.log(`Modifications: ${diff.stats.nodesModified} nodes`)
 ```
 
 ## 📁 Structure du Projet
@@ -339,26 +339,32 @@ Chaque trait suit une structure cohérente :
 
 ```typescript
 // 1. Interfaces
-export interface TraitOptions { nodeId: Ref<string> }
-export interface TraitState { property: Ref<T> }
-export interface TraitHandlers { setProperty: (value: T) => void }
+export interface TraitOptions {
+  nodeId: Ref<string>
+}
+export interface TraitState {
+  property: Ref<T>
+}
+export interface TraitHandlers {
+  setProperty: (value: T) => void
+}
 
 // 2. Composable
 export function useTrait(options: TraitOptions): TraitState & TraitHandlers {
-  const graphStore = useGraphStore();
+  const graphStore = useGraphStore()
 
   // Computed avec getter/setter pour réactivité
   const property = computed({
     get: () => graphStore.nodes[options.nodeId.value]?.data?.property,
     set: (v) => {
-      const node = graphStore.nodes[options.nodeId.value];
+      const node = graphStore.nodes[options.nodeId.value]
       graphStore.updateNode(options.nodeId.value, {
-        data: { ...node.data, property: v }
-      });
-    }
-  });
+        data: { ...node.data, property: v },
+      })
+    },
+  })
 
-  return { property, setProperty: (v) => property.value = v };
+  return { property, setProperty: (v) => (property.value = v) }
 }
 ```
 
@@ -392,13 +398,13 @@ La complexité principale de ce projet réside dans la gestion des différents s
 
 ### `getNodeAbsolutePosition(nodeId)`
 
-* **Problème** : Les nœuds sont positionnés *relativement* à leur parent. Cependant, le `EdgeLayer`, qui est un calque unique et global, doit savoir où dessiner les lignes en coordonnées *absolues* (World Space).
-* **Solution** : Cette fonction prend l'ID d'un nœud, récupère sa géométrie `{x, y}`, puis remonte récursivement la chaîne des `parentId` en additionnant les coordonnées de chaque parent jusqu'à la racine. Le résultat est la position totale du nœud par rapport au coin supérieur gauche du canevas.
+- **Problème** : Les nœuds sont positionnés _relativement_ à leur parent. Cependant, le `EdgeLayer`, qui est un calque unique et global, doit savoir où dessiner les lignes en coordonnées _absolues_ (World Space).
+- **Solution** : Cette fonction prend l'ID d'un nœud, récupère sa géométrie `{x, y}`, puis remonte récursivement la chaîne des `parentId` en additionnant les coordonnées de chaque parent jusqu'à la racine. Le résultat est la position totale du nœud par rapport au coin supérieur gauche du canevas.
 
 ### `screenToLocalCoordinates(screenX, screenY, svgElement, targetParentId)`
 
-* **Problème** : Lorsqu'un utilisateur dépose un item sur le canevas, l'événement du navigateur nous donne `clientX`/`clientY` (Screen Space). Nous devons convertir ce point en une coordonnée locale au sein du nœud parent cible, en tenant compte des transformations (zoom/pan) appliquées au SVG.
-* **Solution** :
+- **Problème** : Lorsqu'un utilisateur dépose un item sur le canevas, l'événement du navigateur nous donne `clientX`/`clientY` (Screen Space). Nous devons convertir ce point en une coordonnée locale au sein du nœud parent cible, en tenant compte des transformations (zoom/pan) appliquées au SVG.
+- **Solution** :
   1. On récupère la Matrice de Transformation Courante (`CTM`) du `svgElement`.
   2. On **inverse** cette matrice pour créer une fonction de transformation de `Screen Space` -> `SVG Space`.
   3. On applique cette transformation au point `clientX`/`clientY` pour obtenir la coordonnée dans le monde SVG non transformé.
@@ -407,19 +413,19 @@ La complexité principale de ce projet réside dans la gestion des différents s
 ## Pour Commencer
 
 1. **Installer les dépendances :**
-   
+
    ```bash
    npm install
    ```
 
 2. **Lancer le serveur de développement :**
-   
+
    ```bash
    npm run dev
    ```
 
 3. **Lancer les tests :**
-   
+
    ```bash
    npm run test      # Mode watch
    npm run test:run  # Exécution unique

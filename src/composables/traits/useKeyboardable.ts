@@ -1,9 +1,9 @@
 // src/composables/traits/useKeyboardable.ts
-import { ref, onMounted, onUnmounted, type Ref } from 'vue';
-import { useGraphStore } from '../../stores/graph';
-import { useSelectionState } from './useSelectable';
-import { useUndoable } from './useUndoable';
-import { useClipboardable } from './useClipboardable';
+import { ref, onMounted, onUnmounted, type Ref } from 'vue'
+import { useGraphStore } from '../../stores/graph'
+import { useSelectionState } from './useSelectable'
+import { useUndoable } from './useUndoable'
+import { useClipboardable } from './useClipboardable'
 
 /**
  * Définition d'un raccourci clavier.
@@ -12,35 +12,35 @@ export interface KeyboardShortcut {
   /**
    * Touche principale du raccourci.
    */
-  key: string;
+  key: string
   /**
    * Nécessite la touche Ctrl (ou Cmd sur Mac).
    */
-  ctrl?: boolean;
+  ctrl?: boolean
   /**
    * Nécessite la touche Shift.
    */
-  shift?: boolean;
+  shift?: boolean
   /**
    * Nécessite la touche Alt.
    */
-  alt?: boolean;
+  alt?: boolean
   /**
    * Nécessite la touche Meta (Cmd sur Mac).
    */
-  meta?: boolean;
+  meta?: boolean
   /**
    * Action à exécuter quand le raccourci est activé.
    */
-  action: () => void;
+  action: () => void
   /**
    * Description lisible du raccourci.
    */
-  description: string;
+  description: string
   /**
    * Catégorie pour organisation (Édition, Sélection, etc.).
    */
-  category: string;
+  category: string
 }
 
 /**
@@ -50,11 +50,11 @@ export interface KeyboardableOptions {
   /**
    * État d'activation des raccourcis (défaut: true).
    */
-  enabled?: Ref<boolean>;
+  enabled?: Ref<boolean>
   /**
    * Raccourcis personnalisés à ajouter.
    */
-  customShortcuts?: KeyboardShortcut[];
+  customShortcuts?: KeyboardShortcut[]
 }
 
 /**
@@ -64,11 +64,11 @@ export interface KeyboardableState {
   /**
    * Indique si les raccourcis sont activés.
    */
-  isEnabled: Ref<boolean>;
+  isEnabled: Ref<boolean>
   /**
    * Liste de tous les raccourcis enregistrés.
    */
-  shortcuts: Ref<KeyboardShortcut[]>;
+  shortcuts: Ref<KeyboardShortcut[]>
 }
 
 /**
@@ -78,31 +78,31 @@ export interface KeyboardableHandlers {
   /**
    * Active les raccourcis clavier.
    */
-  enable: () => void;
+  enable: () => void
   /**
    * Désactive les raccourcis clavier.
    */
-  disable: () => void;
+  disable: () => void
   /**
    * Ajoute ou met à jour un raccourci clavier.
    * @param shortcut - Raccourci à ajouter
    */
-  addShortcut: (shortcut: KeyboardShortcut) => void;
+  addShortcut: (shortcut: KeyboardShortcut) => void
   /**
    * Retire un raccourci clavier.
    * @param key - Touche du raccourci à retirer
    */
-  removeShortcut: (key: string) => void;
+  removeShortcut: (key: string) => void
   /**
    * Récupère les raccourcis groupés par catégorie.
    * @returns Raccourcis organisés par catégorie
    */
-  getShortcutsByCategory: () => Record<string, KeyboardShortcut[]>;
+  getShortcutsByCategory: () => Record<string, KeyboardShortcut[]>
 }
 
 // État global des raccourcis
-const globalShortcuts = ref<KeyboardShortcut[]>([]);
-const isGlobalEnabled = ref(true);
+const globalShortcuts = ref<KeyboardShortcut[]>([])
+const isGlobalEnabled = ref(true)
 
 /**
  * Trait permettant de gérer les raccourcis clavier globaux de l'application.
@@ -127,13 +127,15 @@ const isGlobalEnabled = ref(true);
  * });
  * ```
  */
-export function useKeyboardable(options: KeyboardableOptions = {}): KeyboardableState & KeyboardableHandlers {
-  const graphStore = useGraphStore();
-  const { selectedNodeIds, clearSelection, deleteSelected } = useSelectionState();
-  const { undo, redo, canUndo, canRedo } = useUndoable();
-  const { copy, cut, paste, duplicate, canPaste } = useClipboardable();
+export function useKeyboardable(
+  options: KeyboardableOptions = {}
+): KeyboardableState & KeyboardableHandlers {
+  const graphStore = useGraphStore()
+  const { selectedNodeIds, clearSelection, deleteSelected } = useSelectionState()
+  const { undo, redo, canUndo, canRedo } = useUndoable()
+  const { copy, cut, paste, duplicate, canPaste } = useClipboardable()
 
-  const isEnabled = options.enabled ?? ref(true);
+  const isEnabled = options.enabled ?? ref(true)
 
   // Raccourcis par défaut
   const defaultShortcuts: KeyboardShortcut[] = [
@@ -179,8 +181,8 @@ export function useKeyboardable(options: KeyboardableOptions = {}): Keyboardable
       ctrl: true,
       action: () => {
         // Sélectionner tous les noeuds
-        const allIds = Object.keys(graphStore.nodes);
-        selectedNodeIds.value = new Set(allIds);
+        const allIds = Object.keys(graphStore.nodes)
+        selectedNodeIds.value = new Set(allIds)
       },
       description: 'Tout sélectionner',
       category: 'Sélection',
@@ -197,7 +199,7 @@ export function useKeyboardable(options: KeyboardableOptions = {}): Keyboardable
       key: 'c',
       ctrl: true,
       action: () => {
-        if (selectedNodeIds.value.size > 0) copy();
+        if (selectedNodeIds.value.size > 0) copy()
       },
       description: 'Copier',
       category: 'Presse-papier',
@@ -206,7 +208,7 @@ export function useKeyboardable(options: KeyboardableOptions = {}): Keyboardable
       key: 'v',
       ctrl: true,
       action: () => {
-        if (canPaste()) void paste();
+        if (canPaste()) void paste()
       },
       description: 'Coller',
       category: 'Presse-papier',
@@ -215,7 +217,7 @@ export function useKeyboardable(options: KeyboardableOptions = {}): Keyboardable
       key: 'x',
       ctrl: true,
       action: () => {
-        if (selectedNodeIds.value.size > 0) cut();
+        if (selectedNodeIds.value.size > 0) cut()
       },
       description: 'Couper',
       category: 'Presse-papier',
@@ -224,38 +226,40 @@ export function useKeyboardable(options: KeyboardableOptions = {}): Keyboardable
       key: 'd',
       ctrl: true,
       action: () => {
-        if (selectedNodeIds.value.size > 0) void duplicate();
+        if (selectedNodeIds.value.size > 0) void duplicate()
       },
       description: 'Dupliquer',
       category: 'Presse-papier',
     },
-  ];
+  ]
 
   // Initialiser avec les raccourcis par défaut
   if (globalShortcuts.value.length === 0) {
-    globalShortcuts.value = [...defaultShortcuts];
+    globalShortcuts.value = [...defaultShortcuts]
   }
 
   // Ajouter les raccourcis personnalisés
   if (options.customShortcuts) {
     for (const shortcut of options.customShortcuts) {
-      addShortcut(shortcut);
+      addShortcut(shortcut)
     }
   }
 
   function handleKeyDown(event: KeyboardEvent) {
-    if (!isEnabled.value || !isGlobalEnabled.value) return;
+    if (!isEnabled.value || !isGlobalEnabled.value) return
 
     // Ignorer si on est dans un champ de saisie
-    const target = event.target as HTMLElement;
+    const target = event.target as HTMLElement
     if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-      return;
+      return
     }
 
     for (const shortcut of globalShortcuts.value) {
-      const ctrlMatch = shortcut.ctrl ? (event.ctrlKey || event.metaKey) : !(event.ctrlKey || event.metaKey);
-      const shiftMatch = shortcut.shift ? event.shiftKey : !event.shiftKey;
-      const altMatch = shortcut.alt ? event.altKey : !event.altKey;
+      const ctrlMatch = shortcut.ctrl
+        ? event.ctrlKey || event.metaKey
+        : !(event.ctrlKey || event.metaKey)
+      const shiftMatch = shortcut.shift ? event.shiftKey : !event.shiftKey
+      const altMatch = shortcut.alt ? event.altKey : !event.altKey
 
       if (
         event.key.toLowerCase() === shortcut.key.toLowerCase() &&
@@ -263,60 +267,60 @@ export function useKeyboardable(options: KeyboardableOptions = {}): Keyboardable
         shiftMatch &&
         altMatch
       ) {
-        event.preventDefault();
-        shortcut.action();
-        return;
+        event.preventDefault()
+        shortcut.action()
+        return
       }
     }
   }
 
   function enable() {
-    isEnabled.value = true;
+    isEnabled.value = true
   }
 
   function disable() {
-    isEnabled.value = false;
+    isEnabled.value = false
   }
 
   function addShortcut(shortcut: KeyboardShortcut) {
     // Éviter les doublons
     const index = globalShortcuts.value.findIndex(
-      s =>
+      (s) =>
         s.key === shortcut.key &&
         !!s.ctrl === !!shortcut.ctrl &&
         !!s.shift === !!shortcut.shift &&
         !!s.alt === !!shortcut.alt
-    );
+    )
 
     if (index !== -1) {
-      globalShortcuts.value[index] = shortcut;
+      globalShortcuts.value[index] = shortcut
     } else {
-      globalShortcuts.value.push(shortcut);
+      globalShortcuts.value.push(shortcut)
     }
   }
 
   function removeShortcut(key: string) {
-    globalShortcuts.value = globalShortcuts.value.filter(s => s.key !== key);
+    globalShortcuts.value = globalShortcuts.value.filter((s) => s.key !== key)
   }
 
   function getShortcutsByCategory(): Record<string, KeyboardShortcut[]> {
-    const result: Record<string, KeyboardShortcut[]> = {};
+    const result: Record<string, KeyboardShortcut[]> = {}
     for (const shortcut of globalShortcuts.value) {
       if (!result[shortcut.category]) {
-        result[shortcut.category] = [];
+        result[shortcut.category] = []
       }
-      result[shortcut.category].push(shortcut);
+      result[shortcut.category].push(shortcut)
     }
-    return result;
+    return result
   }
 
   onMounted(() => {
-    window.addEventListener('keydown', handleKeyDown);
-  });
+    window.addEventListener('keydown', handleKeyDown)
+  })
 
   onUnmounted(() => {
-    window.removeEventListener('keydown', handleKeyDown);
-  });
+    window.removeEventListener('keydown', handleKeyDown)
+  })
 
   return {
     isEnabled,
@@ -326,7 +330,7 @@ export function useKeyboardable(options: KeyboardableOptions = {}): Keyboardable
     addShortcut,
     removeShortcut,
     getShortcutsByCategory,
-  };
+  }
 }
 
 // Export pour le contrôle global
@@ -334,21 +338,21 @@ export function useGlobalKeyboard() {
   return {
     isEnabled: isGlobalEnabled,
     enable: () => {
-      isGlobalEnabled.value = true;
+      isGlobalEnabled.value = true
     },
     disable: () => {
-      isGlobalEnabled.value = false;
+      isGlobalEnabled.value = false
     },
     shortcuts: globalShortcuts,
-  };
+  }
 }
 
 // Helper pour formater un raccourci en string lisible
 export function formatShortcut(shortcut: KeyboardShortcut): string {
-  const parts: string[] = [];
-  if (shortcut.ctrl) parts.push('Ctrl');
-  if (shortcut.shift) parts.push('Shift');
-  if (shortcut.alt) parts.push('Alt');
-  parts.push(shortcut.key === ' ' ? 'Space' : shortcut.key);
-  return parts.join('+');
+  const parts: string[] = []
+  if (shortcut.ctrl) parts.push('Ctrl')
+  if (shortcut.shift) parts.push('Shift')
+  if (shortcut.alt) parts.push('Alt')
+  parts.push(shortcut.key === ' ' ? 'Space' : shortcut.key)
+  return parts.join('+')
 }

@@ -1,59 +1,54 @@
-
 <!-- src/components/inspectors/sections/StyleSection.vue -->
 <script setup lang="ts">
-import { toRef, computed } from 'vue';
-import { useStyleable, PRESET_COLORS } from '../../../composables/traits/useStyleable';
-import { useTypeable } from '../../../composables/traits/useTypeable';
-import { useGraphStore } from '../../../stores/graph';
+import { toRef, computed } from 'vue'
+import { useStyleable, PRESET_COLORS } from '../../../composables/traits/useStyleable'
+import { useTypeable } from '../../../composables/traits/useTypeable'
+import { useGraphStore } from '../../../stores/graph'
 
 interface Props {
-  nodeId: string;
+  nodeId: string
 }
-const props = defineProps<Props>();
-const nodeIdRef = toRef(props, 'nodeId');
+const props = defineProps<Props>()
+const nodeIdRef = toRef(props, 'nodeId')
 
-const graphStore = useGraphStore();
-const {
-  currentStyle,
-  updateFill,
-  updateStroke,
-  updateStrokeWidth,
-  updateOpacity,
-} = useStyleable({ nodeId: nodeIdRef });
+const graphStore = useGraphStore()
+const { currentStyle, updateFill, updateStroke, updateStrokeWidth, updateOpacity } = useStyleable({
+  nodeId: nodeIdRef,
+})
 
 // Lecture du type Archimate pour permettre à l'utilisateur de revenir à la
 // couleur de la layer s'il a surchargé manuellement.
-const { archimateType, typeLabel, typeTintFill } = useTypeable({ nodeId: nodeIdRef });
+const { archimateType, typeLabel, typeTintFill } = useTypeable({ nodeId: nodeIdRef })
 
-const node = computed(() => graphStore.nodes[props.nodeId]);
-const hasCustomFill = computed(() => node.value?.data?.customFill === true);
+const node = computed(() => graphStore.nodes[props.nodeId])
+const hasCustomFill = computed(() => node.value?.data?.customFill === true)
 
 // Quand l'utilisateur pique une couleur, on active le flag customFill pour
 // qu'il prenne le pas sur le tint Archimate dans NodeRenderer.
 function pickFill(color: string) {
-  updateFill(color);
-  flagCustomFill(true);
+  updateFill(color)
+  flagCustomFill(true)
 }
 
 function flagCustomFill(value: boolean) {
-  const current = node.value;
-  if (!current) return;
+  const current = node.value
+  if (!current) return
   graphStore.updateNode(props.nodeId, {
     data: { ...(current.data ?? {}), customFill: value },
-  });
+  })
 }
 
 function clearCustomFill() {
-  flagCustomFill(false);
+  flagCustomFill(false)
 }
 
-const PALETTE = computed(() => PRESET_COLORS.slice(0, 60));
+const PALETTE = computed(() => PRESET_COLORS.slice(0, 60))
 
 function applyCustomFill(value: string) {
-  pickFill(value);
+  pickFill(value)
 }
 function applyCustomStroke(value: string) {
-  updateStroke(value);
+  updateStroke(value)
 }
 </script>
 
@@ -67,9 +62,7 @@ function applyCustomStroke(value: string) {
       class="mb-3 p-2 rounded border app-border flex items-center justify-between gap-2"
       :style="{ backgroundColor: typeTintFill }"
     >
-      <span class="text-xs app-fg truncate">
-        Type {{ typeLabel }} — couleur surchargée
-      </span>
+      <span class="text-xs app-fg truncate"> Type {{ typeLabel }} — couleur surchargée </span>
       <button
         class="text-xs app-link flex-shrink-0"
         title="Revenir à la couleur de la layer Archimate"
@@ -87,7 +80,9 @@ function applyCustomStroke(value: string) {
         :key="'fill-' + color"
         :style="{ backgroundColor: color }"
         class="w-5 h-5 rounded-sm border app-border hover:scale-125 transition-transform"
-        :class="{ 'ring-2 app-ring-accent z-10 relative': currentStyle.fill === color && hasCustomFill }"
+        :class="{
+          'ring-2 app-ring-accent z-10 relative': currentStyle.fill === color && hasCustomFill,
+        }"
         :title="color"
         @click="pickFill(color)"
       />

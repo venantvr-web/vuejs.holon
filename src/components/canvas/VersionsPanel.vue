@@ -1,54 +1,58 @@
-
 <!-- src/components/canvas/VersionsPanel.vue -->
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { History, X } from 'lucide-vue-next';
-import { useVersionable } from '../../composables/traits';
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { History, X } from 'lucide-vue-next'
+import { useVersionable } from '../../composables/traits'
 
-const { snapshots, createSnapshot, restoreSnapshot, deleteSnapshot, currentSnapshot } = useVersionable();
+const { snapshots, createSnapshot, restoreSnapshot, deleteSnapshot, currentSnapshot } =
+  useVersionable()
 
-const isOpen = ref(false);
+const isOpen = ref(false)
 
 function handleSave() {
-  const name = window.prompt('Nom de cette version :', `Version ${snapshots.value.length + 1}`);
-  if (!name) return;
-  const description = window.prompt('Description (optionnel) :', '');
-  createSnapshot(name, description || undefined);
+  const name = window.prompt('Nom de cette version :', `Version ${snapshots.value.length + 1}`)
+  if (!name) return
+  const description = window.prompt('Description (optionnel) :', '')
+  createSnapshot(name, description || undefined)
 }
 
 async function handleRestore(id: string) {
-  const snap = snapshots.value.find(s => s.id === id);
-  if (!snap) return;
-  if (!confirm(`Restaurer « ${snap.name} » ? L'état courant sera remplacé (annulable via Ctrl+Z).`)) return;
-  await restoreSnapshot(id);
+  const snap = snapshots.value.find((s) => s.id === id)
+  if (!snap) return
+  if (!confirm(`Restaurer « ${snap.name} » ? L'état courant sera remplacé (annulable via Ctrl+Z).`))
+    return
+  await restoreSnapshot(id)
 }
 
 function handleDelete(event: MouseEvent, id: string) {
-  event.stopPropagation();
-  const snap = snapshots.value.find(s => s.id === id);
-  if (!snap) return;
+  event.stopPropagation()
+  const snap = snapshots.value.find((s) => s.id === id)
+  if (!snap) return
   if (confirm(`Supprimer la version « ${snap.name} » ?`)) {
-    deleteSnapshot(id);
+    deleteSnapshot(id)
   }
 }
 
 function handleOutsideClick(event: MouseEvent) {
-  const target = event.target as HTMLElement;
-  if (!target.closest('.versions-panel')) isOpen.value = false;
+  const target = event.target as HTMLElement
+  if (!target.closest('.versions-panel')) isOpen.value = false
 }
 
 onMounted(() => {
-  window.addEventListener('mousedown', handleOutsideClick, true);
-});
+  window.addEventListener('mousedown', handleOutsideClick, true)
+})
 onBeforeUnmount(() => {
-  window.removeEventListener('mousedown', handleOutsideClick, true);
-});
+  window.removeEventListener('mousedown', handleOutsideClick, true)
+})
 
 function formatDate(ts: number): string {
   return new Date(ts).toLocaleString('fr-FR', {
-    day: '2-digit', month: '2-digit', year: '2-digit',
-    hour: '2-digit', minute: '2-digit',
-  });
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 </script>
 
@@ -71,11 +75,7 @@ function formatDate(ts: number): string {
     >
       <div class="p-2 border-b flex items-center justify-between">
         <span class="text-sm font-semibold">Historique des versions</span>
-        <button
-          @click="handleSave"
-          class="text-xs app-link"
-          title="Capturer l'état courant"
-        >
+        <button @click="handleSave" class="text-xs app-link" title="Capturer l'état courant">
           + Sauver
         </button>
       </div>
@@ -92,11 +92,16 @@ function formatDate(ts: number): string {
             <div class="flex-1 min-w-0">
               <div class="text-sm font-medium truncate">
                 {{ snap.name }}
-                <span v-if="snap.tag" class="ml-1 text-xs text-[var(--accent-strong)] bg-[var(--accent-soft)] px-1.5 py-0.5 rounded">
+                <span
+                  v-if="snap.tag"
+                  class="ml-1 text-xs text-[var(--accent-strong)] bg-[var(--accent-soft)] px-1.5 py-0.5 rounded"
+                >
                   {{ snap.tag }}
                 </span>
               </div>
-              <div v-if="snap.description" class="text-xs app-subtle truncate">{{ snap.description }}</div>
+              <div v-if="snap.description" class="text-xs app-subtle truncate">
+                {{ snap.description }}
+              </div>
               <div class="text-xs app-subtle font-mono mt-0.5">
                 {{ formatDate(snap.metadata.createdAt) }} ·
                 {{ Object.keys(snap.state.nodes).length }} noeuds ·
@@ -113,9 +118,7 @@ function formatDate(ts: number): string {
           </div>
         </li>
       </ul>
-      <div v-else class="p-3 text-xs app-subtle text-center">
-        Aucune version sauvegardée.
-      </div>
+      <div v-else class="p-3 text-xs app-subtle text-center">Aucune version sauvegardée.</div>
     </div>
   </div>
 </template>

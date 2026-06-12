@@ -1,8 +1,8 @@
 // src/composables/useEdgeSelection.ts
-import { ref } from 'vue';
+import { ref } from 'vue'
 
 // État global de sélection des edges
-const selectedEdgeId = ref<string | null>(null);
+const selectedEdgeId = ref<string | null>(null)
 
 /**
  * Composable pour gérer la sélection d'edges
@@ -10,16 +10,16 @@ const selectedEdgeId = ref<string | null>(null);
  */
 export function useEdgeSelectionState() {
   function selectEdge(edgeId: string) {
-    selectedEdgeId.value = edgeId;
+    selectedEdgeId.value = edgeId
   }
 
   function deselectEdge() {
-    selectedEdgeId.value = null;
+    selectedEdgeId.value = null
   }
 
   return {
     selectedEdgeId,
     selectEdge,
     deselectEdge,
-  };
+  }
 }

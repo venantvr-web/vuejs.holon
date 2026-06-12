@@ -1,50 +1,49 @@
-
 <!-- src/components/canvas/ViewsPanel.vue -->
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { Bookmark, X } from 'lucide-vue-next';
-import { useViewable } from '../../composables/traits';
-import { useViewport } from '../../composables/useViewport';
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { Bookmark, X } from 'lucide-vue-next'
+import { useViewable } from '../../composables/traits'
+import { useViewport } from '../../composables/useViewport'
 
-const { savedViews, saveView, deleteView, activeView } = useViewable();
-const { pan, zoomLevel } = useViewport();
+const { savedViews, saveView, deleteView, activeView } = useViewable()
+const { pan, zoomLevel } = useViewport()
 
-const isOpen = ref(false);
+const isOpen = ref(false)
 
 function handleSave() {
-  const name = window.prompt('Nom de la vue :', `Vue ${savedViews.value.length + 1}`);
-  if (!name) return;
-  saveView(name, { zoom: zoomLevel.value, pan: { ...pan.value } });
+  const name = window.prompt('Nom de la vue :', `Vue ${savedViews.value.length + 1}`)
+  if (!name) return
+  saveView(name, { zoom: zoomLevel.value, pan: { ...pan.value } })
 }
 
 function handleRestore(viewId: string) {
-  const view = savedViews.value.find(v => v.id === viewId);
-  if (!view) return;
-  zoomLevel.value = view.zoom;
-  pan.value = { ...view.pan };
-  activeView.value = view;
+  const view = savedViews.value.find((v) => v.id === viewId)
+  if (!view) return
+  zoomLevel.value = view.zoom
+  pan.value = { ...view.pan }
+  activeView.value = view
 }
 
 function handleDelete(event: MouseEvent, viewId: string) {
-  event.stopPropagation();
-  const view = savedViews.value.find(v => v.id === viewId);
-  if (!view) return;
+  event.stopPropagation()
+  const view = savedViews.value.find((v) => v.id === viewId)
+  if (!view) return
   if (confirm(`Supprimer la vue « ${view.name} » ?`)) {
-    deleteView(viewId);
+    deleteView(viewId)
   }
 }
 
 function handleOutsideClick(event: MouseEvent) {
-  const target = event.target as HTMLElement;
-  if (!target.closest('.views-panel')) isOpen.value = false;
+  const target = event.target as HTMLElement
+  if (!target.closest('.views-panel')) isOpen.value = false
 }
 
 onMounted(() => {
-  window.addEventListener('mousedown', handleOutsideClick, true);
-});
+  window.addEventListener('mousedown', handleOutsideClick, true)
+})
 onBeforeUnmount(() => {
-  window.removeEventListener('mousedown', handleOutsideClick, true);
-});
+  window.removeEventListener('mousedown', handleOutsideClick, true)
+})
 </script>
 
 <template>
@@ -66,11 +65,7 @@ onBeforeUnmount(() => {
     >
       <div class="p-2 border-b app-border flex items-center justify-between">
         <span class="text-sm font-semibold app-fg">Vues sauvegardées</span>
-        <button
-          @click="handleSave"
-          class="text-xs app-link"
-          title="Sauvegarder la vue courante"
-        >
+        <button @click="handleSave" class="text-xs app-link" title="Sauvegarder la vue courante">
           + Sauver
         </button>
       </div>
@@ -85,9 +80,7 @@ onBeforeUnmount(() => {
         >
           <div class="flex-1 min-w-0">
             <div class="text-sm truncate app-fg">{{ view.name }}</div>
-            <div class="text-xs app-subtle font-mono">
-              {{ Math.round(view.zoom * 100) }} %
-            </div>
+            <div class="text-xs app-subtle font-mono">{{ Math.round(view.zoom * 100) }} %</div>
           </div>
           <button
             class="opacity-0 group-hover:opacity-100 app-danger-link ml-2 px-1"

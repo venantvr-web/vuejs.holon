@@ -1,68 +1,67 @@
-
 <!-- src/components/ui/ContextMenu.vue -->
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, nextTick } from 'vue';
+import { onMounted, onBeforeUnmount, ref, nextTick } from 'vue'
 
 export interface ContextMenuItem {
-  label: string;
-  shortcut?: string;
-  icon?: string;
-  disabled?: boolean;
-  danger?: boolean;
-  separator?: boolean;
-  action?: () => void;
+  label: string
+  shortcut?: string
+  icon?: string
+  disabled?: boolean
+  danger?: boolean
+  separator?: boolean
+  action?: () => void
 }
 
 interface Props {
-  x: number;
-  y: number;
-  items: ContextMenuItem[];
+  x: number
+  y: number
+  items: ContextMenuItem[]
 }
 
-const props = defineProps<Props>();
-const emit = defineEmits<{ (e: 'close'): void }>();
+const props = defineProps<Props>()
+const emit = defineEmits<{ (e: 'close'): void }>()
 
-const root = ref<HTMLDivElement | null>(null);
-const adjustedX = ref(props.x);
-const adjustedY = ref(props.y);
+const root = ref<HTMLDivElement | null>(null)
+const adjustedX = ref(props.x)
+const adjustedY = ref(props.y)
 
 function handleItemClick(item: ContextMenuItem) {
-  if (item.disabled || item.separator) return;
-  item.action?.();
-  emit('close');
+  if (item.disabled || item.separator) return
+  item.action?.()
+  emit('close')
 }
 
 function handleOutsideClick(event: MouseEvent) {
-  if (!root.value) return;
-  if (!root.value.contains(event.target as Node)) emit('close');
+  if (!root.value) return
+  if (!root.value.contains(event.target as Node)) emit('close')
 }
 
 function handleKey(event: KeyboardEvent) {
-  if (event.key === 'Escape') emit('close');
+  if (event.key === 'Escape') emit('close')
 }
 
 onMounted(async () => {
   // Décaler si le menu déborde de la fenêtre.
-  await nextTick();
-  const el = root.value;
+  await nextTick()
+  const el = root.value
   if (el) {
-    const rect = el.getBoundingClientRect();
+    const rect = el.getBoundingClientRect()
     if (rect.right > window.innerWidth) {
-      adjustedX.value = Math.max(0, window.innerWidth - rect.width - 4);
+      adjustedX.value = Math.max(0, window.innerWidth - rect.width - 4)
     }
     if (rect.bottom > window.innerHeight) {
-      adjustedY.value = Math.max(0, window.innerHeight - rect.height - 4);
+      adjustedY.value = Math.max(0, window.innerHeight - rect.height - 4)
     }
   }
   // Écouteurs hors composant : clic n'importe où pour fermer, Échap.
-  window.addEventListener('mousedown', handleOutsideClick, true);
-  window.addEventListener('keydown', handleKey);
-});
+  window.addEventListener('mousedown', handleOutsideClick, true)
+  window.addEventListener('keydown', handleKey)
+})
 
 onBeforeUnmount(() => {
-  window.removeEventListener('mousedown', handleOutsideClick, true);
-  window.removeEventListener('keydown', handleKey);
-});
+  window.removeEventListener('mousedown', handleOutsideClick, true)
+  window.removeEventListener('keydown', handleKey)
+})
 </script>
 
 <template>
@@ -73,10 +72,7 @@ onBeforeUnmount(() => {
     @contextmenu.prevent
   >
     <template v-for="(item, i) in items" :key="i">
-      <div
-        v-if="item.separator"
-        class="my-1 border-t app-border"
-      />
+      <div v-if="item.separator" class="my-1 border-t app-border" />
       <button
         v-else
         :disabled="item.disabled"

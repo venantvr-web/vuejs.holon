@@ -1,42 +1,46 @@
-
 <!-- src/components/canvas/ValidationPanel.vue -->
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { CheckCircle2, Lightbulb, ShieldCheck, X } from 'lucide-vue-next';
-import { useValidatable, useSelectionState } from '../../composables/traits';
-import { useEdgeSelectionState } from '../../composables/useEdgeSelection';
-import type { ValidationIssue, ValidationSeverity } from '../../composables/traits/useValidatable';
+import { ref, computed } from 'vue'
+import { CheckCircle2, Lightbulb, ShieldCheck, X } from 'lucide-vue-next'
+import { useValidatable, useSelectionState } from '../../composables/traits'
+import { useEdgeSelectionState } from '../../composables/useEdgeSelection'
+import type { ValidationIssue, ValidationSeverity } from '../../composables/traits/useValidatable'
 
-const { lastValidationResult, validateGraph, errorCount, warningCount } = useValidatable();
-const { selectedNodeIds, focusedNodeId } = useSelectionState();
-const { selectedEdgeId } = useEdgeSelectionState();
+const { lastValidationResult, validateGraph, errorCount, warningCount } = useValidatable()
+const { selectedNodeIds, focusedNodeId } = useSelectionState()
+const { selectedEdgeId } = useEdgeSelectionState()
 
-const isOpen = ref(false);
+const isOpen = ref(false)
 
 function handleValidate() {
-  validateGraph();
-  isOpen.value = true;
+  validateGraph()
+  isOpen.value = true
 }
 
-const issues = computed(() => lastValidationResult.value?.issues ?? []);
+const issues = computed(() => lastValidationResult.value?.issues ?? [])
 
 const severityBadge: Record<ValidationSeverity, { label: string; cls: string }> = {
   error: { label: 'Erreur', cls: 'app-badge app-badge-danger' },
   warning: { label: 'Attention', cls: 'app-badge app-badge-warning' },
   info: { label: 'Info', cls: 'app-badge app-badge-info' },
-};
+}
 
 function focusIssue(issue: ValidationIssue) {
   if (issue.nodeIds && issue.nodeIds.length > 0) {
-    selectedNodeIds.value = new Set(issue.nodeIds);
-    focusedNodeId.value = issue.nodeIds[0];
+    selectedNodeIds.value = new Set(issue.nodeIds)
+    focusedNodeId.value = issue.nodeIds[0]
   }
   if (issue.edgeIds && issue.edgeIds.length > 0) {
-    selectedEdgeId.value = issue.edgeIds[0];
+    selectedEdgeId.value = issue.edgeIds[0]
   }
 }
 
-defineExpose({ open: () => { isOpen.value = true; }, handleValidate });
+defineExpose({
+  open: () => {
+    isOpen.value = true
+  },
+  handleValidate,
+})
 </script>
 
 <template>
@@ -73,17 +77,13 @@ defineExpose({ open: () => { isOpen.value = true; }, handleValidate });
         <div class="flex items-center gap-2">
           <h3 class="text-sm font-semibold app-fg">Résultats de validation</h3>
           <span class="text-xs app-subtle">
-            {{ errorCount }} erreur{{ errorCount > 1 ? 's' : '' }} ·
-            {{ warningCount }} attention{{ warningCount > 1 ? 's' : '' }}
+            {{ errorCount }} erreur{{ errorCount > 1 ? 's' : '' }} · {{ warningCount }} attention{{
+              warningCount > 1 ? 's' : ''
+            }}
           </span>
         </div>
         <div class="flex items-center gap-2">
-          <button
-            class="text-xs app-link"
-            @click="handleValidate"
-          >
-            Revalider
-          </button>
+          <button class="text-xs app-link" @click="handleValidate">Revalider</button>
           <button
             class="app-subtle hover:text-[var(--fg)] transition-colors duration-150 px-1"
             title="Fermer"
@@ -109,19 +109,21 @@ defineExpose({ open: () => { isOpen.value = true; }, handleValidate });
           @click="focusIssue(issue)"
         >
           <div class="flex items-start gap-2">
-            <span
-              class="flex-shrink-0"
-              :class="severityBadge[issue.severity].cls"
-            >
+            <span class="flex-shrink-0" :class="severityBadge[issue.severity].cls">
               {{ severityBadge[issue.severity].label }}
             </span>
             <div class="flex-1 min-w-0">
               <div class="text-sm app-fg">{{ issue.message }}</div>
-              <div v-if="issue.suggestion" class="text-xs app-subtle mt-0.5 flex items-center gap-1">
+              <div
+                v-if="issue.suggestion"
+                class="text-xs app-subtle mt-0.5 flex items-center gap-1"
+              >
                 <Lightbulb :size="12" class="flex-shrink-0 text-[var(--warning)]" />
                 <span>{{ issue.suggestion }}</span>
               </div>
-              <div class="text-xs app-subtle font-mono mt-0.5">{{ issue.ruleId }} · {{ issue.category }}</div>
+              <div class="text-xs app-subtle font-mono mt-0.5">
+                {{ issue.ruleId }} · {{ issue.category }}
+              </div>
             </div>
           </div>
         </li>

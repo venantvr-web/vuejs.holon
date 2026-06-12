@@ -1,16 +1,15 @@
-
 <!-- src/components/layout/LanguagePicker.vue -->
 <script setup lang="ts">
-import { ref } from 'vue';
-import { Globe } from 'lucide-vue-next';
-import { useI18n, AVAILABLE_LOCALES, type Locale } from '../../composables/useI18n';
+import { ref } from 'vue'
+import { Globe } from 'lucide-vue-next'
+import { useI18n, AVAILABLE_LOCALES, type Locale } from '../../composables/useI18n'
 
-const { locale, setLocale } = useI18n();
-const isOpen = ref(false);
+const { locale, setLocale } = useI18n()
+const isOpen = ref(false)
 
 function choose(v: Locale) {
-  setLocale(v);
-  isOpen.value = false;
+  setLocale(v)
+  isOpen.value = false
 }
 </script>
 

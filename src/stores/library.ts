@@ -1,10 +1,9 @@
-
 // src/stores/library.ts
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import { nanoid } from 'nanoid';
-import { db } from '../db';
-import type { Node, LibraryItem } from '../types';
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+import { nanoid } from 'nanoid'
+import { db } from '../db'
+import type { Node, LibraryItem } from '../types'
 
 /**
  * Blocs prédéfinis, réinsérés au premier démarrage si la bibliothèque est vide.
@@ -34,25 +33,25 @@ const BUILT_IN_ITEMS: LibraryItem[] = [
       data: { name: 'Box' },
     },
   },
-];
+]
 
 export const useLibraryStore = defineStore('library', () => {
-  const items = ref<LibraryItem[]>([]);
+  const items = ref<LibraryItem[]>([])
 
   function sortItems(list: LibraryItem[]): LibraryItem[] {
     return [...list].sort((a, b) => {
-      if (a.isBuiltIn !== b.isBuiltIn) return a.isBuiltIn ? -1 : 1;
-      return a.createdAt - b.createdAt;
-    });
+      if (a.isBuiltIn !== b.isBuiltIn) return a.isBuiltIn ? -1 : 1
+      return a.createdAt - b.createdAt
+    })
   }
 
   async function loadFromDB() {
-    const stored = await db.library.toArray();
+    const stored = await db.library.toArray()
     if (stored.length === 0) {
-      await db.library.bulkPut(BUILT_IN_ITEMS);
-      items.value = sortItems(BUILT_IN_ITEMS);
+      await db.library.bulkPut(BUILT_IN_ITEMS)
+      items.value = sortItems(BUILT_IN_ITEMS)
     } else {
-      items.value = sortItems(stored);
+      items.value = sortItems(stored)
     }
   }
 
@@ -61,7 +60,7 @@ export const useLibraryStore = defineStore('library', () => {
    * Les coordonnées sont remises à zéro pour que le bloc se place au point de drop.
    */
   async function addFromNode(node: Node, name?: string): Promise<LibraryItem> {
-    const { id: _id, parentId: _parentId, ...rest } = node;
+    const { id: _id, parentId: _parentId, ...rest } = node
     const item: LibraryItem = {
       id: nanoid(),
       name: name ?? (node.data?.name as string) ?? 'Sans nom',
@@ -71,25 +70,25 @@ export const useLibraryStore = defineStore('library', () => {
         ...rest,
         geometry: { ...rest.geometry, x: 0, y: 0 },
       },
-    };
-    items.value.push(item);
-    items.value = sortItems(items.value);
-    await db.library.put(item);
-    return item;
+    }
+    items.value.push(item)
+    items.value = sortItems(items.value)
+    await db.library.put(item)
+    return item
   }
 
   async function removeItem(id: string) {
-    const item = items.value.find(i => i.id === id);
-    if (!item || item.isBuiltIn) return;
-    items.value = items.value.filter(i => i.id !== id);
-    await db.library.delete(id);
+    const item = items.value.find((i) => i.id === id)
+    if (!item || item.isBuiltIn) return
+    items.value = items.value.filter((i) => i.id !== id)
+    await db.library.delete(id)
   }
 
   async function renameItem(id: string, name: string) {
-    const item = items.value.find(i => i.id === id);
-    if (!item) return;
-    item.name = name;
-    await db.library.update(id, { name });
+    const item = items.value.find((i) => i.id === id)
+    if (!item) return
+    item.name = name
+    await db.library.update(id, { name })
   }
 
   return {
@@ -98,5 +97,5 @@ export const useLibraryStore = defineStore('library', () => {
     addFromNode,
     removeItem,
     renameItem,
-  };
-});
+  }
+})

@@ -1,6 +1,6 @@
 // src/composables/traits/useArrowable.ts
-import { computed, type Ref } from 'vue';
-import { useGraphStore } from '../../stores/graph';
+import { computed, type Ref } from 'vue'
+import { useGraphStore } from '../../stores/graph'
 
 /**
  * Types de flèches disponibles pour les marqueurs d'edges.
@@ -8,17 +8,17 @@ import { useGraphStore } from '../../stores/graph';
 export enum ArrowType {
   None = 'none',
   // Marqueur de départ discret (point d'origine)
-  Dot = 'dot',                     // Petit point discret (défaut pour départ)
-  SmallDot = 'small-dot',          // Point très petit
+  Dot = 'dot', // Petit point discret (défaut pour départ)
+  SmallDot = 'small-dot', // Point très petit
   // Flèches standard
-  Arrow = 'arrow',                 // Flèche simple
-  FilledArrow = 'filled-arrow',    // Flèche pleine
-  Diamond = 'diamond',             // Losange (composition)
+  Arrow = 'arrow', // Flèche simple
+  FilledArrow = 'filled-arrow', // Flèche pleine
+  Diamond = 'diamond', // Losange (composition)
   FilledDiamond = 'filled-diamond', // Losange plein (composition forte)
-  Circle = 'circle',               // Cercle
-  FilledCircle = 'filled-circle',  // Cercle plein
-  Square = 'square',               // Carré
-  FilledSquare = 'filled-square',  // Carré plein
+  Circle = 'circle', // Cercle
+  FilledCircle = 'filled-circle', // Cercle plein
+  Square = 'square', // Carré
+  FilledSquare = 'filled-square', // Carré plein
   // Types Archimate
   ArchiComposition = 'archi-composition',
   ArchiAggregation = 'archi-aggregation',
@@ -38,19 +38,19 @@ export interface ArrowConfig {
   /**
    * Type de flèche au départ de l'edge.
    */
-  startArrow: ArrowType;
+  startArrow: ArrowType
   /**
    * Type de flèche à l'arrivée de l'edge.
    */
-  endArrow: ArrowType;
+  endArrow: ArrowType
   /**
    * Taille du marqueur de flèche.
    */
-  size: number;
+  size: number
   /**
    * Couleur du marqueur (optionnel).
    */
-  color?: string;
+  color?: string
 }
 
 /**
@@ -60,7 +60,7 @@ export interface ArrowableOptions {
   /**
    * Référence réactive vers l'ID de l'edge concerné.
    */
-  edgeId: Ref<string>;
+  edgeId: Ref<string>
 }
 
 /**
@@ -70,15 +70,15 @@ export interface ArrowableState {
   /**
    * Type de flèche au départ de l'edge.
    */
-  startArrow: Ref<ArrowType>;
+  startArrow: Ref<ArrowType>
   /**
    * Type de flèche à l'arrivée de l'edge.
    */
-  endArrow: Ref<ArrowType>;
+  endArrow: Ref<ArrowType>
   /**
    * Taille des marqueurs de flèche.
    */
-  arrowSize: Ref<number>;
+  arrowSize: Ref<number>
 }
 
 /**
@@ -89,17 +89,17 @@ export interface ArrowableHandlers {
    * Définit le type de flèche au départ de l'edge.
    * @param type - Type de flèche à appliquer
    */
-  setStartArrow: (type: ArrowType) => void;
+  setStartArrow: (type: ArrowType) => void
   /**
    * Définit le type de flèche à l'arrivée de l'edge.
    * @param type - Type de flèche à appliquer
    */
-  setEndArrow: (type: ArrowType) => void;
+  setEndArrow: (type: ArrowType) => void
   /**
    * Définit la taille des marqueurs de flèche.
    * @param size - Taille en pixels
    */
-  setArrowSize: (size: number) => void;
+  setArrowSize: (size: number) => void
   /**
    * Génère la définition SVG du marqueur de flèche.
    * @param type - Type de flèche
@@ -107,7 +107,7 @@ export interface ArrowableHandlers {
    * @param color - Couleur du marqueur
    * @returns Définition SVG du marqueur
    */
-  getArrowMarkerDef: (type: ArrowType, position: 'start' | 'end', color: string) => string;
+  getArrowMarkerDef: (type: ArrowType, position: 'start' | 'end', color: string) => string
 }
 
 // Définitions SVG des marqueurs de flèches
@@ -192,7 +192,7 @@ export const ARROW_MARKERS: Record<ArrowType, (size: number, filled: boolean) =>
   [ArrowType.ArchiFlow]: (size) => `
     <path d="M 0 0 L ${size} ${size / 2} L 0 ${size} Z" fill="currentColor"/>
   `,
-};
+}
 
 // Calcule le point de référence (refX, refY) du marker selon le type et la position
 // Le point de référence est le point qui sera aligné avec l'extrémité du path
@@ -201,7 +201,7 @@ function getMarkerRefPoint(
   position: 'start' | 'end',
   size: number
 ): { refX: number; refY: number } {
-  const center = size / 2;
+  const center = size / 2
 
   // Types centrés (points/cercles) - le centre doit être sur l'intersection
   const centeredTypes = [
@@ -209,10 +209,10 @@ function getMarkerRefPoint(
     ArrowType.SmallDot,
     ArrowType.Circle,
     ArrowType.FilledCircle,
-  ];
+  ]
 
   if (centeredTypes.includes(type)) {
-    return { refX: center, refY: center };
+    return { refX: center, refY: center }
   }
 
   // Types diamant - le centre du losange doit être sur l'intersection
@@ -221,28 +221,28 @@ function getMarkerRefPoint(
     ArrowType.FilledDiamond,
     ArrowType.ArchiComposition,
     ArrowType.ArchiAggregation,
-  ];
+  ]
 
   if (diamondTypes.includes(type)) {
-    return { refX: center, refY: center };
+    return { refX: center, refY: center }
   }
 
   // Types carrés
-  const squareTypes = [ArrowType.Square, ArrowType.FilledSquare];
+  const squareTypes = [ArrowType.Square, ArrowType.FilledSquare]
 
   if (squareTypes.includes(type)) {
-    return { refX: center, refY: center };
+    return { refX: center, refY: center }
   }
 
   // Types flèches directionnelles
   // Pour end: la pointe (à droite du path) doit être sur l'intersection
   // Pour start: la base de la flèche doit être sur l'intersection
   if (position === 'end') {
-    return { refX: size, refY: center };
+    return { refX: size, refY: center }
   } else {
     // Pour start, on veut que le marqueur soit visible au départ
     // refX=0 place la base de la flèche sur le point
-    return { refX: 0, refY: center };
+    return { refX: 0, refY: center }
   }
 }
 
@@ -262,57 +262,57 @@ function getMarkerRefPoint(
  * ```
  */
 export function useArrowable(options: ArrowableOptions): ArrowableState & ArrowableHandlers {
-  const graphStore = useGraphStore();
+  const graphStore = useGraphStore()
 
-  const edge = computed(() => graphStore.edges[options.edgeId.value]);
+  const edge = computed(() => graphStore.edges[options.edgeId.value])
 
   const startArrow = computed((): ArrowType => {
-    const e = edge.value;
+    const e = edge.value
     // Par défaut : petit point discret pour marquer le départ
-    return (e?.startArrow as ArrowType) ?? ArrowType.Dot;
-  });
+    return (e?.startArrow as ArrowType) ?? ArrowType.Dot
+  })
 
   const endArrow = computed((): ArrowType => {
-    const e = edge.value;
-    return (e?.endArrow as ArrowType) ?? ArrowType.Arrow;
-  });
+    const e = edge.value
+    return (e?.endArrow as ArrowType) ?? ArrowType.Arrow
+  })
 
   const arrowSize = computed((): number => {
-    const e = edge.value;
-    return e?.arrowSize ?? 10;
-  });
+    const e = edge.value
+    return e?.arrowSize ?? 10
+  })
 
   function setStartArrow(type: ArrowType) {
     if (edge.value) {
-      graphStore.updateEdge(options.edgeId.value, { startArrow: type });
+      graphStore.updateEdge(options.edgeId.value, { startArrow: type })
     }
   }
 
   function setEndArrow(type: ArrowType) {
     if (edge.value) {
-      graphStore.updateEdge(options.edgeId.value, { endArrow: type });
+      graphStore.updateEdge(options.edgeId.value, { endArrow: type })
     }
   }
 
   function setArrowSize(size: number) {
     if (edge.value) {
-      graphStore.updateEdge(options.edgeId.value, { arrowSize: size });
+      graphStore.updateEdge(options.edgeId.value, { arrowSize: size })
     }
   }
 
   function getArrowMarkerDef(type: ArrowType, position: 'start' | 'end', color: string): string {
-    if (type === ArrowType.None) return '';
+    if (type === ArrowType.None) return ''
 
-    const size = arrowSize.value;
-    const id = `arrow-${type}-${position}-${color.replace('#', '')}`;
+    const size = arrowSize.value
+    const id = `arrow-${type}-${position}-${color.replace('#', '')}`
 
     // Calculer refX/refY selon le type de marqueur et la position
     // Pour les points (Dot, SmallDot, Circle, FilledCircle), le centre doit être sur l'intersection
     // Pour les flèches, la pointe doit être sur l'intersection (position end) ou la base (position start)
-    const { refX, refY } = getMarkerRefPoint(type, position, size);
-    const orient = position === 'end' ? 'auto' : 'auto-start-reverse';
+    const { refX, refY } = getMarkerRefPoint(type, position, size)
+    const orient = position === 'end' ? 'auto' : 'auto-start-reverse'
 
-    const markerContent = ARROW_MARKERS[type]?.(size, type.includes('filled')) ?? '';
+    const markerContent = ARROW_MARKERS[type]?.(size, type.includes('filled')) ?? ''
 
     return `
       <marker
@@ -327,7 +327,7 @@ export function useArrowable(options: ArrowableOptions): ArrowableState & Arrowa
       >
         ${markerContent}
       </marker>
-    `;
+    `
   }
 
   return {
@@ -338,7 +338,7 @@ export function useArrowable(options: ArrowableOptions): ArrowableState & Arrowa
     setEndArrow,
     setArrowSize,
     getArrowMarkerDef,
-  };
+  }
 }
 
 // Labels pour l'UI
@@ -363,7 +363,7 @@ export const ARROW_TYPE_LABELS: Record<ArrowType, string> = {
   [ArrowType.ArchiInfluence]: 'Influence',
   [ArrowType.ArchiTrigger]: 'Déclencheur',
   [ArrowType.ArchiFlow]: 'Flux',
-};
+}
 
 // Marqueurs recommandés pour le départ (discrets)
 export const START_MARKER_TYPES: ArrowType[] = [
@@ -372,7 +372,7 @@ export const START_MARKER_TYPES: ArrowType[] = [
   ArrowType.None,
   ArrowType.FilledCircle,
   ArrowType.Circle,
-];
+]
 
 // Marqueurs recommandés pour l'arrivée (directionnels)
 export const END_MARKER_TYPES: ArrowType[] = [
@@ -383,4 +383,4 @@ export const END_MARKER_TYPES: ArrowType[] = [
   ArrowType.Circle,
   ArrowType.FilledCircle,
   ArrowType.None,
-];
+]

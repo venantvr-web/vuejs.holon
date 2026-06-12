@@ -1,23 +1,26 @@
-
 <!-- src/components/inspectors/sections/PropertiesSection.vue -->
 <script setup lang="ts">
-import { ref, toRef } from 'vue';
-import { X } from 'lucide-vue-next';
-import { usePropertyable, type CustomProperty, type PropertyType } from '../../../composables/traits/usePropertyable';
+import { ref, toRef } from 'vue'
+import { X } from 'lucide-vue-next'
+import {
+  usePropertyable,
+  type CustomProperty,
+  type PropertyType,
+} from '../../../composables/traits/usePropertyable'
 
 interface Props {
-  nodeId: string;
+  nodeId: string
 }
-const props = defineProps<Props>();
-const nodeIdRef = toRef(props, 'nodeId');
+const props = defineProps<Props>()
+const nodeIdRef = toRef(props, 'nodeId')
 
 const { properties, templates, addProperty, updateProperty, removeProperty, applyTemplate } =
-  usePropertyable({ nodeId: nodeIdRef });
+  usePropertyable({ nodeId: nodeIdRef })
 
-const adderOpen = ref(false);
-const newKey = ref('');
-const newLabel = ref('');
-const newType = ref<PropertyType>('string');
+const adderOpen = ref(false)
+const newKey = ref('')
+const newLabel = ref('')
+const newType = ref<PropertyType>('string')
 
 const TYPES: { value: PropertyType; label: string }[] = [
   { value: 'string', label: 'Texte' },
@@ -26,11 +29,11 @@ const TYPES: { value: PropertyType; label: string }[] = [
   { value: 'date', label: 'Date' },
   { value: 'url', label: 'URL' },
   { value: 'email', label: 'Email' },
-];
+]
 
 function handleAdd() {
-  const key = newKey.value.trim();
-  if (!key) return;
+  const key = newKey.value.trim()
+  if (!key) return
   const defaultValue: Record<PropertyType, unknown> = {
     string: '',
     number: 0,
@@ -39,33 +42,33 @@ function handleAdd() {
     select: '',
     url: '',
     email: '',
-  };
+  }
   const prop: CustomProperty = {
     key,
     value: defaultValue[newType.value],
     type: newType.value,
     label: newLabel.value.trim() || key,
-  };
-  addProperty(prop);
-  newKey.value = '';
-  newLabel.value = '';
-  adderOpen.value = false;
+  }
+  addProperty(prop)
+  newKey.value = ''
+  newLabel.value = ''
+  adderOpen.value = false
 }
 
 function castBoolean(value: unknown): boolean {
-  return value === true || value === 'true';
+  return value === true || value === 'true'
 }
 function castNumber(value: unknown): number {
-  const n = Number(value);
-  return isNaN(n) ? 0 : n;
+  const n = Number(value)
+  return isNaN(n) ? 0 : n
 }
 
 function inputTypeFor(type: PropertyType): string {
-  if (type === 'date') return 'date';
-  if (type === 'url') return 'url';
-  if (type === 'email') return 'email';
-  if (type === 'number') return 'number';
-  return 'text';
+  if (type === 'date') return 'date'
+  if (type === 'url') return 'url'
+  if (type === 'email') return 'email'
+  if (type === 'number') return 'number'
+  return 'text'
 }
 </script>
 
@@ -73,21 +76,14 @@ function inputTypeFor(type: PropertyType): string {
   <section class="p-3 border-b app-border">
     <div class="flex items-center justify-between mb-2">
       <h3 class="app-section-title">Propriétés personnalisées</h3>
-      <button
-        class="text-xs app-link"
-        @click="adderOpen = !adderOpen"
-      >
+      <button class="text-xs app-link" @click="adderOpen = !adderOpen">
         {{ adderOpen ? 'Fermer' : '+ Ajouter' }}
       </button>
     </div>
 
     <!-- Liste -->
     <div v-if="properties.length > 0" class="space-y-2 mb-2">
-      <div
-        v-for="prop in properties"
-        :key="prop.key"
-        class="group flex items-start gap-2"
-      >
+      <div v-for="prop in properties" :key="prop.key" class="group flex items-start gap-2">
         <div class="flex-1 min-w-0">
           <label class="block text-xs app-subtle truncate">
             {{ prop.label ?? prop.key }}
@@ -113,7 +109,14 @@ function inputTypeFor(type: PropertyType): string {
             :type="inputTypeFor(prop.type)"
             :value="prop.value as string"
             class="app-input w-full px-2 py-1 text-sm"
-            @input="updateProperty(prop.key, prop.type === 'number' ? castNumber(($event.target as HTMLInputElement).value) : ($event.target as HTMLInputElement).value)"
+            @input="
+              updateProperty(
+                prop.key,
+                prop.type === 'number'
+                  ? castNumber(($event.target as HTMLInputElement).value)
+                  : ($event.target as HTMLInputElement).value
+              )
+            "
           />
         </div>
         <button
@@ -157,10 +160,7 @@ function inputTypeFor(type: PropertyType): string {
         class="app-input w-full px-2 py-1 text-xs"
       />
       <div class="flex items-center gap-2">
-        <select
-          v-model="newType"
-          class="app-input flex-1 px-2 py-1 text-xs"
-        >
+        <select v-model="newType" class="app-input flex-1 px-2 py-1 text-xs">
           <option v-for="t in TYPES" :key="t.value" :value="t.value">{{ t.label }}</option>
         </select>
         <button

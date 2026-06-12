@@ -1,42 +1,42 @@
 // src/composables/traits/useThemeable.ts
-import { ref, computed, type Ref } from 'vue';
+import { ref, computed, type Ref } from 'vue'
 
 /**
  * Palette de couleurs pour un thème.
  */
 export interface ColorPalette {
   /** Couleur primaire */
-  primary: string;
+  primary: string
   /** Couleur secondaire */
-  secondary: string;
+  secondary: string
   /** Couleur d'accentuation */
-  accent: string;
+  accent: string
   /** Couleur de fond */
-  background: string;
+  background: string
   /** Couleur de surface */
-  surface: string;
+  surface: string
   /** Couleur du texte principal */
-  text: string;
+  text: string
   /** Couleur du texte atténué */
-  textMuted: string;
+  textMuted: string
   /** Couleur de bordure */
-  border: string;
+  border: string
 
   /** Couleur de succès */
-  success: string;
+  success: string
   /** Couleur d'avertissement */
-  warning: string;
+  warning: string
   /** Couleur d'erreur */
-  error: string;
+  error: string
   /** Couleur d'information */
-  info: string;
+  info: string
 
   /** Couleur de sélection */
-  selection: string;
+  selection: string
   /** Couleur de survol */
-  hover: string;
+  hover: string
   /** Couleur de focus */
-  focus: string;
+  focus: string
 }
 
 /**
@@ -44,21 +44,21 @@ export interface ColorPalette {
  */
 export interface Theme {
   /** Identifiant unique du thème */
-  id: string;
+  id: string
   /** Nom du thème */
-  name: string;
+  name: string
   /** Description optionnelle */
-  description?: string;
+  description?: string
   /** Indique si c'est un thème sombre */
-  isDark: boolean;
+  isDark: boolean
   /** Palette de couleurs */
-  colors: ColorPalette;
+  colors: ColorPalette
   /** Date de création (timestamp) */
-  createdAt?: number;
+  createdAt?: number
   /** Date de dernière modification (timestamp) */
-  modifiedAt?: number;
+  modifiedAt?: number
   /** Auteur du thème */
-  author?: string;
+  author?: string
 }
 
 // Thèmes prédéfinis — réduits à deux modes : Jour (clair) et Nuit (sombre).
@@ -110,50 +110,54 @@ export const PRESET_THEMES: Record<string, Theme> = {
       focus: '#1e3a5f',
     },
   },
-};
-
-// État global du thème, persisté en localStorage pour survivre aux reloads.
-const THEME_STORAGE_KEY = 'holon.theme';
-function loadInitialTheme(): string {
-  try {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    if (stored === 'light' || stored === 'dark') return stored;
-  } catch { /* ignore */ }
-  // Sinon : respecter la préférence système (prefers-color-scheme).
-  try {
-    if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) return 'dark';
-  } catch { /* ignore */ }
-  return 'light';
 }
 
-const currentThemeId = ref<string>(loadInitialTheme());
-const customThemes = ref<Map<string, Theme>>(new Map());
+// État global du thème, persisté en localStorage pour survivre aux reloads.
+const THEME_STORAGE_KEY = 'holon.theme'
+function loadInitialTheme(): string {
+  try {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY)
+    if (stored === 'light' || stored === 'dark') return stored
+  } catch {
+    /* ignore */
+  }
+  // Sinon : respecter la préférence système (prefers-color-scheme).
+  try {
+    if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) return 'dark'
+  } catch {
+    /* ignore */
+  }
+  return 'light'
+}
+
+const currentThemeId = ref<string>(loadInitialTheme())
+const customThemes = ref<Map<string, Theme>>(new Map())
 
 // Application immédiate du thème au chargement du module (avant tout mount),
 // pour éviter un flash visuel au démarrage.
 function applyThemeToDocument(themeId: string) {
-  const theme = PRESET_THEMES[themeId] ?? PRESET_THEMES.light;
-  const root = document.documentElement;
+  const theme = PRESET_THEMES[themeId] ?? PRESET_THEMES.light
+  const root = document.documentElement
   for (const [key, value] of Object.entries(theme.colors)) {
-    root.style.setProperty(`--color-${key}`, value);
+    root.style.setProperty(`--color-${key}`, value)
   }
-  if (theme.isDark) root.classList.add('dark');
-  else root.classList.remove('dark');
+  if (theme.isDark) root.classList.add('dark')
+  else root.classList.remove('dark')
 }
-applyThemeToDocument(currentThemeId.value);
+applyThemeToDocument(currentThemeId.value)
 
 /**
  * État réactif géré par le trait Themeable.
  */
 export interface ThemeableState {
   /** Thème actuellement actif */
-  currentTheme: Ref<Theme>;
+  currentTheme: Ref<Theme>
   /** Identifiant du thème actuel */
-  currentThemeId: Ref<string>;
+  currentThemeId: Ref<string>
   /** Liste de tous les thèmes disponibles (presets + personnalisés) */
-  availableThemes: Ref<Theme[]>;
+  availableThemes: Ref<Theme[]>
   /** Indique si le mode sombre est actif */
-  isDarkMode: Ref<boolean>;
+  isDarkMode: Ref<boolean>
 }
 
 /**
@@ -161,23 +165,23 @@ export interface ThemeableState {
  */
 export interface ThemeableHandlers {
   /** Active un thème par son identifiant */
-  setTheme: (themeId: string) => void;
+  setTheme: (themeId: string) => void
   /** Crée un nouveau thème personnalisé et retourne son ID */
-  createTheme: (theme: Omit<Theme, 'id' | 'createdAt'>) => string;
+  createTheme: (theme: Omit<Theme, 'id' | 'createdAt'>) => string
   /** Met à jour un thème personnalisé existant */
-  updateTheme: (themeId: string, updates: Partial<Theme>) => void;
+  updateTheme: (themeId: string, updates: Partial<Theme>) => void
   /** Supprime un thème personnalisé (impossible pour les presets) */
-  deleteTheme: (themeId: string) => boolean;
+  deleteTheme: (themeId: string) => boolean
   /** Duplique un thème existant avec un nouveau nom */
-  duplicateTheme: (themeId: string, newName: string) => string | null;
+  duplicateTheme: (themeId: string, newName: string) => string | null
   /** Exporte un thème au format JSON */
-  exportTheme: (themeId: string) => string | null;
+  exportTheme: (themeId: string) => string | null
   /** Importe un thème depuis du JSON */
-  importTheme: (json: string) => string | null;
+  importTheme: (json: string) => string | null
   /** Récupère une couleur de la palette du thème actuel */
-  getColor: (key: keyof ColorPalette) => string;
+  getColor: (key: keyof ColorPalette) => string
   /** Bascule entre thème clair et sombre */
-  toggleDarkMode: () => void;
+  toggleDarkMode: () => void
 }
 
 /**
@@ -197,136 +201,139 @@ export interface ThemeableHandlers {
  * ```
  */
 export function useThemeable(): ThemeableState & ThemeableHandlers {
-
   const currentTheme = computed((): Theme => {
-    const custom = customThemes.value.get(currentThemeId.value);
-    if (custom) return custom;
-    return PRESET_THEMES[currentThemeId.value] ?? PRESET_THEMES.light;
-  });
+    const custom = customThemes.value.get(currentThemeId.value)
+    if (custom) return custom
+    return PRESET_THEMES[currentThemeId.value] ?? PRESET_THEMES.light
+  })
 
   const availableThemes = computed((): Theme[] => {
-    const presets = Object.values(PRESET_THEMES);
-    const customs = Array.from(customThemes.value.values());
-    return [...presets, ...customs];
-  });
+    const presets = Object.values(PRESET_THEMES)
+    const customs = Array.from(customThemes.value.values())
+    return [...presets, ...customs]
+  })
 
-  const isDarkMode = computed(() => currentTheme.value.isDark);
+  const isDarkMode = computed(() => currentTheme.value.isDark)
 
   function setTheme(themeId: string) {
     if (PRESET_THEMES[themeId] || customThemes.value.has(themeId)) {
-      currentThemeId.value = themeId;
-      applyThemeToCss();
-      try { localStorage.setItem(THEME_STORAGE_KEY, themeId); } catch { /* ignore */ }
+      currentThemeId.value = themeId
+      applyThemeToCss()
+      try {
+        localStorage.setItem(THEME_STORAGE_KEY, themeId)
+      } catch {
+        /* ignore */
+      }
     }
   }
 
   function createTheme(theme: Omit<Theme, 'id' | 'createdAt'>): string {
-    const id = `custom-${Date.now()}`;
+    const id = `custom-${Date.now()}`
     const newTheme: Theme = {
       ...theme,
       id,
       createdAt: Date.now(),
       modifiedAt: Date.now(),
-    };
-    customThemes.value.set(id, newTheme);
-    return id;
+    }
+    customThemes.value.set(id, newTheme)
+    return id
   }
 
   function updateTheme(themeId: string, updates: Partial<Theme>) {
-    const theme = customThemes.value.get(themeId);
+    const theme = customThemes.value.get(themeId)
     if (theme) {
       const updated = {
         ...theme,
         ...updates,
         id: theme.id, // Empêcher la modification de l'ID
         modifiedAt: Date.now(),
-      };
-      customThemes.value.set(themeId, updated);
+      }
+      customThemes.value.set(themeId, updated)
 
       // Si c'est le thème actuel, réappliquer
       if (currentThemeId.value === themeId) {
-        applyThemeToCss();
+        applyThemeToCss()
       }
     }
   }
 
   function deleteTheme(themeId: string): boolean {
     // Ne pas supprimer les presets
-    if (PRESET_THEMES[themeId]) return false;
+    if (PRESET_THEMES[themeId]) return false
 
-    const deleted = customThemes.value.delete(themeId);
+    const deleted = customThemes.value.delete(themeId)
 
     // Si c'était le thème actuel, revenir au light
     if (deleted && currentThemeId.value === themeId) {
-      setTheme('light');
+      setTheme('light')
     }
 
-    return deleted;
+    return deleted
   }
 
   function duplicateTheme(themeId: string, newName: string): string | null {
-    const source = PRESET_THEMES[themeId] ?? customThemes.value.get(themeId);
-    if (!source) return null;
+    const source = PRESET_THEMES[themeId] ?? customThemes.value.get(themeId)
+    if (!source) return null
 
     return createTheme({
       ...source,
       name: newName,
       description: `Copie de ${source.name}`,
-    });
+    })
   }
 
   function exportTheme(themeId: string): string | null {
-    const theme = PRESET_THEMES[themeId] ?? customThemes.value.get(themeId);
-    if (!theme) return null;
-    return JSON.stringify(theme, null, 2);
+    const theme = PRESET_THEMES[themeId] ?? customThemes.value.get(themeId)
+    if (!theme) return null
+    return JSON.stringify(theme, null, 2)
   }
 
   function importTheme(json: string): string | null {
     try {
-      const theme = JSON.parse(json) as Theme;
+      const theme = JSON.parse(json) as Theme
       // Valider la structure minimale
       if (!theme.name || !theme.colors) {
-        return null;
+        return null
       }
-      return createTheme(theme);
+      return createTheme(theme)
     } catch {
-      return null;
+      return null
     }
   }
 
   function getColor(key: keyof ColorPalette): string {
-    return currentTheme.value.colors[key];
+    return currentTheme.value.colors[key]
   }
 
   function toggleDarkMode() {
     if (isDarkMode.value) {
-      setTheme('light');
+      setTheme('light')
     } else {
-      setTheme('dark');
+      setTheme('dark')
     }
   }
 
   // Applique les variables CSS du thème
   function applyThemeToCss() {
-    const theme = currentTheme.value;
-    const root = document.documentElement;
+    const theme = currentTheme.value
+    const root = document.documentElement
 
     // Couleurs de base (héritage legacy — à terme tout passe par les
     // vars --bg/--surface/etc. définies dans style.css).
     for (const [key, value] of Object.entries(theme.colors)) {
-      root.style.setProperty(`--color-${key}`, value);
+      root.style.setProperty(`--color-${key}`, value)
     }
 
     // Classe dark mode
     if (theme.isDark) {
-      root.classList.add('dark');
+      root.classList.add('dark')
     } else {
-      root.classList.remove('dark');
+      root.classList.remove('dark')
     }
   }
 
   // Appliquer le thème initial
-  applyThemeToCss();
+  applyThemeToCss()
 
   return {
     currentTheme,
@@ -342,7 +349,7 @@ export function useThemeable(): ThemeableState & ThemeableHandlers {
     importTheme,
     getColor,
     toggleDarkMode,
-  };
+  }
 }
 
 // Export de l'état global pour persistance
@@ -351,27 +358,27 @@ export function useThemeState() {
     currentThemeId,
     customThemes,
     saveToStorage: () => {
-      localStorage.setItem('holon-theme', currentThemeId.value);
+      localStorage.setItem('holon-theme', currentThemeId.value)
       localStorage.setItem(
         'holon-custom-themes',
         JSON.stringify(Array.from(customThemes.value.entries()))
-      );
+      )
     },
     loadFromStorage: () => {
-      const savedTheme = localStorage.getItem('holon-theme');
+      const savedTheme = localStorage.getItem('holon-theme')
       if (savedTheme) {
-        currentThemeId.value = savedTheme;
+        currentThemeId.value = savedTheme
       }
 
-      const savedCustom = localStorage.getItem('holon-custom-themes');
+      const savedCustom = localStorage.getItem('holon-custom-themes')
       if (savedCustom) {
         try {
-          const entries = JSON.parse(savedCustom) as [string, Theme][];
-          customThemes.value = new Map(entries);
+          const entries = JSON.parse(savedCustom) as [string, Theme][]
+          customThemes.value = new Map(entries)
         } catch {
           // Ignorer les erreurs de parsing
         }
       }
     },
-  };
+  }
 }

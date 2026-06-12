@@ -1,8 +1,8 @@
 // src/composables/traits/useHistorable.ts
 // Event Sourcing & Object Lineage pour traçabilité complète
-import { ref, computed, type Ref } from 'vue';
-import { useGraphStore } from '../../stores/graph';
-import { nanoid } from 'nanoid';
+import { ref, computed, type Ref } from 'vue'
+import { useGraphStore } from '../../stores/graph'
+import { nanoid } from 'nanoid'
 // Types Node et Edge utilisés implicitement via graphStore
 
 /**
@@ -54,33 +54,33 @@ export interface HistoryEvent {
   /**
    * Identifiant unique de l'événement.
    */
-  id: string;
+  id: string
   /**
    * Type d'événement.
    */
-  type: EventType;
+  type: EventType
   /**
    * Timestamp de l'événement.
    */
-  timestamp: number;
+  timestamp: number
   /**
    * ID de l'objet concerné.
    */
-  targetId: string;
+  targetId: string
   /**
    * Type de l'objet concerné.
    */
-  targetType: 'node' | 'edge' | 'group' | 'diagram';
+  targetType: 'node' | 'edge' | 'group' | 'diagram'
   /**
    * Données avant modification pour rollback.
    * Type unknown car peut contenir n'importe quel snapshot d'objet (Node, Edge, etc.).
    */
-  before?: unknown;
+  before?: unknown
   /**
    * Données après modification.
    * Type unknown car peut contenir n'importe quel snapshot d'objet (Node, Edge, etc.).
    */
-  after?: unknown;
+  after?: unknown
   /**
    * Métadonnées additionnelles de l'événement.
    */
@@ -88,20 +88,20 @@ export interface HistoryEvent {
     /**
      * Utilisateur ayant déclenché l'événement.
      */
-    user?: string;
+    user?: string
     /**
      * Raison de la modification.
      */
-    reason?: string;
+    reason?: string
     /**
      * ID de l'événement parent (pour événements liés).
      */
-    parentEventId?: string;
+    parentEventId?: string
     /**
      * ID du batch (pour grouper les événements d'une même action).
      */
-    batchId?: string;
-  };
+    batchId?: string
+  }
   /**
    * Information de lignage pour traçabilité des clones.
    */
@@ -109,16 +109,16 @@ export interface HistoryEvent {
     /**
      * ID de l'objet source si clone.
      */
-    clonedFrom?: string;
+    clonedFrom?: string
     /**
      * IDs des objets sources si dérivé.
      */
-    derivedFrom?: string[];
+    derivedFrom?: string[]
     /**
      * Version de l'objet.
      */
-    version?: number;
-  };
+    version?: number
+  }
 }
 
 /**
@@ -128,19 +128,19 @@ export interface ObjectLineage {
   /**
    * ID de l'objet tracé.
    */
-  objectId: string;
+  objectId: string
   /**
    * Type de l'objet.
    */
-  objectType: 'node' | 'edge';
+  objectType: 'node' | 'edge'
   /**
    * Timestamp de création.
    */
-  createdAt: number;
+  createdAt: number
   /**
    * Créateur de l'objet.
    */
-  createdBy?: string;
+  createdBy?: string
   /**
    * Information sur l'origine de l'objet.
    */
@@ -148,16 +148,16 @@ export interface ObjectLineage {
     /**
      * Type d'origine.
      */
-    type: 'created' | 'cloned' | 'imported' | 'derived';
+    type: 'created' | 'cloned' | 'imported' | 'derived'
     /**
      * ID de l'objet source si cloné ou dérivé.
      */
-    sourceId?: string;
+    sourceId?: string
     /**
      * IDs des objets sources si dérivé de plusieurs.
      */
-    sourceIds?: string[];
-  };
+    sourceIds?: string[]
+  }
   /**
    * Historique des versions de l'objet.
    */
@@ -165,31 +165,31 @@ export interface ObjectLineage {
     /**
      * Numéro de version.
      */
-    version: number;
+    version: number
     /**
      * Timestamp de la version.
      */
-    timestamp: number;
+    timestamp: number
     /**
      * ID de l'événement ayant créé cette version.
      */
-    eventId: string;
+    eventId: string
     /**
      * Liste des champs modifiés.
      */
-    changes: string[];
-  }[];
+    changes: string[]
+  }[]
   /**
    * IDs des descendants (objets clonés depuis celui-ci).
    */
-  descendants: string[];
+  descendants: string[]
 }
 
 // État global
-const events = ref<HistoryEvent[]>([]);
-const lineages = ref<Map<string, ObjectLineage>>(new Map());
-const currentBatchId = ref<string | null>(null);
-const maxEvents = ref(1000);
+const events = ref<HistoryEvent[]>([])
+const lineages = ref<Map<string, ObjectLineage>>(new Map())
+const currentBatchId = ref<string | null>(null)
+const maxEvents = ref(1000)
 
 /**
  * Options de configuration pour le trait Historable.
@@ -198,11 +198,11 @@ export interface HistorableOptions {
   /**
    * ID du noeud à tracer (optionnel, pour filtrage de l'historique).
    */
-  nodeId?: Ref<string>;
+  nodeId?: Ref<string>
   /**
    * Nombre maximum d'événements à conserver en mémoire.
    */
-  maxHistory?: number;
+  maxHistory?: number
 }
 
 /**
@@ -212,19 +212,19 @@ export interface HistorableState {
   /**
    * Liste complète des événements historiques.
    */
-  events: Ref<HistoryEvent[]>;
+  events: Ref<HistoryEvent[]>
   /**
    * Lignage de l'objet spécifié dans les options (null si non spécifié).
    */
-  objectLineage: Ref<ObjectLineage | null>;
+  objectLineage: Ref<ObjectLineage | null>
   /**
    * Historique filtré pour l'objet spécifié dans les options.
    */
-  objectHistory: Ref<HistoryEvent[]>;
+  objectHistory: Ref<HistoryEvent[]>
   /**
    * Version actuelle de l'objet.
    */
-  currentVersion: Ref<number>;
+  currentVersion: Ref<number>
 }
 
 /**
@@ -248,99 +248,99 @@ export interface HistorableHandlers {
     before?: unknown,
     after?: unknown,
     metadata?: HistoryEvent['metadata']
-  ) => string;
+  ) => string
   /**
    * Démarre un batch d'événements groupés.
    * @param reason - Raison du batch
    * @returns ID du batch
    */
-  startBatch: (reason?: string) => string;
+  startBatch: (reason?: string) => string
   /**
    * Termine le batch d'événements en cours.
    */
-  endBatch: () => void;
+  endBatch: () => void
   /**
    * Annule les modifications jusqu'à un événement spécifique.
    * @param eventId - ID de l'événement cible
    * @returns true si succès
    */
-  rollbackToEvent: (eventId: string) => boolean;
+  rollbackToEvent: (eventId: string) => boolean
   /**
    * Annule le dernier événement.
    * @returns true si succès
    */
-  rollbackLastEvent: () => boolean;
+  rollbackLastEvent: () => boolean
   /**
    * Restaure un objet à une version spécifique.
    * @param objectId - ID de l'objet
    * @param version - Numéro de version cible
    * @returns true si succès
    */
-  rollbackObject: (objectId: string, version: number) => boolean;
+  rollbackObject: (objectId: string, version: number) => boolean
   /**
    * Récupère le lignage complet d'un objet.
    * @param objectId - ID de l'objet
    * @returns Lignage de l'objet (null si non trouvé)
    */
-  getLineage: (objectId: string) => ObjectLineage | null;
+  getLineage: (objectId: string) => ObjectLineage | null
   /**
    * Récupère la chaîne d'ancêtres d'un objet (clones successifs).
    * @param objectId - ID de l'objet
    * @returns IDs des ancêtres
    */
-  getAncestors: (objectId: string) => string[];
+  getAncestors: (objectId: string) => string[]
   /**
    * Récupère tous les descendants d'un objet (clones).
    * @param objectId - ID de l'objet
    * @returns IDs des descendants
    */
-  getDescendants: (objectId: string) => string[];
+  getDescendants: (objectId: string) => string[]
   /**
    * Clone un noeud avec traçabilité du lignage.
    * @param sourceId - ID du noeud source
    * @returns ID du clone créé (null si échec)
    */
-  cloneWithLineage: (sourceId: string) => Promise<string | null>;
+  cloneWithLineage: (sourceId: string) => Promise<string | null>
   /**
    * Récupère tous les événements concernant un objet.
    * @param objectId - ID de l'objet
    * @returns Liste des événements
    */
-  getEventsForObject: (objectId: string) => HistoryEvent[];
+  getEventsForObject: (objectId: string) => HistoryEvent[]
   /**
    * Récupère les événements dans une plage temporelle.
    * @param startTime - Timestamp de début
    * @param endTime - Timestamp de fin
    * @returns Liste des événements
    */
-  getEventsBetween: (startTime: number, endTime: number) => HistoryEvent[];
+  getEventsBetween: (startTime: number, endTime: number) => HistoryEvent[]
   /**
    * Récupère tous les événements d'un type donné.
    * @param type - Type d'événement
    * @returns Liste des événements
    */
-  getEventsByType: (type: EventType) => HistoryEvent[];
+  getEventsByType: (type: EventType) => HistoryEvent[]
   /**
    * Exporte l'historique complet en JSON.
    * @returns JSON de l'historique
    */
-  exportHistory: () => string;
+  exportHistory: () => string
   /**
    * Exporte le lignage d'un objet en JSON.
    * @param objectId - ID de l'objet
    * @returns JSON du lignage (null si non trouvé)
    */
-  exportLineage: (objectId: string) => string | null;
+  exportLineage: (objectId: string) => string | null
   /**
    * Vide complètement l'historique.
    */
-  clearHistory: () => void;
+  clearHistory: () => void
   /**
    * Nettoie les événements anciens en conservant les N derniers.
    * @param keepLast - Nombre d'événements à conserver
    * @returns Nombre d'événements supprimés
    */
-  pruneOldEvents: (keepLast: number) => number;
+  pruneOldEvents: (keepLast: number) => number
 }
 
 /**
@@ -360,29 +360,31 @@ export interface HistorableHandlers {
  * recordEvent(EventType.NodeUpdated, 'node-123', 'node', oldData, newData);
  * ```
  */
-export function useHistorable(options: HistorableOptions = {}): HistorableState & HistorableHandlers {
-  const graphStore = useGraphStore();
+export function useHistorable(
+  options: HistorableOptions = {}
+): HistorableState & HistorableHandlers {
+  const graphStore = useGraphStore()
 
   if (options.maxHistory) {
-    maxEvents.value = options.maxHistory;
+    maxEvents.value = options.maxHistory
   }
 
   // État calculé pour un objet spécifique
   const objectLineage = computed((): ObjectLineage | null => {
-    if (!options.nodeId) return null;
-    return lineages.value.get(options.nodeId.value) ?? null;
-  });
+    if (!options.nodeId) return null
+    return lineages.value.get(options.nodeId.value) ?? null
+  })
 
   const objectHistory = computed((): HistoryEvent[] => {
-    if (!options.nodeId) return [];
-    return events.value.filter(e => e.targetId === options.nodeId!.value);
-  });
+    if (!options.nodeId) return []
+    return events.value.filter((e) => e.targetId === options.nodeId!.value)
+  })
 
   const currentVersion = computed((): number => {
-    const lineage = objectLineage.value;
-    if (!lineage) return 0;
-    return lineage.versions.length;
-  });
+    const lineage = objectLineage.value
+    if (!lineage) return 0
+    return lineage.versions.length
+  })
 
   // Enregistre un événement
   function recordEvent(
@@ -393,7 +395,7 @@ export function useHistorable(options: HistorableOptions = {}): HistorableState 
     after?: unknown,
     metadata?: HistoryEvent['metadata']
   ): string {
-    const eventId = nanoid();
+    const eventId = nanoid()
 
     const event: HistoryEvent = {
       id: eventId,
@@ -407,21 +409,21 @@ export function useHistorable(options: HistorableOptions = {}): HistorableState 
         ...metadata,
         batchId: currentBatchId.value ?? undefined,
       },
-    };
+    }
 
-    events.value.push(event);
+    events.value.push(event)
 
     // Limiter la taille
     if (events.value.length > maxEvents.value) {
-      events.value = events.value.slice(-maxEvents.value);
+      events.value = events.value.slice(-maxEvents.value)
     }
 
     // Mettre à jour le lignage si c'est un node ou edge
     if (targetType === 'node' || targetType === 'edge') {
-      updateLineage(targetId, targetType, type, eventId, before, after);
+      updateLineage(targetId, targetType, type, eventId, before, after)
     }
 
-    return eventId;
+    return eventId
   }
 
   // Met à jour le lignage d'un objet
@@ -435,9 +437,9 @@ export function useHistorable(options: HistorableOptions = {}): HistorableState 
   ) {
     // Les snapshots sont des objets de données arbitraires : on les indexe par
     // clé pour le diff, d'où le typage Record plutôt que unknown opaque.
-    const before = beforeRaw as Record<string, unknown> | undefined;
-    const after = afterRaw as Record<string, unknown> | undefined;
-    let lineage = lineages.value.get(objectId);
+    const before = beforeRaw as Record<string, unknown> | undefined
+    const after = afterRaw as Record<string, unknown> | undefined
+    let lineage = lineages.value.get(objectId)
 
     // Créer le lignage si nouveau
     if (!lineage) {
@@ -451,17 +453,17 @@ export function useHistorable(options: HistorableOptions = {}): HistorableState 
         },
         versions: [],
         descendants: [],
-      };
-      lineages.value.set(objectId, lineage);
+      }
+      lineages.value.set(objectId, lineage)
     }
 
     // Ajouter la version
-    const changes: string[] = [];
+    const changes: string[] = []
     if (before && after) {
       // Détecter les changements
       for (const key of Object.keys(after)) {
         if (JSON.stringify(before[key]) !== JSON.stringify(after[key])) {
-          changes.push(key);
+          changes.push(key)
         }
       }
     }
@@ -471,129 +473,120 @@ export function useHistorable(options: HistorableOptions = {}): HistorableState 
       timestamp: Date.now(),
       eventId,
       changes,
-    });
+    })
 
     // Si c'est un clone, enregistrer dans le parent
     if (typeof after?.clonedFrom === 'string') {
-      const parentLineage = lineages.value.get(after.clonedFrom);
+      const parentLineage = lineages.value.get(after.clonedFrom)
       if (parentLineage && !parentLineage.descendants.includes(objectId)) {
-        parentLineage.descendants.push(objectId);
+        parentLineage.descendants.push(objectId)
       }
     }
   }
 
   // Démarre un batch d'événements
   function startBatch(_reason?: string): string {
-    currentBatchId.value = nanoid();
-    return currentBatchId.value;
+    currentBatchId.value = nanoid()
+    return currentBatchId.value
   }
 
   function endBatch() {
-    currentBatchId.value = null;
+    currentBatchId.value = null
   }
 
   // Rollback vers un événement spécifique
   function rollbackToEvent(eventId: string): boolean {
-    const eventIndex = events.value.findIndex(e => e.id === eventId);
-    if (eventIndex === -1) return false;
+    const eventIndex = events.value.findIndex((e) => e.id === eventId)
+    if (eventIndex === -1) return false
 
-    const event = events.value[eventIndex];
-    if (!event.before) return false;
+    const event = events.value[eventIndex]
+    if (!event.before) return false
 
     // Restaurer l'état précédent
     if (event.targetType === 'node' && graphStore.nodes[event.targetId]) {
-      graphStore.updateNode(event.targetId, event.before);
-      recordEvent(
-        EventType.Undo,
-        event.targetId,
-        'node',
-        event.after,
-        event.before,
-        { reason: `Rollback to event ${eventId}`, parentEventId: eventId }
-      );
-      return true;
+      graphStore.updateNode(event.targetId, event.before)
+      recordEvent(EventType.Undo, event.targetId, 'node', event.after, event.before, {
+        reason: `Rollback to event ${eventId}`,
+        parentEventId: eventId,
+      })
+      return true
     }
 
-    return false;
+    return false
   }
 
   // Rollback le dernier événement
   function rollbackLastEvent(): boolean {
-    const lastEvent = events.value[events.value.length - 1];
-    if (!lastEvent || lastEvent.type === EventType.Undo) return false;
-    return rollbackToEvent(lastEvent.id);
+    const lastEvent = events.value[events.value.length - 1]
+    if (!lastEvent || lastEvent.type === EventType.Undo) return false
+    return rollbackToEvent(lastEvent.id)
   }
 
   // Rollback un objet à une version spécifique
   function rollbackObject(objectId: string, version: number): boolean {
-    const lineage = lineages.value.get(objectId);
-    if (!lineage || version < 1 || version > lineage.versions.length) return false;
+    const lineage = lineages.value.get(objectId)
+    if (!lineage || version < 1 || version > lineage.versions.length) return false
 
-    const targetVersion = lineage.versions[version - 1];
-    const event = events.value.find(e => e.id === targetVersion.eventId);
+    const targetVersion = lineage.versions[version - 1]
+    const event = events.value.find((e) => e.id === targetVersion.eventId)
 
     if (event?.before) {
-      graphStore.updateNode(objectId, event.before);
-      recordEvent(
-        EventType.Undo,
-        objectId,
-        'node',
-        null,
-        event.before,
-        { reason: `Rollback to version ${version}` }
-      );
-      return true;
+      graphStore.updateNode(objectId, event.before)
+      recordEvent(EventType.Undo, objectId, 'node', null, event.before, {
+        reason: `Rollback to version ${version}`,
+      })
+      return true
     }
 
-    return false;
+    return false
   }
 
   // Récupère le lignage d'un objet
   function getLineage(objectId: string): ObjectLineage | null {
-    return lineages.value.get(objectId) ?? null;
+    return lineages.value.get(objectId) ?? null
   }
 
   // Récupère les ancêtres (chaîne de clones)
   function getAncestors(objectId: string): string[] {
-    const ancestors: string[] = [];
-    let currentId = objectId;
+    const ancestors: string[] = []
+    let currentId = objectId
 
     while (currentId) {
-      const lineage = lineages.value.get(currentId);
-      if (!lineage?.origin.sourceId) break;
-      ancestors.push(lineage.origin.sourceId);
-      currentId = lineage.origin.sourceId;
+      const lineage = lineages.value.get(currentId)
+      if (!lineage?.origin.sourceId) break
+      ancestors.push(lineage.origin.sourceId)
+      currentId = lineage.origin.sourceId
     }
 
-    return ancestors;
+    return ancestors
   }
 
   // Récupère tous les descendants
   function getDescendants(objectId: string): string[] {
-    const descendants: string[] = [];
-    const toVisit = [objectId];
+    const descendants: string[] = []
+    const toVisit = [objectId]
 
     while (toVisit.length > 0) {
-      const current = toVisit.pop()!;
-      const lineage = lineages.value.get(current);
+      const current = toVisit.pop()!
+      const lineage = lineages.value.get(current)
 
       if (lineage) {
         for (const descId of lineage.descendants) {
           if (!descendants.includes(descId)) {
-            descendants.push(descId);
-            toVisit.push(descId);
+            descendants.push(descId)
+            toVisit.push(descId)
           }
         }
       }
     }
 
-    return descendants;
+    return descendants
   }
 
   // Clone un noeud avec suivi du lignage
   async function cloneWithLineage(sourceId: string): Promise<string | null> {
-    const sourceNode = graphStore.nodes[sourceId];
-    if (!sourceNode) return null;
+    const sourceNode = graphStore.nodes[sourceId]
+    if (!sourceNode) return null
 
     // Créer le clone
     const clonedNode = await graphStore.createNode(
@@ -612,7 +605,7 @@ export function useHistorable(options: HistorableOptions = {}): HistorableState 
         },
       },
       sourceNode.parentId
-    );
+    )
 
     // Enregistrer l'événement avec lignage
     recordEvent(
@@ -622,24 +615,22 @@ export function useHistorable(options: HistorableOptions = {}): HistorableState 
       null,
       { ...clonedNode, clonedFrom: sourceId },
       { reason: `Cloned from ${sourceId}` }
-    );
+    )
 
-    return clonedNode.id;
+    return clonedNode.id
   }
 
   // Requêtes
   function getEventsForObject(objectId: string): HistoryEvent[] {
-    return events.value.filter(e => e.targetId === objectId);
+    return events.value.filter((e) => e.targetId === objectId)
   }
 
   function getEventsBetween(startTime: number, endTime: number): HistoryEvent[] {
-    return events.value.filter(
-      e => e.timestamp >= startTime && e.timestamp <= endTime
-    );
+    return events.value.filter((e) => e.timestamp >= startTime && e.timestamp <= endTime)
   }
 
   function getEventsByType(type: EventType): HistoryEvent[] {
-    return events.value.filter(e => e.type === type);
+    return events.value.filter((e) => e.type === type)
   }
 
   // Export
@@ -652,16 +643,16 @@ export function useHistorable(options: HistorableOptions = {}): HistorableState 
       },
       null,
       2
-    );
+    )
   }
 
   function exportLineage(objectId: string): string | null {
-    const lineage = lineages.value.get(objectId);
-    if (!lineage) return null;
+    const lineage = lineages.value.get(objectId)
+    if (!lineage) return null
 
-    const relatedEvents = getEventsForObject(objectId);
-    const ancestors = getAncestors(objectId);
-    const descendants = getDescendants(objectId);
+    const relatedEvents = getEventsForObject(objectId)
+    const ancestors = getAncestors(objectId)
+    const descendants = getDescendants(objectId)
 
     return JSON.stringify(
       {
@@ -673,21 +664,21 @@ export function useHistorable(options: HistorableOptions = {}): HistorableState 
       },
       null,
       2
-    );
+    )
   }
 
   // Nettoyage
   function clearHistory() {
-    events.value = [];
-    lineages.value.clear();
+    events.value = []
+    lineages.value.clear()
   }
 
   function pruneOldEvents(keepLast: number): number {
-    const originalLength = events.value.length;
-    if (originalLength <= keepLast) return 0;
+    const originalLength = events.value.length
+    if (originalLength <= keepLast) return 0
 
-    events.value = events.value.slice(-keepLast);
-    return originalLength - keepLast;
+    events.value = events.value.slice(-keepLast)
+    return originalLength - keepLast
   }
 
   return {
@@ -712,7 +703,7 @@ export function useHistorable(options: HistorableOptions = {}): HistorableState 
     exportLineage,
     clearHistory,
     pruneOldEvents,
-  };
+  }
 }
 
 // État global pour debug et persistance
@@ -723,31 +714,31 @@ export function useHistoryState() {
     stats: computed(() => ({
       totalEvents: events.value.length,
       totalObjects: lineages.value.size,
-      eventsByType: events.value.reduce((acc, e) => {
-        acc[e.type] = (acc[e.type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>),
+      eventsByType: events.value.reduce(
+        (acc, e) => {
+          acc[e.type] = (acc[e.type] || 0) + 1
+          return acc
+        },
+        {} as Record<string, number>
+      ),
     })),
     saveToStorage: () => {
-      localStorage.setItem('holon-history', JSON.stringify(events.value));
-      localStorage.setItem(
-        'holon-lineages',
-        JSON.stringify(Array.from(lineages.value.entries()))
-      );
+      localStorage.setItem('holon-history', JSON.stringify(events.value))
+      localStorage.setItem('holon-lineages', JSON.stringify(Array.from(lineages.value.entries())))
     },
     loadFromStorage: () => {
       try {
-        const savedEvents = localStorage.getItem('holon-history');
+        const savedEvents = localStorage.getItem('holon-history')
         if (savedEvents) {
-          events.value = JSON.parse(savedEvents);
+          events.value = JSON.parse(savedEvents)
         }
-        const savedLineages = localStorage.getItem('holon-lineages');
+        const savedLineages = localStorage.getItem('holon-lineages')
         if (savedLineages) {
-          lineages.value = new Map(JSON.parse(savedLineages));
+          lineages.value = new Map(JSON.parse(savedLineages))
         }
       } catch {
         // Ignorer les erreurs
       }
     },
-  };
+  }
 }

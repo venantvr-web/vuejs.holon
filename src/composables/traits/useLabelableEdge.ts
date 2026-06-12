@@ -1,6 +1,6 @@
 // src/composables/traits/useLabelableEdge.ts
-import { computed, type Ref } from 'vue';
-import { useGraphStore } from '../../stores/graph';
+import { computed, type Ref } from 'vue'
+import { useGraphStore } from '../../stores/graph'
 
 /**
  * Label d'une arête avec position et offset.
@@ -9,36 +9,36 @@ export interface EdgeLabel {
   /**
    * Texte du label.
    */
-  text: string;
+  text: string
   /**
    * Position sur l'arête (0 = source, 1 = target).
    * @default 0.5
    */
-  position: number;
+  position: number
   /**
    * Offset par rapport à la ligne de l'arête.
    */
   offset: {
-    x: number;
-    y: number;
-  };
+    x: number
+    y: number
+  }
   /**
    * Style de texte.
    */
   style?: {
-    fontSize?: number;
-    fontFamily?: string;
-    fill?: string;
-    fontWeight?: string;
-  };
+    fontSize?: number
+    fontFamily?: string
+    fill?: string
+    fontWeight?: string
+  }
   /**
    * Arrière-plan du label.
    */
   background?: {
-    fill?: string;
-    padding?: number;
-    borderRadius?: number;
-  };
+    fill?: string
+    padding?: number
+    borderRadius?: number
+  }
 }
 
 /**
@@ -48,7 +48,7 @@ export interface LabelableEdgeOptions {
   /**
    * Référence réactive vers l'ID de l'arête concernée.
    */
-  edgeId: Ref<string>;
+  edgeId: Ref<string>
 }
 
 /**
@@ -58,11 +58,11 @@ export interface LabelableEdgeState {
   /**
    * Labels de l'arête.
    */
-  labels: Ref<EdgeLabel[]>;
+  labels: Ref<EdgeLabel[]>
   /**
    * Indique si l'arête a des labels.
    */
-  hasLabels: Ref<boolean>;
+  hasLabels: Ref<boolean>
 }
 
 /**
@@ -73,34 +73,34 @@ export interface LabelableEdgeHandlers {
    * Ajoute un label à l'arête.
    * @param label - Label à ajouter
    */
-  addLabel: (label: Partial<EdgeLabel> & { text: string }) => void;
+  addLabel: (label: Partial<EdgeLabel> & { text: string }) => void
   /**
    * Met à jour un label existant.
    * @param index - Index du label
    * @param updates - Propriétés à mettre à jour
    */
-  updateLabel: (index: number, updates: Partial<EdgeLabel>) => void;
+  updateLabel: (index: number, updates: Partial<EdgeLabel>) => void
   /**
    * Supprime un label.
    * @param index - Index du label à supprimer
    */
-  removeLabel: (index: number) => void;
+  removeLabel: (index: number) => void
   /**
    * Supprime tous les labels.
    */
-  clearLabels: () => void;
+  clearLabels: () => void
   /**
    * Déplace un label le long de l'arête.
    * @param index - Index du label
    * @param position - Nouvelle position (0-1)
    */
-  setLabelPosition: (index: number, position: number) => void;
+  setLabelPosition: (index: number, position: number) => void
   /**
    * Ajuste l'offset d'un label.
    * @param index - Index du label
    * @param offset - Nouvel offset
    */
-  setLabelOffset: (index: number, offset: { x: number; y: number }) => void;
+  setLabelOffset: (index: number, offset: { x: number; y: number }) => void
 }
 
 /**
@@ -129,24 +129,26 @@ export interface LabelableEdgeHandlers {
  * setLabelPosition(0, 0.3); // 30% depuis la source
  * ```
  */
-export function useLabelableEdge(options: LabelableEdgeOptions): LabelableEdgeState & LabelableEdgeHandlers {
-  const graphStore = useGraphStore();
+export function useLabelableEdge(
+  options: LabelableEdgeOptions
+): LabelableEdgeState & LabelableEdgeHandlers {
+  const graphStore = useGraphStore()
 
   const labels = computed((): EdgeLabel[] => {
-    const edge = graphStore.edges[options.edgeId.value];
-    if (!edge) return [];
+    const edge = graphStore.edges[options.edgeId.value]
+    if (!edge) return []
 
-    return (edge.data?.labels as EdgeLabel[]) || [];
-  });
+    return (edge.data?.labels as EdgeLabel[]) || []
+  })
 
-  const hasLabels = computed(() => labels.value.length > 0);
+  const hasLabels = computed(() => labels.value.length > 0)
 
   /**
    * Ajoute un label.
    */
   function addLabel(label: Partial<EdgeLabel> & { text: string }): void {
-    const edge = graphStore.edges[options.edgeId.value];
-    if (!edge) return;
+    const edge = graphStore.edges[options.edgeId.value]
+    if (!edge) return
 
     const newLabel: EdgeLabel = {
       text: label.text,
@@ -163,87 +165,87 @@ export function useLabelableEdge(options: LabelableEdgeOptions): LabelableEdgeSt
         padding: 4,
         borderRadius: 2,
       },
-    };
+    }
 
-    const currentLabels = labels.value;
-    const updatedLabels = [...currentLabels, newLabel];
+    const currentLabels = labels.value
+    const updatedLabels = [...currentLabels, newLabel]
 
     graphStore.updateEdge(options.edgeId.value, {
       data: {
         ...edge.data,
         labels: updatedLabels,
       },
-    });
+    })
   }
 
   /**
    * Met à jour un label.
    */
   function updateLabel(index: number, updates: Partial<EdgeLabel>): void {
-    const edge = graphStore.edges[options.edgeId.value];
-    if (!edge) return;
+    const edge = graphStore.edges[options.edgeId.value]
+    if (!edge) return
 
-    const currentLabels = labels.value;
-    if (index < 0 || index >= currentLabels.length) return;
+    const currentLabels = labels.value
+    if (index < 0 || index >= currentLabels.length) return
 
-    const updatedLabels = [...currentLabels];
-    updatedLabels[index] = { ...updatedLabels[index], ...updates };
+    const updatedLabels = [...currentLabels]
+    updatedLabels[index] = { ...updatedLabels[index], ...updates }
 
     graphStore.updateEdge(options.edgeId.value, {
       data: {
         ...edge.data,
         labels: updatedLabels,
       },
-    });
+    })
   }
 
   /**
    * Supprime un label.
    */
   function removeLabel(index: number): void {
-    const edge = graphStore.edges[options.edgeId.value];
-    if (!edge) return;
+    const edge = graphStore.edges[options.edgeId.value]
+    if (!edge) return
 
-    const currentLabels = labels.value;
-    if (index < 0 || index >= currentLabels.length) return;
+    const currentLabels = labels.value
+    if (index < 0 || index >= currentLabels.length) return
 
-    const updatedLabels = currentLabels.filter((_, i) => i !== index);
+    const updatedLabels = currentLabels.filter((_, i) => i !== index)
 
     graphStore.updateEdge(options.edgeId.value, {
       data: {
         ...edge.data,
         labels: updatedLabels,
       },
-    });
+    })
   }
 
   /**
    * Efface tous les labels.
    */
   function clearLabels(): void {
-    const edge = graphStore.edges[options.edgeId.value];
-    if (!edge) return;
+    const edge = graphStore.edges[options.edgeId.value]
+    if (!edge) return
 
     graphStore.updateEdge(options.edgeId.value, {
       data: {
         ...edge.data,
         labels: [],
       },
-    });
+    })
   }
 
   /**
    * Définit la position d'un label.
    */
   function setLabelPosition(index: number, position: number): void {
-    updateLabel(index, { position: Math.max(0, Math.min(1, position)) });
+    updateLabel(index, { position: Math.max(0, Math.min(1, position)) })
   }
 
   /**
    * Définit l'offset d'un label.
    */
   function setLabelOffset(index: number, offset: { x: number; y: number }): void {
-    updateLabel(index, { offset });
+    updateLabel(index, { offset })
   }
 
   return {
@@ -255,5 +257,5 @@ export function useLabelableEdge(options: LabelableEdgeOptions): LabelableEdgeSt
     clearLabels,
     setLabelPosition,
     setLabelOffset,
-  };
+  }
 }

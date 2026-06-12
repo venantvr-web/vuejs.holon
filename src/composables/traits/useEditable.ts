@@ -1,6 +1,6 @@
 // src/composables/traits/useEditable.ts
-import { ref, computed, type Ref } from 'vue';
-import { useGraphStore } from '../../stores/graph';
+import { ref, computed, type Ref } from 'vue'
+import { useGraphStore } from '../../stores/graph'
 
 /**
  * Options de configuration pour le trait Editable.
@@ -9,11 +9,11 @@ export interface EditableOptions {
   /**
    * Référence réactive vers l'ID du noeud concerné.
    */
-  nodeId: Ref<string>;
+  nodeId: Ref<string>
   /**
    * Champ à éditer dans data (défaut: 'name').
    */
-  field?: string;
+  field?: string
 }
 
 /**
@@ -23,15 +23,15 @@ export interface EditableState {
   /**
    * Indique si le noeud est en mode édition.
    */
-  isEditing: Ref<boolean>;
+  isEditing: Ref<boolean>
   /**
    * Valeur en cours d'édition.
    */
-  editValue: Ref<string>;
+  editValue: Ref<string>
   /**
    * Valeur affichée du champ.
    */
-  displayValue: Ref<string>;
+  displayValue: Ref<string>
 }
 
 /**
@@ -41,20 +41,20 @@ export interface EditableHandlers {
   /**
    * Démarre l'édition du champ.
    */
-  startEditing: () => void;
+  startEditing: () => void
   /**
    * Valide et enregistre les modifications.
    */
-  commitEdit: () => void;
+  commitEdit: () => void
   /**
    * Annule l'édition en cours.
    */
-  cancelEdit: () => void;
+  cancelEdit: () => void
   /**
    * Gère les événements clavier pendant l'édition (Enter pour valider, Escape pour annuler).
    * @param event - Événement clavier
    */
-  handleEditKeydown: (event: KeyboardEvent) => void;
+  handleEditKeydown: (event: KeyboardEvent) => void
 }
 
 /**
@@ -74,33 +74,33 @@ export interface EditableHandlers {
  * ```
  */
 export function useEditable(options: EditableOptions): EditableState & EditableHandlers {
-  const graphStore = useGraphStore();
-  const field = options.field ?? 'name';
+  const graphStore = useGraphStore()
+  const field = options.field ?? 'name'
 
-  const isEditing = ref(false);
-  const editValue = ref('');
+  const isEditing = ref(false)
+  const editValue = ref('')
 
   const displayValue = computed(() => {
-    const node = graphStore.nodes[options.nodeId.value];
-    if (!node) return '';
-    return node.data[field] || node.id.substring(0, 8);
-  });
+    const node = graphStore.nodes[options.nodeId.value]
+    if (!node) return ''
+    return node.data[field] || node.id.substring(0, 8)
+  })
 
   function startEditing() {
-    const node = graphStore.nodes[options.nodeId.value];
-    if (!node) return;
+    const node = graphStore.nodes[options.nodeId.value]
+    if (!node) return
 
-    isEditing.value = true;
-    editValue.value = node.data[field] || '';
+    isEditing.value = true
+    editValue.value = node.data[field] || ''
   }
 
   function commitEdit() {
-    if (!isEditing.value) return;
+    if (!isEditing.value) return
 
-    const node = graphStore.nodes[options.nodeId.value];
-    if (!node) return;
+    const node = graphStore.nodes[options.nodeId.value]
+    if (!node) return
 
-    const trimmedValue = editValue.value.trim();
+    const trimmedValue = editValue.value.trim()
 
     if (trimmedValue !== node.data[field]) {
       graphStore.updateNode(options.nodeId.value, {
@@ -108,24 +108,24 @@ export function useEditable(options: EditableOptions): EditableState & EditableH
           ...node.data,
           [field]: trimmedValue || undefined,
         },
-      });
+      })
     }
 
-    isEditing.value = false;
+    isEditing.value = false
   }
 
   function cancelEdit() {
-    isEditing.value = false;
-    editValue.value = '';
+    isEditing.value = false
+    editValue.value = ''
   }
 
   function handleEditKeydown(event: KeyboardEvent) {
     if (event.key === 'Enter') {
-      event.preventDefault();
-      commitEdit();
+      event.preventDefault()
+      commitEdit()
     } else if (event.key === 'Escape') {
-      event.preventDefault();
-      cancelEdit();
+      event.preventDefault()
+      cancelEdit()
     }
   }
 
@@ -137,5 +137,5 @@ export function useEditable(options: EditableOptions): EditableState & EditableH
     commitEdit,
     cancelEdit,
     handleEditKeydown,
-  };
+  }
 }

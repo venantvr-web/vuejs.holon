@@ -1,39 +1,38 @@
-
 <!-- src/components/inspectors/sections/LabelSection.vue -->
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useGraphStore } from '../../../stores/graph';
+import { computed } from 'vue'
+import { useGraphStore } from '../../../stores/graph'
 
 interface LabelSectionProps {
-  edgeId: string;
+  edgeId: string
 }
 
-const props = defineProps<LabelSectionProps>();
-const graphStore = useGraphStore();
+const props = defineProps<LabelSectionProps>()
+const graphStore = useGraphStore()
 
-const edge = computed(() => graphStore.edges[props.edgeId]);
+const edge = computed(() => graphStore.edges[props.edgeId])
 
 const name = computed({
   get: () => (edge.value?.data?.name as string) ?? '',
   set: (value: string) => {
-    const current = edge.value;
-    if (!current) return;
+    const current = edge.value
+    if (!current) return
     graphStore.updateEdge(props.edgeId, {
       data: { ...(current.data ?? {}), name: value },
-    });
+    })
   },
-});
+})
 
 const comment = computed({
   get: () => (edge.value?.data?.comment as string) ?? '',
   set: (value: string) => {
-    const current = edge.value;
-    if (!current) return;
+    const current = edge.value
+    if (!current) return
     graphStore.updateEdge(props.edgeId, {
       data: { ...(current.data ?? {}), comment: value },
-    });
+    })
   },
-});
+})
 </script>
 
 <template>
