@@ -18,6 +18,7 @@ import FilterPanel from '../canvas/FilterPanel.vue'
 import VersionsPanel from '../canvas/VersionsPanel.vue'
 import ViewsPanel from '../canvas/ViewsPanel.vue'
 import SuggestionsPanel from '../canvas/SuggestionsPanel.vue'
+import HistoryPanel from '../canvas/HistoryPanel.vue'
 import ExportMenu from './ExportMenu.vue'
 import ImportButton from './ImportButton.vue'
 import ThemePicker from './ThemePicker.vue'
@@ -28,6 +29,7 @@ import { useI18n } from '../../composables/useI18n'
 import {
   Undo2,
   Redo2,
+  History as HistoryIcon,
   LayoutGrid,
   Magnet,
   Maximize,
@@ -41,6 +43,7 @@ import {
 const { t } = useI18n()
 
 const manualOpen = ref(false)
+const showHistoryPanel = ref(false)
 
 const graphStore = useGraphStore()
 const { selectedNodeIds } = useSelectionState()
@@ -213,6 +216,29 @@ function handleUngroup() {
           ><Redo2 class="w-4 h-4" /> {{ t('toolbar.redo') }}</span
         >
       </button>
+
+      <!-- Bascule panneau Historique (timeline complète + jump-to-state) -->
+      <div class="relative">
+        <button
+          @click="showHistoryPanel = !showHistoryPanel"
+          class="px-2 py-1.5 text-sm app-btn rounded transition-colors"
+          :class="{ 'app-toggle-active': showHistoryPanel }"
+          title="Afficher / masquer la timeline d'historique"
+          :aria-expanded="showHistoryPanel"
+          aria-controls="history-panel-popover"
+        >
+          <span class="inline-flex items-center gap-1.5"
+            ><HistoryIcon class="w-4 h-4" /> Historique</span
+          >
+        </button>
+        <div
+          v-if="showHistoryPanel"
+          id="history-panel-popover"
+          class="absolute right-0 top-full mt-1 z-20"
+        >
+          <HistoryPanel :visible="showHistoryPanel" @close="showHistoryPanel = false" />
+        </div>
+      </div>
 
       <span class="w-px h-5 bg-[var(--border)] mx-1"></span>
 

@@ -42,7 +42,7 @@ describe('useViewport (consolidation)', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     const v = useViewport()
-    v.resetView()
+    v.resetView(false)
   })
 
   it('setZoom clampe entre MIN_ZOOM et MAX_ZOOM', () => {
@@ -75,7 +75,7 @@ describe('useViewport (consolidation)', () => {
 
   it('fitWorldBox centre et adapte le zoom à la bbox monde', () => {
     const v = useViewport()
-    v.fitWorldBox({ x: 0, y: 0, w: 100, h: 100 }, 1000, 1000, 0)
+    v.fitWorldBox({ x: 0, y: 0, w: 100, h: 100 }, 1000, 1000, 0, false)
     // Le contenu (100x100) tient largement → zoom limité par max (5).
     expect(v.zoomLevel.value).toBeLessThanOrEqual(v.MAX_ZOOM)
     // Le centre monde (50,50) doit tomber au centre écran (500,500).
@@ -87,7 +87,7 @@ describe('useViewport (consolidation)', () => {
 describe('usePannable façade de useViewport', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    useViewport().resetView()
+    useViewport().resetView(false)
   })
 
   it('panX/panY lisent et écrivent dans viewport.pan', () => {
@@ -142,7 +142,7 @@ describe('usePannable façade de useViewport', () => {
 describe('useZoomable façade de useViewport', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    useViewport().resetView()
+    useViewport().resetView(false)
   })
 
   it('zoom est une vue mutable sur viewport.zoomLevel', () => {
@@ -170,6 +170,13 @@ describe('useZoomable façade de useViewport', () => {
     expect(z.zoom.value).toBe(1)
   })
 
+  // Helper : attendre la fin d'une animation rAF (durée par défaut 300 ms +
+  // marge). Permet d'observer l'état final du viewport dans les tests qui
+  // déclenchent fitWorldBox / animateViewport.
+  async function settleAnimation() {
+    await new Promise((resolve) => setTimeout(resolve, 400))
+  }
+
   it('zoomToSelection ajuste le viewport autour de la bbox des noeuds donnés', async () => {
     const store = useGraphStore()
     await store.importNode(makeNode('a', 0, 0, 100, 100))
@@ -178,17 +185,19 @@ describe('useZoomable façade de useViewport', () => {
     const v = useViewport()
     const z = useZoomable()
     z.zoomToSelection(['a', 'b'], 1000, 1000)
+    await settleAnimation()
     // Centre de la bbox = (150, 150) → doit se projeter au centre écran (500,500).
     const sx = v.pan.value.x + 150 * v.zoomLevel.value
     expect(sx).toBeCloseTo(500, 3)
   })
 
-  it('zoomToFit sans noeud reset à l’origine', () => {
+  it('zoomToFit sans noeud reset à l’origine', async () => {
     const v = useViewport()
     const z = useZoomable()
     v.setZoom(3)
     v.pan.value = { x: 100, y: 100 }
     z.zoomToFit(1000, 1000)
+    await settleAnimation()
     expect(v.zoomLevel.value).toBe(1)
     expect(v.pan.value).toEqual({ x: 0, y: 0 })
   })
