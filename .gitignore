@@ -170,3 +170,9 @@ cython_debug/
 
 # TypeDoc generated documentation (racine uniquement — ne pas ignorer src/docs)
 /docs/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
