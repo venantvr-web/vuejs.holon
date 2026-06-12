@@ -1,0 +1,14 @@
+{
+  // Configuration Cloudflare Workers (Static Assets).
+  // Holon est une SPA Vue ; aucun Worker côté serveur n'est nécessaire,
+  // on ne déploie que le bundle statique produit par `vite build` dans `./dist`.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "holon-architecture-modeler",
+  "compatibility_date": "2026-06-12",
+  "assets": {
+    "directory": "./dist",
+    // SPA : toute requête qui ne matche pas un fichier statique est rejouée
+    // vers index.html pour laisser le routeur côté client gérer l'URL.
+    "not_found_handling": "single-page-application"
+  }
+}
