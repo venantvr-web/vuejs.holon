@@ -16,11 +16,35 @@ Je suis un architecte d'entreprise avec 25 ans d'expérience dans la conception 
 
 ### Standards de Code
 
-- **Pas de diagrammes ASCII** dans le code ou la documentation - utiliser des descriptions textuelles claires
-- **Documentation en français** avec accents corrects
 - **Nommage explicite** : Les noms de variables et fonctions doivent révéler l'intention
 - **Commentaires pertinents** : Expliquer le "pourquoi", pas le "quoi"
 - **Tests systématiques** : Chaque trait doit avoir sa suite de tests unitaires
+
+### Fichiers de documentation (`.md`)
+
+Toute documentation, README, ADR, plan, rapport ou note technique au format Markdown doit respecter ces règles **sans exception** :
+
+- **Langue : français** — y compris titres, sous-titres, listes, légendes, tableaux. L'anglais est réservé aux identifiants techniques (noms de fichiers, fonctions, types).
+- **Accents corrects** : `é`, `è`, `à`, `ç`, `ù`, `î`, `ô`, etc. Pas de mots accentués écrits sans accent.
+- **Diagrammes : Mermaid uniquement**, jamais d'ASCII art. Pour un schéma de flux, séquence, classe, état ou architecture, utiliser un bloc ` ```mermaid `. Si Mermaid ne convient pas (rare), écrire une description textuelle structurée — jamais d'art ASCII.
+- **Blocs de code typés** : toujours préciser le langage (` ```ts `, ` ```vue `, ` ```bash `).
+- **Ton et style** : phrases complètes, ponctuation française (espaces insécables avant `:` `;` `?` `!` quand possible), pas d'emoji décoratif sauf demande explicite.
+
+Exemple correct :
+
+```mermaid
+flowchart LR
+    Local[Espace local] --> World[Espace monde]
+    World --> Screen[Espace écran]
+```
+
+Exemple à proscrire :
+
+```
++--------+      +--------+      +--------+
+| Local  | ---> | World  | ---> | Screen |
++--------+      +--------+      +--------+
+```
 
 ### Gestion de la Complexité Géométrique
 
@@ -106,21 +130,23 @@ Le composable `useGeometry` centralise cette logique critique. Toute modificatio
 #### 2.1 Navigation et Visualisation Avancée
 
 **useViewable** - Système de vues sauvegardées
+
 ```typescript
 interface View {
-  id: string;
-  name: string;
-  description?: string;
-  zoom: number;
-  panX: number;
-  panY: number;
-  filters: FilterConfig[];
-  visibleLayers: string[];
-  timestamp: number;
+  id: string
+  name: string
+  description?: string
+  zoom: number
+  panX: number
+  panY: number
+  filters: FilterConfig[]
+  visibleLayers: string[]
+  timestamp: number
 }
 ```
 
 **Fonctionnalités** :
+
 - Sauvegarde/restauration de vues
 - Vues par stakeholder (Business, Application, Technology)
 - Mode présentation (slideshow de vues)
@@ -128,6 +154,7 @@ interface View {
 - Export de vue spécifique (PNG, PDF)
 
 **useSearchable** - Recherche globale performante
+
 - Recherche textuelle sur labels, propriétés, métadonnées
 - Recherche par expression régulière
 - Navigation clavier entre résultats
@@ -139,6 +166,7 @@ interface View {
 **useExportable** - Export professionnel multi-format
 
 **Formats supportés** :
+
 - **PNG/JPEG** : Rendu haute résolution (300 DPI pour impression)
 - **SVG** : Export vectoriel optimisé et autonome
 - **PDF** : Multi-pages avec table des matières
@@ -146,12 +174,14 @@ interface View {
 - **Archimate Exchange** : Standard Open Group
 
 **Fonctionnalités** :
+
 - Configuration d'export (résolution, format papier)
 - Export de vue ou diagramme complet
 - Watermark personnalisable
 - Métadonnées embarquées (auteur, date, version)
 
 **useImportable** - Import robuste avec validation
+
 - Import JSON avec migration de version
 - Import SVG avec parsing intelligent
 - Import Archimate Open Exchange (XML)
@@ -162,20 +192,22 @@ interface View {
 #### 2.3 Données et Métadonnées Riches
 
 **usePropertyable** - Système de propriétés extensible
+
 ```typescript
 interface PropertySchema {
-  key: string;
-  label: string;
-  type: 'string' | 'number' | 'boolean' | 'date' | 'enum' | 'computed';
-  required?: boolean;
-  defaultValue?: any;
-  validation?: (value: any) => boolean;
-  enumValues?: string[];
-  computeFn?: (node: Node) => any;
+  key: string
+  label: string
+  type: 'string' | 'number' | 'boolean' | 'date' | 'enum' | 'computed'
+  required?: boolean
+  defaultValue?: any
+  validation?: (value: any) => boolean
+  enumValues?: string[]
+  computeFn?: (node: Node) => any
 }
 ```
 
 **Fonctionnalités** :
+
 - Propriétés personnalisées par type de nœud
 - Propriétés calculées (ex: nombre d'enfants, profondeur)
 - Héritage de propriétés (parent → enfant)
@@ -183,6 +215,7 @@ interface PropertySchema {
 - Indexation pour recherche rapide
 
 **useTaggable** - Système de tags flexible
+
 - Tags multiples par nœud/edge
 - Catégories de tags avec couleurs
 - Auto-complétion de tags
@@ -190,6 +223,7 @@ interface PropertySchema {
 - Statistiques d'utilisation des tags
 
 **useVersionable** - Gestion de versions professionnelle
+
 - Branches/variantes du diagramme
 - Comparaison visuelle (diff) entre versions
 - Fusion de branches avec résolution de conflits
@@ -199,18 +233,20 @@ interface PropertySchema {
 #### 2.4 Validation et Qualité
 
 **useValidatable** - Validation Archimate complète
+
 ```typescript
 interface ValidationRule {
-  id: string;
-  severity: 'error' | 'warning' | 'info';
-  category: 'archimate' | 'structure' | 'style' | 'custom';
-  check: (node: Node, context: GraphContext) => ValidationResult;
-  message: string;
-  autoFix?: (node: Node) => void;
+  id: string
+  severity: 'error' | 'warning' | 'info'
+  category: 'archimate' | 'structure' | 'style' | 'custom'
+  check: (node: Node, context: GraphContext) => ValidationResult
+  message: string
+  autoFix?: (node: Node) => void
 }
 ```
 
 **Règles de validation** :
+
 - Conformité aux règles Archimate
 - Relations valides entre types de nœuds
 - Détection de cycles dans les relations
@@ -220,6 +256,7 @@ interface ValidationRule {
 - Suggestions d'amélioration
 
 **useConstrainable** - Contraintes de conception
+
 - Taille min/max par type
 - Ratio de forme fixe/libre
 - Contraintes de position (grid, bounds)
@@ -229,6 +266,7 @@ interface ValidationRule {
 #### 2.5 Intelligence et Automatisation
 
 **useLayoutable** - Algorithmes de mise en page automatique
+
 - **Hierarchical Layout** : Pour les arbres de processus
 - **Force-Directed Layout** : Pour les réseaux de dépendances
 - **Grid Layout** : Pour les vues organisées
@@ -239,6 +277,7 @@ interface ValidationRule {
 - Préservation des contraintes utilisateur
 
 **useSuggestable** - Assistants intelligents
+
 - Suggestions de connexions (ex: Function → Process)
 - Auto-complétion de types basée sur le contexte
 - Détection de patterns communs
@@ -252,12 +291,14 @@ interface ValidationRule {
 #### 3.1 Interface Utilisateur Raffinée
 
 **Toolbar Contextuelle**
+
 - Barre d'outils adaptative selon la sélection
 - Actions rapides (dupliquer, supprimer, aligner)
 - Raccourcis clavier visibles
 - Mode compact/étendu
 
 **Panels Latéraux**
+
 - **Properties Panel** : Édition détaillée des propriétés
 - **Layers Panel** : Gestion des calques
 - **Outline Panel** : Vue arborescente de la hiérarchie
@@ -265,12 +306,14 @@ interface ValidationRule {
 - Panneaux redimensionnables et détachables
 
 **Mini-map**
+
 - Vue d'ensemble du diagramme
 - Indication de la zone visible
 - Navigation par clic
 - Indication des éléments sélectionnés
 
 **Breadcrumb Navigation**
+
 - Navigation dans la hiérarchie des containers
 - Drill-down/drill-up rapide
 - Chemin complet du nœud sélectionné
@@ -278,6 +321,7 @@ interface ValidationRule {
 #### 3.2 Interactions Avancées
 
 **useZoomable** - Zoom intelligent
+
 - Zoom sur sélection (fit to selection)
 - Zoom sur nœud avec focus
 - Zoom avec molette + Ctrl (standard)
@@ -286,12 +330,14 @@ interface ValidationRule {
 - Drill-down : entrer dans un container en plein écran
 
 **usePannable** - Navigation fluide
+
 - Pan avec molette (déjà implémenté, à extraire)
 - Pan avec clic molette ou espace + clic
 - Limites intelligentes (auto-extend)
 - Momentum scrolling optionnel
 
 **useFocusable** - Navigation clavier accessible
+
 - Tab : navigation entre nœuds
 - Flèches : navigation spatiale
 - Enter : édition du label
@@ -301,6 +347,7 @@ interface ValidationRule {
 #### 3.3 Thèmes et Apparence
 
 **Extension de useThemeable**
+
 - Thèmes personnalisables complets
 - Variables CSS pour tous les éléments
 - Mode sombre/clair avec transition
@@ -309,6 +356,7 @@ interface ValidationRule {
 - Thèmes par organisation (branding)
 
 **useIconable** - Bibliothèque d'icônes
+
 - Icônes intégrées dans les nœuds
 - Bibliothèque d'icônes Archimate
 - Support d'icônes personnalisées (SVG)
@@ -316,12 +364,14 @@ interface ValidationRule {
 - Taille adaptative au zoom
 
 **useBorderable** - Styles de bordure avancés
+
 - Styles multiples (solid, dashed, dotted, double)
 - Épaisseur et couleur personnalisables
 - Ombres portées (drop-shadow)
 - Bordures arrondies (border-radius)
 
 **useGradientable** - Dégradés sophistiqués
+
 - Dégradés linéaires et radiaux
 - Presets par layer Archimate
 - Éditeur visuel de dégradés
@@ -344,18 +394,21 @@ interface ValidationRule {
 #### 4.1 Persistance et Synchronisation
 
 **Extension de la persistance IndexedDB**
+
 - Compression des données (LZ-String)
 - Purge automatique des anciennes versions
 - Export automatique de sauvegarde
 - Récupération après crash
 
 **useBackupable** - Sauvegardes automatiques
+
 - Backups automatiques configurables (intervalle)
 - Historique des backups (rétention configurable)
 - Restauration sélective
 - Export vers cloud optionnel
 
 **useSyncable** - Synchronisation (optionnel, selon besoins)
+
 - Sync offline-first
 - Résolution de conflits automatique/manuelle
 - WebSocket pour collaboration temps réel
@@ -365,6 +418,7 @@ interface ValidationRule {
 #### 4.2 Gestion de Projet
 
 **useModelingConfidence** - Extension
+
 - Niveaux de maturité (draft, review, validated, published)
 - Sources de données documentées
 - Questions ouvertes par élément
@@ -372,6 +426,7 @@ interface ValidationRule {
 - Signatures électroniques
 
 **Audit Trail**
+
 - Journal complet des modifications
 - Attribution des changements (qui, quand, quoi)
 - Export du journal (CSV, JSON)
@@ -384,6 +439,7 @@ interface ValidationRule {
 #### 5.1 Performance Avancée
 
 **Optimisations de rendu**
+
 - Virtual scrolling pour diagrammes > 1000 nœuds
 - Culling des nœuds hors viewport
 - Simplification LOD (Level of Detail) au dé-zoom
@@ -391,12 +447,14 @@ interface ValidationRule {
 - Web Workers pour calculs lourds (layout)
 
 **Optimisations de calculs**
+
 - Cache des positions absolues (invalidation intelligente)
 - Spatial indexing (R-tree) pour détection de collision
 - Debouncing intelligent des recalculs
 - Memoization des calculs géométriques
 
 **Bundle size**
+
 - Code splitting par fonctionnalité
 - Tree-shaking vérifié
 - Lazy loading des traits optionnels
@@ -460,6 +518,7 @@ Avant de considérer le projet comme "terminé", chaque fonctionnalité doit res
 ### Definition of Done
 
 Une fonctionnalité est "Done" quand :
+
 - ✅ Code implémenté et testé
 - ✅ Tests unitaires et d'intégration passent
 - ✅ Documentation à jour
@@ -472,42 +531,49 @@ Une fonctionnalité est "Done" quand :
 ## Priorisation Recommandée
 
 ### Sprint 1 (2 semaines) - Qualité et Robustesse
+
 1. Audit de code complet
 2. Renforcement des tests (objectif : 90% couverture)
 3. Documentation architecture (ADR)
 4. Refactoring identifié
 
 ### Sprint 2 (2 semaines) - Export/Import Professionnel
+
 1. useExportable (PNG, SVG, PDF)
 2. useImportable (JSON, Archimate)
 3. Tests d'intégration export/import
 4. Documentation utilisateur
 
 ### Sprint 3 (2 semaines) - Navigation et Vues
+
 1. useViewable (vues sauvegardées)
 2. useSearchable (recherche globale)
 3. useZoomable (drill-down)
 4. Mini-map et breadcrumb
 
 ### Sprint 4 (2 semaines) - Validation et Qualité
+
 1. useValidatable (règles Archimate)
 2. usePropertyable (métadonnées riches)
 3. useTaggable (organisation)
 4. useConstrainable (contraintes)
 
 ### Sprint 5 (2 semaines) - Intelligence
+
 1. useLayoutable (auto-layout)
 2. useSuggestable (assistants)
 3. Optimisations de performance
 4. Tests de scalabilité
 
 ### Sprint 6 (1 semaine) - UX/UI Polish
+
 1. Toolbar contextuelle
 2. Panels latéraux
 3. Thèmes avancés
 4. Accessibilité WCAG
 
 ### Sprint 7 (1 semaine) - DevOps et Déploiement
+
 1. CI/CD pipeline
 2. Monitoring
 3. Documentation utilisateur finale
@@ -518,18 +584,21 @@ Une fonctionnalité est "Done" quand :
 ## Principes de Maintenance
 
 ### Dette Technique
+
 - **Zéro tolérance** pour la dette technique non documentée
 - Chaque raccourci doit avoir un TODO avec ticket associé
 - Revue mensuelle de la dette technique
 - Ratio : 20% du temps pour remboursement de la dette
 
 ### Évolutivité
+
 - Architecture ouverte pour nouveaux traits
 - APIs stables et versionnées
 - Breaking changes seulement en major versions
 - Migrations automatiques entre versions
 
 ### Sécurité
+
 - Validation stricte des données importées
 - Sanitization des entrées utilisateur
 - Content Security Policy (CSP)

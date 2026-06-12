@@ -1,8 +1,9 @@
 // src/composables/traits/utils/trait-helpers.ts
-import { computed, type Ref, type ComputedRef } from 'vue';
-import { useGraphStore } from '../../../stores/graph';
-import type { Node } from '../../../types';
-import { NodeNotFoundError } from './errors';
+import { computed, type Ref, type ComputedRef } from 'vue'
+import { useGraphStore } from '../../../stores/graph'
+import type { Node } from '../../../types'
+import { NodeNotFoundError } from './errors'
+import { getCachedAbsolutePosition } from './position-cache'
 
 /**
  * Crée une computed property réactive pour accéder/modifier un champ de node.data.
@@ -33,18 +34,18 @@ export function createTraitComputedProperty<T>(
   dataKey: string,
   defaultValue: T
 ): ComputedRef<T> {
-  const graphStore = useGraphStore();
+  const graphStore = useGraphStore()
 
   return computed({
     get: (): T => {
-      const node = graphStore.nodes[nodeId.value];
-      if (!node) return defaultValue;
-      return (node.data?.[dataKey] as T) ?? defaultValue;
+      const node = graphStore.nodes[nodeId.value]
+      if (!node) return defaultValue
+      return (node.data?.[dataKey] as T) ?? defaultValue
     },
     set: (value: T): void => {
-      const node = graphStore.nodes[nodeId.value];
+      const node = graphStore.nodes[nodeId.value]
       if (!node) {
-        throw new NodeNotFoundError(nodeId.value);
+        throw new NodeNotFoundError(nodeId.value)
       }
 
       graphStore.updateNode(nodeId.value, {
@@ -52,9 +53,9 @@ export function createTraitComputedProperty<T>(
           ...node.data,
           [dataKey]: value,
         },
-      });
+      })
     },
-  });
+  })
 }
 
 /**
@@ -83,31 +84,31 @@ export function createTraitObjectProperty<T extends Record<string, any>>(
   dataKey: string,
   defaultValue: T
 ): ComputedRef<T> {
-  const graphStore = useGraphStore();
+  const graphStore = useGraphStore()
 
   return computed({
     get: (): T => {
-      const node = graphStore.nodes[nodeId.value];
-      if (!node) return defaultValue;
-      return (node.data?.[dataKey] as T) ?? defaultValue;
+      const node = graphStore.nodes[nodeId.value]
+      if (!node) return defaultValue
+      return (node.data?.[dataKey] as T) ?? defaultValue
     },
     set: (value: Partial<T>): void => {
-      const node = graphStore.nodes[nodeId.value];
+      const node = graphStore.nodes[nodeId.value]
       if (!node) {
-        throw new NodeNotFoundError(nodeId.value);
+        throw new NodeNotFoundError(nodeId.value)
       }
 
-      const currentValue = (node.data?.[dataKey] as T) ?? defaultValue;
-      const mergedValue = { ...currentValue, ...value };
+      const currentValue = (node.data?.[dataKey] as T) ?? defaultValue
+      const mergedValue = { ...currentValue, ...value }
 
       graphStore.updateNode(nodeId.value, {
         data: {
           ...node.data,
           [dataKey]: mergedValue,
         },
-      });
+      })
     },
-  });
+  })
 }
 
 /**
@@ -118,8 +119,8 @@ export function createTraitObjectProperty<T extends Record<string, any>>(
  * @returns true si le noeud existe, false sinon
  */
 export function nodeExists(nodeId: string): boolean {
-  const graphStore = useGraphStore();
-  return !!graphStore.nodes[nodeId];
+  const graphStore = useGraphStore()
+  return !!graphStore.nodes[nodeId]
 }
 
 /**
@@ -131,44 +132,29 @@ export function nodeExists(nodeId: string): boolean {
  * @throws {NodeNotFoundError} Si le noeud n'existe pas
  */
 export function getNodeOrThrow(nodeId: string): Node {
-  const graphStore = useGraphStore();
-  const node = graphStore.nodes[nodeId];
+  const graphStore = useGraphStore()
+  const node = graphStore.nodes[nodeId]
 
   if (!node) {
-    throw new NodeNotFoundError(nodeId);
+    throw new NodeNotFoundError(nodeId)
   }
 
-  return node;
+  return node
 }
 
 /**
  * Calcule la position absolue d'un noeud en remontant la chaîne des parents.
  * Utilitaire partagé pour éviter duplication entre useAnchorable et useGeometry.
  *
+ * Le résultat est mémoïsé par `position-cache` ; l'invalidation est pilotée
+ * par le store dès qu'une mutation modifie la géométrie ou la topologie.
+ *
  * @param nodeId - ID du noeud
  * @returns Position absolue { x, y } ou null si noeud inexistant
  */
 export function getNodeAbsolutePosition(nodeId: string): { x: number; y: number } | null {
-  const graphStore = useGraphStore();
-  const node = graphStore.nodes[nodeId];
-
-  if (!node) return null;
-
-  let absX = node.geometry.x;
-  let absY = node.geometry.y;
-  let currentParentId = node.parentId;
-
-  // Remonter la chaîne des parents
-  while (currentParentId) {
-    const parent = graphStore.nodes[currentParentId];
-    if (!parent) break;
-
-    absX += parent.geometry.x;
-    absY += parent.geometry.y;
-    currentParentId = parent.parentId;
-  }
-
-  return { x: absX, y: absY };
+  const graphStore = useGraphStore()
+  return getCachedAbsolutePosition(nodeId, graphStore.nodes as Record<string, Node>)
 }
 
 /**
@@ -178,29 +164,32 @@ export function getNodeAbsolutePosition(nodeId: string): { x: number; y: number 
  * @returns Position du centre { x, y } ou null si noeud inexistant
  */
 export function getNodeCenter(nodeId: string): { x: number; y: number } | null {
-  const graphStore = useGraphStore();
-  const node = graphStore.nodes[nodeId];
+  const graphStore = useGraphStore()
+  const node = graphStore.nodes[nodeId]
 
-  if (!node) return null;
+  if (!node) return null
 
-  const absPos = getNodeAbsolutePosition(nodeId);
-  if (!absPos) return null;
+  const absPos = getNodeAbsolutePosition(nodeId)
+  if (!absPos) return null
 
   return {
     x: absPos.x + node.geometry.w / 2,
     y: absPos.y + node.geometry.h / 2,
-  };
+  }
 }
 
 /**
  * Récupère tous les enfants directs d'un noeud.
  *
+ * Délègue à `graphStore.getChildren` qui exploite l'index parent → enfants
+ * (O(k) au lieu de O(n) en filtre brut).
+ *
  * @param nodeId - ID du noeud parent
  * @returns Tableau des noeuds enfants
  */
 export function getNodeChildren(nodeId: string): Node[] {
-  const graphStore = useGraphStore();
-  return Object.values(graphStore.nodes).filter(n => n.parentId === nodeId);
+  const graphStore = useGraphStore()
+  return graphStore.getChildren(nodeId)
 }
 
 /**
@@ -210,15 +199,15 @@ export function getNodeChildren(nodeId: string): Node[] {
  * @returns Tableau de tous les descendants
  */
 export function getNodeDescendants(nodeId: string): Node[] {
-  const descendants: Node[] = [];
-  const children = getNodeChildren(nodeId);
+  const descendants: Node[] = []
+  const children = getNodeChildren(nodeId)
 
   for (const child of children) {
-    descendants.push(child);
-    descendants.push(...getNodeDescendants(child.id));
+    descendants.push(child)
+    descendants.push(...getNodeDescendants(child.id))
   }
 
-  return descendants;
+  return descendants
 }
 
 /**
@@ -229,17 +218,15 @@ export function getNodeDescendants(nodeId: string): Node[] {
  * @returns true si ancestorId est ancêtre de descendantId
  */
 export function isAncestorOf(ancestorId: string, descendantId: string): boolean {
-  const graphStore = useGraphStore();
-  let currentNode = graphStore.nodes[descendantId] as
-    | (typeof graphStore.nodes)[string]
-    | undefined;
+  const graphStore = useGraphStore()
+  let currentNode = graphStore.nodes[descendantId] as (typeof graphStore.nodes)[string] | undefined
 
   while (currentNode) {
-    if (currentNode.parentId === ancestorId) return true;
-    currentNode = currentNode.parentId ? graphStore.nodes[currentNode.parentId] : undefined;
+    if (currentNode.parentId === ancestorId) return true
+    currentNode = currentNode.parentId ? graphStore.nodes[currentNode.parentId] : undefined
   }
 
-  return false;
+  return false
 }
 
 /**
@@ -249,20 +236,20 @@ export function isAncestorOf(ancestorId: string, descendantId: string): boolean 
  * @returns Profondeur (nombre d'ancêtres) ou -1 si noeud inexistant
  */
 export function getNodeDepth(nodeId: string): number {
-  const graphStore = useGraphStore();
-  const node = graphStore.nodes[nodeId];
+  const graphStore = useGraphStore()
+  const node = graphStore.nodes[nodeId]
 
-  if (!node) return -1;
+  if (!node) return -1
 
-  let depth = 0;
-  let currentParentId = node.parentId;
+  let depth = 0
+  let currentParentId = node.parentId
 
   while (currentParentId) {
-    depth++;
-    const parent = graphStore.nodes[currentParentId];
-    if (!parent) break;
-    currentParentId = parent.parentId;
+    depth++
+    const parent = graphStore.nodes[currentParentId]
+    if (!parent) break
+    currentParentId = parent.parentId
   }
 
-  return depth;
+  return depth
 }

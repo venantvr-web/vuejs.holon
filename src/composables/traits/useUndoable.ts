@@ -1,14 +1,27 @@
 // src/composables/traits/useUndoable.ts
-import { ref, computed, watch, type Ref } from 'vue';
-import { useGraphStore } from '../../stores/graph';
-import type { Node, Edge } from '../../types';
+import { ref, computed, watch, type Ref } from 'vue'
+import { useGraphStore } from '../../stores/graph'
+import type { Node, Edge } from '../../types'
+
+/**
+ * Clone profond « déproxifié » pour les snapshots.
+ *
+ * `structuredClone` est plus rapide mais lève `DataCloneError` sur les Proxy
+ * réactifs de Vue (les `readonly()` exposés par le store). Le cycle JSON
+ * matérialise les valeurs en objets natifs en un passage, ce qui est à la
+ * fois sûr et suffisant : tous les champs de Node/Edge sont des primitives,
+ * objets imbriqués ou tableaux JSON-compatibles.
+ */
+function deepClone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value))
+}
 
 /**
  * Options de configuration pour le trait Undoable.
  */
 export interface UndoableOptions {
   /** Nombre maximum d'états conservés dans l'historique (défaut: 50) */
-  maxHistory?: number;
+  maxHistory?: number
 }
 
 /**
@@ -16,13 +29,13 @@ export interface UndoableOptions {
  */
 export interface UndoableState {
   /** Indique si une opération d'annulation est possible */
-  canUndo: Ref<boolean>;
+  canUndo: Ref<boolean>
   /** Indique si une opération de rétablissement est possible */
-  canRedo: Ref<boolean>;
+  canRedo: Ref<boolean>
   /** Nombre total d'états dans l'historique */
-  historyLength: Ref<number>;
+  historyLength: Ref<number>
   /** Index de l'état actuel dans l'historique */
-  currentIndex: Ref<number>;
+  currentIndex: Ref<number>
 }
 
 /**
@@ -30,26 +43,32 @@ export interface UndoableState {
  */
 export interface UndoableHandlers {
   /** Annule la dernière modification en restaurant l'état précédent */
-  undo: () => void;
+  undo: () => void
   /** Rétablit la modification annulée suivante */
-  redo: () => void;
+  redo: () => void
   /** Efface tout l'historique et crée un snapshot initial */
-  clearHistory: () => void;
+  clearHistory: () => void
   /** Crée un snapshot de l'état actuel du graphe */
-  snapshot: () => void;
+  snapshot: () => void
 }
 
 interface GraphSnapshot {
-  nodes: Record<string, Node>;
-  edges: Record<string, Edge>;
-  timestamp: number;
+  nodes: Record<string, Node>
+  edges: Record<string, Edge>
+  /**
+   * Version `mutationVersion` du store au moment de la capture. Sert d'index
+   * d'égalité pour éviter de pousser un snapshot identique au précédent
+   * (cas typique : undo suivi d'un auto-snapshot débouncé).
+   */
+  version: number
+  timestamp: number
 }
 
 // État global de l'historique
-const history = ref<GraphSnapshot[]>([]);
-const currentIndex = ref(-1);
-const isUndoRedoAction = ref(false);
-const maxHistory = ref(50);
+const history = ref<GraphSnapshot[]>([])
+const currentIndex = ref(-1)
+const isUndoRedoAction = ref(false)
+const maxHistory = ref(50)
 
 /**
  * Ajoute la capacité d'annulation et de rétablissement au graphe.
@@ -62,96 +81,92 @@ const maxHistory = ref(50);
  * @returns État réactif et gestionnaires pour l'undo/redo
  */
 export function useUndoable(options: UndoableOptions = {}): UndoableState & UndoableHandlers {
-  const graphStore = useGraphStore();
+  const graphStore = useGraphStore()
 
   if (options.maxHistory) {
-    maxHistory.value = options.maxHistory;
+    maxHistory.value = options.maxHistory
   }
 
-  const canUndo = computed(() => currentIndex.value > 0);
-  const canRedo = computed(() => currentIndex.value < history.value.length - 1);
-  const historyLength = computed(() => history.value.length);
+  const canUndo = computed(() => currentIndex.value > 0)
+  const canRedo = computed(() => currentIndex.value < history.value.length - 1)
+  const historyLength = computed(() => history.value.length)
 
   // Crée un snapshot de l'état actuel
   function snapshot() {
-    if (isUndoRedoAction.value) return;
+    if (isUndoRedoAction.value) return
 
-    const nodesJson = JSON.stringify(graphStore.nodes);
-    const edgesJson = JSON.stringify(graphStore.edges);
+    const version = graphStore.mutationVersion
 
-    // Idempotence : si l'état n'a pas changé depuis le snapshot courant, ne
-    // rien faire. Indispensable car l'auto-snapshot est débouncé (500 ms) et
-    // se déclenche APRÈS la levée du drapeau isUndoRedoAction : sans cette
-    // garde, chaque undo poussait un doublon et détruisait la pile de redo.
-    const current = history.value[currentIndex.value];
-    if (
-      current &&
-      JSON.stringify(current.nodes) === nodesJson &&
-      JSON.stringify(current.edges) === edgesJson
-    ) {
-      return;
-    }
+    // Idempotence : si la version du store n'a pas bougé depuis le snapshot
+    // courant, l'état est strictement identique — pas la peine de cloner. Le
+    // simple compteur évite la double sérialisation JSON utilisée auparavant
+    // pour comparer.
+    const current = history.value[currentIndex.value]
+    if (current && current.version === version) return
 
     const snap: GraphSnapshot = {
-      nodes: JSON.parse(nodesJson),
-      edges: JSON.parse(edgesJson),
+      nodes: deepClone(graphStore.nodes as Record<string, Node>),
+      edges: deepClone(graphStore.edges as Record<string, Edge>),
+      version,
       timestamp: Date.now(),
-    };
+    }
 
     // Si on est au milieu de l'historique, supprimer les états futurs
     if (currentIndex.value < history.value.length - 1) {
-      history.value = history.value.slice(0, currentIndex.value + 1);
+      history.value = history.value.slice(0, currentIndex.value + 1)
     }
 
-    history.value.push(snap);
+    history.value.push(snap)
 
     // Limiter la taille de l'historique
     if (history.value.length > maxHistory.value) {
-      history.value = history.value.slice(history.value.length - maxHistory.value);
+      history.value = history.value.slice(history.value.length - maxHistory.value)
     }
 
-    currentIndex.value = history.value.length - 1;
+    currentIndex.value = history.value.length - 1
   }
 
   // Restaure un snapshot en préservant les IDs (crucial pour la cohérence
   // des références source/target des arêtes et des parentId).
   async function restoreSnapshot(snap: GraphSnapshot) {
-    isUndoRedoAction.value = true;
+    isUndoRedoAction.value = true
 
     try {
-      await graphStore.replaceAll(snap.nodes, snap.edges);
+      await graphStore.replaceAll(snap.nodes, snap.edges)
     } finally {
       // Laisser passer le cycle de watch avant de réactiver l'auto-snapshot,
       // sinon replaceAll déclencherait un nouveau snapshot parasite.
-      setTimeout(() => { isUndoRedoAction.value = false; }, 0);
+      setTimeout(() => {
+        isUndoRedoAction.value = false
+      }, 0)
     }
   }
 
   function undo() {
-    if (!canUndo.value) return;
+    if (!canUndo.value) return
 
-    currentIndex.value--;
-    const snap = history.value[currentIndex.value];
+    currentIndex.value--
+    const snap = history.value[currentIndex.value]
     if (snap) {
-      restoreSnapshot(snap);
+      restoreSnapshot(snap)
     }
   }
 
   function redo() {
-    if (!canRedo.value) return;
+    if (!canRedo.value) return
 
-    currentIndex.value++;
-    const snap = history.value[currentIndex.value];
+    currentIndex.value++
+    const snap = history.value[currentIndex.value]
     if (snap) {
-      restoreSnapshot(snap);
+      restoreSnapshot(snap)
     }
   }
 
   function clearHistory() {
-    history.value = [];
-    currentIndex.value = -1;
+    history.value = []
+    currentIndex.value = -1
     // Créer un snapshot initial
-    snapshot();
+    snapshot()
   }
 
   return {
@@ -163,35 +178,38 @@ export function useUndoable(options: UndoableOptions = {}): UndoableState & Undo
     redo,
     clearHistory,
     snapshot,
-  };
+  }
 }
 
 // Hook pour auto-snapshot sur les changements du store
 export function useAutoSnapshot() {
-  const graphStore = useGraphStore();
-  const { snapshot } = useUndoable();
-  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  const graphStore = useGraphStore()
+  const { snapshot } = useUndoable()
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
   // Debounce les snapshots pour éviter d'en créer trop
   function debouncedSnapshot() {
     if (debounceTimer) {
-      clearTimeout(debounceTimer);
+      clearTimeout(debounceTimer)
     }
     debounceTimer = setTimeout(() => {
-      snapshot();
-    }, 500);
+      snapshot()
+    }, 500)
   }
 
-  // Watch les changements
+  // Avant : `watch([nodes, edges], …, { deep: true })` faisait parcourir
+  // récursivement tout le graphe à chaque mutation — O(n) pour un signal
+  // binaire (« quelque chose a changé »). On écoute désormais le compteur
+  // `mutationVersion` du store, incrémenté par chaque action mutante. Le
+  // résultat est strictement équivalent et coûte O(1) par mutation.
   watch(
-    () => [graphStore.nodes, graphStore.edges],
+    () => graphStore.mutationVersion,
     () => {
-      debouncedSnapshot();
-    },
-    { deep: true }
-  );
+      debouncedSnapshot()
+    }
+  )
 
-  return { snapshot };
+  return { snapshot }
 }
 
 // Export de l'état global pour debug/UI
@@ -200,5 +218,5 @@ export function useUndoState() {
     history,
     currentIndex,
     isUndoRedoAction,
-  };
+  }
 }
