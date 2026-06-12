@@ -1,176 +1,157 @@
 // src/composables/traits/useZoomable.ts
-import { ref, computed, type Ref } from 'vue';
+import { computed, ref, type Ref } from 'vue'
+import { useGraphStore } from '../../stores/graph'
+import { useViewport } from '../useViewport'
+import { getNodeAbsolutePosition } from './utils/trait-helpers'
 
 /**
  * Options de configuration pour le trait Zoomable.
  */
 export interface ZoomableOptions {
   /**
-   * Niveau de zoom initial.
-   * @default 1
-   */
-  initialZoom?: number;
-  /**
-   * Zoom minimum autorisé.
+   * Incrément de zoom pour les boutons +/−.
    * @default 0.1
    */
-  minZoom?: number;
+  zoomStep?: number
   /**
-   * Zoom maximum autorisé.
-   * @default 5
+   * Marge en pixels écran lors d'un fit (zoomToFit, zoomToSelection).
+   * @default 40
    */
-  maxZoom?: number;
-  /**
-   * Incrément de zoom pour les boutons +/-.
-   * @default 0.1
-   */
-  zoomStep?: number;
+  fitPadding?: number
 }
 
 /**
  * État réactif exposé par le trait Zoomable.
  */
 export interface ZoomableState {
-  /**
-   * Niveau de zoom actuel.
-   */
-  zoom: Ref<number>;
-  /**
-   * Niveau de zoom minimum.
-   */
-  minZoom: Ref<number>;
-  /**
-   * Niveau de zoom maximum.
-   */
-  maxZoom: Ref<number>;
-  /**
-   * Pourcentage de zoom (0-500%).
-   */
-  zoomPercent: Ref<number>;
+  /** Niveau de zoom actuel (1 = 100 %). */
+  zoom: Ref<number>
+  /** Niveau de zoom minimum (clamp). */
+  minZoom: Ref<number>
+  /** Niveau de zoom maximum (clamp). */
+  maxZoom: Ref<number>
+  /** Pourcentage de zoom arrondi (0–500). */
+  zoomPercent: Ref<number>
 }
 
 /**
  * Handlers (actions) exposés par le trait Zoomable.
  */
 export interface ZoomableHandlers {
+  /** Augmente le zoom d'un pas. */
+  zoomIn: () => void
+  /** Diminue le zoom d'un pas. */
+  zoomOut: () => void
   /**
-   * Augmente le zoom.
+   * Ajuste pan et zoom pour faire tenir tout le contenu du graphe dans
+   * le viewport indiqué.
    */
-  zoomIn: () => void;
+  zoomToFit: (viewportWidth: number, viewportHeight: number) => void
   /**
-   * Diminue le zoom.
+   * Ajuste pan et zoom pour faire tenir la sélection indiquée dans le
+   * viewport.
+   * @param nodeIds - IDs des noeuds à recadrer
    */
-  zoomOut: () => void;
-  /**
-   * Ajuste le zoom pour afficher tout le contenu.
-   */
-  zoomToFit: () => void;
-  /**
-   * Zoom sur une sélection de noeuds.
-   * @param nodeIds - IDs des noeuds à zoomer
-   */
-  zoomToSelection: (nodeIds: string[]) => void;
+  zoomToSelection: (nodeIds: string[], viewportWidth: number, viewportHeight: number) => void
   /**
    * Définit un niveau de zoom spécifique.
-   * @param level - Niveau de zoom (0.1-5)
+   * @param level - Niveau de zoom (clampé entre min et max)
    */
-  setZoomLevel: (level: number) => void;
-  /**
-   * Réinitialise le zoom à 100%.
-   */
-  resetZoom: () => void;
+  setZoomLevel: (level: number) => void
+  /** Réinitialise le zoom à 100 %. */
+  resetZoom: () => void
 }
 
 /**
  * Trait permettant de gérer le zoom du canvas.
  *
- * Fournit une API programmatique pour contrôler le niveau de zoom avec validation
- * des limites min/max et incréments configurables.
- *
- * @param options - Options de configuration
- * @returns État réactif et handlers pour le zoom
+ * Façade typée au-dessus de `useViewport`. `zoomToFit` et `zoomToSelection`
+ * calculent la bounding box monde de la cible et la délèguent à
+ * `viewport.fitWorldBox`, ce qui garantit qu'on ne dérive jamais de l'état
+ * canonique du viewport.
  *
  * @example
  * ```typescript
- * const { zoom, zoomIn, zoomOut, zoomToFit } = useZoomable({
- *   initialZoom: 1,
- *   minZoom: 0.1,
- *   maxZoom: 5
- * });
- *
- * // Zoomer
- * zoomIn();  // +10%
- * zoomOut(); // -10%
- *
- * // Zoom intelligent
- * zoomToFit(); // Affiche tout le contenu
+ * const { zoom, zoomIn, zoomToFit } = useZoomable()
+ * zoomToFit(window.innerWidth, window.innerHeight)
  * ```
  */
 export function useZoomable(options: ZoomableOptions = {}): ZoomableState & ZoomableHandlers {
-  const {
-    initialZoom = 1,
-    minZoom: minZoomValue = 0.1,
-    maxZoom: maxZoomValue = 5,
-    zoomStep = 0.1,
-  } = options;
+  const { zoomStep = 0.1, fitPadding = 40 } = options
+  const viewport = useViewport()
+  const graphStore = useGraphStore()
 
-  const zoom = ref(initialZoom);
-  const minZoom = ref(minZoomValue);
-  const maxZoom = ref(maxZoomValue);
+  // L'état canonique vit dans useViewport. On expose des refs typés pour
+  // matcher le contrat ZoomableState ; min/max sont des constantes immuables
+  // côté trait, donc des refs simples suffisent.
+  const minZoom = ref(viewport.MIN_ZOOM)
+  const maxZoom = ref(viewport.MAX_ZOOM)
+  const zoom = computed<number>({
+    get: () => viewport.zoomLevel.value,
+    set: (v) => viewport.setZoom(v),
+  })
+  const zoomPercent = viewport.zoomPercent
 
-  const zoomPercent = computed(() => Math.round(zoom.value * 100));
-
-  /**
-   * Clamp le zoom entre min et max.
-   */
-  function clampZoom(value: number): number {
-    return Math.max(minZoom.value, Math.min(maxZoom.value, value));
-  }
-
-  /**
-   * Zoom in.
-   */
   function zoomIn(): void {
-    zoom.value = clampZoom(zoom.value + zoomStep);
+    viewport.setZoom(viewport.zoomLevel.value + zoomStep)
   }
 
-  /**
-   * Zoom out.
-   */
   function zoomOut(): void {
-    zoom.value = clampZoom(zoom.value - zoomStep);
+    viewport.setZoom(viewport.zoomLevel.value - zoomStep)
   }
 
   /**
-   * Zoom to fit (émet un événement).
+   * Calcule la bounding box monde d'un ensemble de noeuds.
+   * Retourne `null` si la sélection est vide ou invalide.
    */
-  function zoomToFit(): void {
-    const event = new CustomEvent('zoom-to-fit');
-    window.dispatchEvent(event);
+  function computeWorldBox(
+    nodeIds: string[]
+  ): { x: number; y: number; w: number; h: number } | null {
+    let minX = Infinity
+    let minY = Infinity
+    let maxX = -Infinity
+    let maxY = -Infinity
+    let count = 0
+
+    for (const id of nodeIds) {
+      const node = graphStore.nodes[id]
+      if (!node) continue
+      const pos = getNodeAbsolutePosition(id)
+      if (!pos) continue
+      minX = Math.min(minX, pos.x)
+      minY = Math.min(minY, pos.y)
+      maxX = Math.max(maxX, pos.x + node.geometry.w)
+      maxY = Math.max(maxY, pos.y + node.geometry.h)
+      count++
+    }
+
+    if (count === 0) return null
+    return { x: minX, y: minY, w: maxX - minX, h: maxY - minY }
   }
 
-  /**
-   * Zoom sur sélection (émet un événement).
-   */
-  function zoomToSelection(nodeIds: string[]): void {
-    const event = new CustomEvent('zoom-to-selection', {
-      detail: { nodeIds },
-    });
-    window.dispatchEvent(event);
+  function zoomToFit(viewportWidth: number, viewportHeight: number): void {
+    const allIds = Object.keys(graphStore.nodes)
+    const box = computeWorldBox(allIds)
+    if (!box) {
+      viewport.resetView()
+      return
+    }
+    viewport.fitWorldBox(box, viewportWidth, viewportHeight, fitPadding)
   }
 
-  /**
-   * Set zoom level.
-   */
+  function zoomToSelection(nodeIds: string[], viewportWidth: number, viewportHeight: number): void {
+    if (nodeIds.length === 0) return
+    const box = computeWorldBox(nodeIds)
+    if (!box) return
+    viewport.fitWorldBox(box, viewportWidth, viewportHeight, fitPadding)
+  }
+
   function setZoomLevel(level: number): void {
-    zoom.value = clampZoom(level);
+    viewport.setZoom(level)
   }
 
-  /**
-   * Reset zoom.
-   */
   function resetZoom(): void {
-    zoom.value = 1;
+    viewport.setZoom(1)
   }
 
   return {
@@ -184,5 +165,5 @@ export function useZoomable(options: ZoomableOptions = {}): ZoomableState & Zoom
     zoomToSelection,
     setZoomLevel,
     resetZoom,
-  };
+  }
 }

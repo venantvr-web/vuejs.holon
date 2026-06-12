@@ -1,48 +1,28 @@
 // src/composables/traits/usePannable.ts
-import { ref, type Ref } from 'vue';
+import { computed, ref, type Ref } from 'vue'
+import { useViewport } from '../useViewport'
 
 /**
  * Options de configuration pour le trait Pannable.
  */
 export interface PannableOptions {
   /**
-   * Position initiale du pan X.
-   * @default 0
-   */
-  initialX?: number;
-  /**
-   * Position initiale du pan Y.
-   * @default 0
-   */
-  initialY?: number;
-  /**
-   * Activer l'animation des transitions.
-   * @default true
-   */
-  animate?: boolean;
-  /**
-   * Durée de l'animation en ms.
+   * Durée par défaut de l'animation en millisecondes.
    * @default 300
    */
-  animationDuration?: number;
+  animationDuration?: number
 }
 
 /**
  * État réactif exposé par le trait Pannable.
  */
 export interface PannableState {
-  /**
-   * Position X du pan.
-   */
-  panX: Ref<number>;
-  /**
-   * Position Y du pan.
-   */
-  panY: Ref<number>;
-  /**
-   * Indique si une animation est en cours.
-   */
-  isAnimating: Ref<boolean>;
+  /** Position X du pan. */
+  panX: Ref<number>
+  /** Position Y du pan. */
+  panY: Ref<number>
+  /** Indique si une animation est en cours. */
+  isAnimating: Ref<boolean>
 }
 
 /**
@@ -53,27 +33,27 @@ export interface PannableHandlers {
    * Déplace la vue vers une position absolue.
    * @param x - Position X cible
    * @param y - Position Y cible
-   * @param animate - Animer la transition
+   * @param animate - Animer la transition (défaut : `true`)
    */
-  panTo: (x: number, y: number, animate?: boolean) => void;
+  panTo: (x: number, y: number, animate?: boolean) => void
   /**
    * Déplace la vue de manière relative.
    * @param dx - Déplacement X
    * @param dy - Déplacement Y
    */
-  panBy: (dx: number, dy: number) => void;
+  panBy: (dx: number, dy: number) => void
   /**
    * Réinitialise le pan à l'origine.
-   * @param animate - Animer la transition
+   * @param animate - Animer la transition (défaut : `true`)
    */
-  resetPan: (animate?: boolean) => void;
+  resetPan: (animate?: boolean) => void
   /**
-   * Centre la vue sur un point.
-   * @param x - Coordonnée X à centrer
-   * @param y - Coordonnée Y à centrer
-   * @param viewportWidth - Largeur du viewport
-   * @param viewportHeight - Hauteur du viewport
-   * @param animate - Animer la transition
+   * Centre la vue sur un point monde donné.
+   * @param x - Coordonnée X monde à centrer
+   * @param y - Coordonnée Y monde à centrer
+   * @param viewportWidth - Largeur du viewport en pixels
+   * @param viewportHeight - Hauteur du viewport en pixels
+   * @param animate - Animer la transition (défaut : `true`)
    */
   centerOn: (
     x: number,
@@ -81,100 +61,96 @@ export interface PannableHandlers {
     viewportWidth: number,
     viewportHeight: number,
     animate?: boolean
-  ) => void;
+  ) => void
 }
 
 /**
  * Trait permettant de gérer le pan (déplacement) du canvas.
  *
- * Fournit une API programmatique pour contrôler la position du viewport avec
- * support optionnel de l'animation pour des transitions fluides.
- *
- * @param options - Options de configuration
- * @returns État réactif et handlers pour le pan
+ * Façade typée au-dessus de `useViewport` — toutes les implémentations partagent
+ * le même état canonique (pan, zoom) pour éviter les dérives de transformation
+ * entre les espaces local, monde et écran.
  *
  * @example
  * ```typescript
- * const { panX, panY, panTo, panBy, centerOn } = usePannable({
- *   initialX: 0,
- *   initialY: 0,
- *   animate: true
- * });
- *
- * // Déplacement absolu
- * panTo(100, 200, true); // avec animation
- *
- * // Déplacement relatif
- * panBy(50, -30); // décale de 50px à droite, 30px vers le haut
- *
- * // Centrer sur un point
- * centerOn(nodeX, nodeY, viewportW, viewportH, true);
+ * const { panX, panY, panTo, centerOn } = usePannable()
+ * panTo(100, 200, true)
+ * centerOn(nodeWorldX, nodeWorldY, viewportW, viewportH)
  * ```
  */
 export function usePannable(options: PannableOptions = {}): PannableState & PannableHandlers {
-  const {
-    initialX = 0,
-    initialY = 0,
-    animate: defaultAnimate = true,
-    animationDuration = 300,
-  } = options;
+  const { animationDuration = 300 } = options
+  const viewport = useViewport()
+  const isAnimating = ref(false)
 
-  const panX = ref(initialX);
-  const panY = ref(initialY);
-  const isAnimating = ref(false);
+  // Vues mutables sur l'état canonique : lire/écrire panX/panY met à jour viewport.pan.
+  const panX = computed<number>({
+    get: () => viewport.pan.value.x,
+    set: (v) => {
+      viewport.pan.value = { x: v, y: viewport.pan.value.y }
+    },
+  })
+  const panY = computed<number>({
+    get: () => viewport.pan.value.y,
+    set: (v) => {
+      viewport.pan.value = { x: viewport.pan.value.x, y: v }
+    },
+  })
 
-  /**
-   * Pan to absolute position.
-   */
-  function panTo(x: number, y: number, animate: boolean = defaultAnimate): void {
-    if (animate) {
-      isAnimating.value = true;
+  function animatePan(targetX: number, targetY: number, duration: number): void {
+    const startX = viewport.pan.value.x
+    const startY = viewport.pan.value.y
+    const startTime = performance.now()
+    isAnimating.value = true
 
-      // Émettre événement pour animation CSS
-      const event = new CustomEvent('pan-animate', {
-        detail: { x, y, duration: animationDuration },
-      });
-      window.dispatchEvent(event);
+    function step(now: number) {
+      const t = Math.min(1, (now - startTime) / duration)
+      // Easing « ease-out cubic » pour une décélération naturelle.
+      const eased = 1 - Math.pow(1 - t, 3)
+      viewport.pan.value = {
+        x: startX + (targetX - startX) * eased,
+        y: startY + (targetY - startY) * eased,
+      }
+      if (t < 1) {
+        requestAnimationFrame(step)
+      } else {
+        isAnimating.value = false
+      }
+    }
+    requestAnimationFrame(step)
+  }
 
-      setTimeout(() => {
-        panX.value = x;
-        panY.value = y;
-        isAnimating.value = false;
-      }, animationDuration);
+  function panTo(x: number, y: number, animate = true): void {
+    if (animate && animationDuration > 0) {
+      animatePan(x, y, animationDuration)
     } else {
-      panX.value = x;
-      panY.value = y;
+      viewport.pan.value = { x, y }
     }
   }
 
-  /**
-   * Pan by relative offset.
-   */
   function panBy(dx: number, dy: number): void {
-    panX.value += dx;
-    panY.value += dy;
+    viewport.pan.value = {
+      x: viewport.pan.value.x + dx,
+      y: viewport.pan.value.y + dy,
+    }
   }
 
-  /**
-   * Reset pan to origin.
-   */
-  function resetPan(animate: boolean = defaultAnimate): void {
-    panTo(0, 0, animate);
+  function resetPan(animate = true): void {
+    panTo(0, 0, animate)
   }
 
-  /**
-   * Center on a point.
-   */
   function centerOn(
     x: number,
     y: number,
     viewportWidth: number,
     viewportHeight: number,
-    animate: boolean = defaultAnimate
+    animate = true
   ): void {
-    const targetX = viewportWidth / 2 - x;
-    const targetY = viewportHeight / 2 - y;
-    panTo(targetX, targetY, animate);
+    // x, y sont en coordonnées monde. La transformation visuelle est
+    // « translate(pan) scale(zoom) » donc pour que (x, y) tombe au centre
+    // écran (vw/2, vh/2) il faut pan = centre_écran − x · zoom.
+    const z = viewport.zoomLevel.value
+    panTo(viewportWidth / 2 - x * z, viewportHeight / 2 - y * z, animate)
   }
 
   return {
@@ -185,5 +161,5 @@ export function usePannable(options: PannableOptions = {}): PannableState & Pann
     panBy,
     resetPan,
     centerOn,
-  };
+  }
 }
