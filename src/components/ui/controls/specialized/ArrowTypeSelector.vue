@@ -1,22 +1,22 @@
 <!-- src/components/ui/controls/specialized/ArrowTypeSelector.vue -->
 <script setup lang="ts">
-import { ArrowType, ARROW_TYPE_LABELS } from '../../../../composables/traits/useArrowable';
+import { ArrowType, ARROW_TYPE_LABELS } from '../../../../composables/traits/useArrowable'
 
 interface ArrowTypeSelectorProps {
-  modelValue: ArrowType;
-  position?: 'start' | 'end';
-  label?: string;
-  showCategories?: boolean;
+  modelValue: ArrowType
+  position?: 'start' | 'end'
+  label?: string
+  showCategories?: boolean
 }
 
 withDefaults(defineProps<ArrowTypeSelectorProps>(), {
   position: 'end',
   showCategories: true,
-});
+})
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: ArrowType): void;
-}>();
+  (e: 'update:modelValue', value: ArrowType): void
+}>()
 
 // Catégories de types de flèches
 const arrowCategories = {
@@ -55,11 +55,11 @@ const arrowCategories = {
       ArrowType.ArchiFlow,
     ],
   },
-};
+}
 
 function handleChange(event: Event) {
-  const target = event.target as HTMLSelectElement;
-  emit('update:modelValue', target.value as ArrowType);
+  const target = event.target as HTMLSelectElement
+  emit('update:modelValue', target.value as ArrowType)
 }
 </script>
 
@@ -71,23 +71,11 @@ function handleChange(event: Event) {
     </label>
 
     <!-- Dropdown avec catégories -->
-    <select
-      :value="modelValue"
-      @change="handleChange"
-      class="app-input w-full px-2 py-1.5 text-xs"
-    >
+    <select :value="modelValue" @change="handleChange" class="app-input w-full px-2 py-1.5 text-xs">
       <template v-if="showCategories">
         <!-- Avec catégories (optgroups) -->
-        <optgroup
-          v-for="(category, key) in arrowCategories"
-          :key="key"
-          :label="category.label"
-        >
-          <option
-            v-for="type in category.types"
-            :key="type"
-            :value="type"
-          >
+        <optgroup v-for="(category, key) in arrowCategories" :key="key" :label="category.label">
+          <option v-for="type in category.types" :key="type" :value="type">
             {{ ARROW_TYPE_LABELS[type] }}
           </option>
         </optgroup>
@@ -96,11 +84,7 @@ function handleChange(event: Event) {
       <template v-else>
         <!-- Sans catégories (liste simple) -->
         <template v-for="(category, key) in arrowCategories" :key="`cat-${key}`">
-          <option
-            v-for="type in category.types"
-            :key="type"
-            :value="type"
-          >
+          <option v-for="type in category.types" :key="type" :value="type">
             {{ ARROW_TYPE_LABELS[type] }}
           </option>
         </template>

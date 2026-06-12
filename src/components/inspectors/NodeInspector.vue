@@ -1,19 +1,21 @@
 <!-- src/components/inspectors/NodeInspector.vue -->
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useGraphStore } from '../../stores/graph';
-import NameSection from './sections/NameSection.vue';
-import StyleSection from './sections/StyleSection.vue';
-import TagsSection from './sections/TagsSection.vue';
-import PropertiesSection from './sections/PropertiesSection.vue';
-import ConfidenceSection from './sections/ConfidenceSection.vue';
+import { computed } from 'vue'
+import { useGraphStore } from '../../stores/graph'
+import NameSection from './sections/NameSection.vue'
+import StyleSection from './sections/StyleSection.vue'
+import TagsSection from './sections/TagsSection.vue'
+import PropertiesSection from './sections/PropertiesSection.vue'
+import ConfidenceSection from './sections/ConfidenceSection.vue'
 
-interface NodeInspectorProps { nodeId: string; }
-const props = defineProps<NodeInspectorProps>();
-const graphStore = useGraphStore();
+interface NodeInspectorProps {
+  nodeId: string
+}
+const props = defineProps<NodeInspectorProps>()
+const graphStore = useGraphStore()
 
-const node = computed(() => graphStore.nodes[props.nodeId]);
-const typeLabel = computed(() => node.value?.type ?? '');
+const node = computed(() => graphStore.nodes[props.nodeId])
+const typeLabel = computed(() => node.value?.type ?? '')
 </script>
 
 <template>

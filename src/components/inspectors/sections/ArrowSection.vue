@@ -1,34 +1,34 @@
 <!-- src/components/inspectors/sections/ArrowSection.vue -->
 <script setup lang="ts">
-import { computed, toRef } from 'vue';
-import { useArrowable, ArrowType } from '../../../composables/traits/useArrowable';
-import ArrowTypeSelector from '../../ui/controls/specialized/ArrowTypeSelector.vue';
-import BaseSlider from '../../ui/controls/base/BaseSlider.vue';
+import { computed, toRef } from 'vue'
+import { useArrowable, ArrowType } from '../../../composables/traits/useArrowable'
+import ArrowTypeSelector from '../../ui/controls/specialized/ArrowTypeSelector.vue'
+import BaseSlider from '../../ui/controls/base/BaseSlider.vue'
 
 interface ArrowSectionProps {
-  edgeId: string;
+  edgeId: string
 }
 
-const props = defineProps<ArrowSectionProps>();
+const props = defineProps<ArrowSectionProps>()
 
-const edgeIdRef = toRef(props, 'edgeId');
-const arrowable = useArrowable({ edgeId: edgeIdRef });
+const edgeIdRef = toRef(props, 'edgeId')
+const arrowable = useArrowable({ edgeId: edgeIdRef })
 
 // Computed bidirectionnels pour v-model
 const startArrow = computed({
   get: () => arrowable.startArrow.value,
   set: (type: ArrowType) => arrowable.setStartArrow(type),
-});
+})
 
 const endArrow = computed({
   get: () => arrowable.endArrow.value,
   set: (type: ArrowType) => arrowable.setEndArrow(type),
-});
+})
 
 const arrowSize = computed({
   get: () => arrowable.arrowSize.value,
   set: (size: number) => arrowable.setArrowSize(size),
-});
+})
 </script>
 
 <template>

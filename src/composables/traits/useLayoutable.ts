@@ -1,13 +1,13 @@
 // src/composables/traits/useLayoutable.ts
-import { ref, type Ref } from 'vue';
-import { useGraphStore } from '../../stores/graph';
-import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide } from 'd3-force';
-import { hierarchy, tree } from 'd3-hierarchy';
+import { ref, type Ref } from 'vue'
+import { useGraphStore } from '../../stores/graph'
+import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide } from 'd3-force'
+import { hierarchy, tree } from 'd3-hierarchy'
 
 /**
  * Algorithmes de layout disponibles.
  */
-export type LayoutAlgorithm = 'force' | 'hierarchical' | 'circular' | 'grid' | 'tree';
+export type LayoutAlgorithm = 'force' | 'hierarchical' | 'circular' | 'grid' | 'tree'
 
 /**
  * Options générales de layout.
@@ -17,17 +17,17 @@ export interface LayoutOptions {
    * Animer l'application du layout.
    * @default true
    */
-  animate?: boolean;
+  animate?: boolean
   /**
    * Durée de l'animation en ms.
    * @default 1000
    */
-  duration?: number;
+  duration?: number
   /**
    * Espacement entre les noeuds.
    * @default 100
    */
-  spacing?: number;
+  spacing?: number
 }
 
 /**
@@ -38,17 +38,17 @@ export interface ForceLayoutOptions extends LayoutOptions {
    * Force de répulsion entre noeuds.
    * @default -300
    */
-  chargeStrength?: number;
+  chargeStrength?: number
   /**
    * Distance des liens.
    * @default 100
    */
-  linkDistance?: number;
+  linkDistance?: number
   /**
    * Force de collision (évite chevauchements).
    * @default 50
    */
-  collisionRadius?: number;
+  collisionRadius?: number
 }
 
 /**
@@ -59,12 +59,12 @@ export interface HierarchicalLayoutOptions extends LayoutOptions {
    * Direction du layout.
    * @default 'top-bottom'
    */
-  direction?: 'top-bottom' | 'bottom-top' | 'left-right' | 'right-left';
+  direction?: 'top-bottom' | 'bottom-top' | 'left-right' | 'right-left'
   /**
    * Espacement vertical entre niveaux.
    * @default 150
    */
-  levelSpacing?: number;
+  levelSpacing?: number
 }
 
 /**
@@ -74,11 +74,11 @@ export interface LayoutableState {
   /**
    * Layout en cours d'application.
    */
-  isLayouting: Ref<boolean>;
+  isLayouting: Ref<boolean>
   /**
    * Algorithme actuel.
    */
-  currentAlgorithm: Ref<LayoutAlgorithm | null>;
+  currentAlgorithm: Ref<LayoutAlgorithm | null>
 }
 
 /**
@@ -90,15 +90,15 @@ export interface LayoutableHandlers {
    * @param algorithm - Algorithme à utiliser
    * @param options - Options de configuration
    */
-  applyLayout: (algorithm: LayoutAlgorithm, options?: LayoutOptions) => Promise<void>;
+  applyLayout: (algorithm: LayoutAlgorithm, options?: LayoutOptions) => Promise<void>
   /**
    * Arrête le layout en cours.
    */
-  stopLayout: () => void;
+  stopLayout: () => void
   /**
    * Réinitialise les positions des noeuds.
    */
-  resetLayout: () => void;
+  resetLayout: () => void
 }
 
 /**
@@ -132,12 +132,12 @@ export interface LayoutableHandlers {
  * ```
  */
 // État global (partagé entre toutes les instances).
-const isLayouting = ref(false);
-const currentAlgorithm = ref<LayoutAlgorithm | null>(null);
-let simulation: any = null;
+const isLayouting = ref(false)
+const currentAlgorithm = ref<LayoutAlgorithm | null>(null)
+let simulation: any = null
 
 export function useLayoutable(): LayoutableState & LayoutableHandlers {
-  const graphStore = useGraphStore();
+  const graphStore = useGraphStore()
 
   /**
    * Layout force-directed avec d3-force.
@@ -149,29 +149,34 @@ export function useLayoutable(): LayoutableState & LayoutableHandlers {
       collisionRadius = 50,
       animate = true,
       duration = 1000,
-    } = options;
+    } = options
 
     const nodes = Object.values(graphStore.nodes).map((n) => ({
       id: n.id,
       x: n.geometry.x,
       y: n.geometry.y,
-    }));
+    }))
 
     const links = Object.values(graphStore.edges).map((e) => ({
       source: e.sourceId,
       target: e.targetId,
-    }));
+    }))
 
     // Créer la simulation d3-force
     simulation = forceSimulation(nodes)
-      .force('link', forceLink(links).id((d: any) => d.id).distance(linkDistance))
+      .force(
+        'link',
+        forceLink(links)
+          .id((d: any) => d.id)
+          .distance(linkDistance)
+      )
       .force('charge', forceManyBody().strength(chargeStrength))
       .force('center', forceCenter(400, 300))
-      .force('collide', forceCollide(collisionRadius));
+      .force('collide', forceCollide(collisionRadius))
 
     // Exécuter la simulation
     for (let i = 0; i < 300; i++) {
-      simulation.tick();
+      simulation.tick()
     }
 
     // Appliquer les nouvelles positions
@@ -179,10 +184,10 @@ export function useLayoutable(): LayoutableState & LayoutableHandlers {
       // Animation via événement
       const event = new CustomEvent('apply-layout', {
         detail: { nodes, duration },
-      });
-      window.dispatchEvent(event);
+      })
+      window.dispatchEvent(event)
 
-      await new Promise((resolve) => setTimeout(resolve, duration));
+      await new Promise((resolve) => setTimeout(resolve, duration))
     }
 
     // Mettre à jour le store
@@ -193,10 +198,10 @@ export function useLayoutable(): LayoutableState & LayoutableHandlers {
           x: node.x || 0,
           y: node.y || 0,
         },
-      });
+      })
     }
 
-    simulation = null;
+    simulation = null
   }
 
   /**
@@ -209,59 +214,59 @@ export function useLayoutable(): LayoutableState & LayoutableHandlers {
       spacing = 100,
       animate = true,
       duration = 1000,
-    } = options;
+    } = options
 
-    const nodes = Object.values(graphStore.nodes);
-    const rootNodes = nodes.filter((n) => n.parentId === null);
+    const nodes = Object.values(graphStore.nodes)
+    const rootNodes = nodes.filter((n) => n.parentId === null)
 
-    if (rootNodes.length === 0) return;
+    if (rootNodes.length === 0) return
 
     // Calculer les niveaux
-    const levels = new Map<string, number>();
+    const levels = new Map<string, number>()
     const queue: Array<{ id: string; level: number }> = rootNodes.map((n) => ({
       id: n.id,
       level: 0,
-    }));
+    }))
 
     while (queue.length > 0) {
-      const { id, level } = queue.shift()!;
-      levels.set(id, level);
+      const { id, level } = queue.shift()!
+      levels.set(id, level)
 
-      const children = nodes.filter((n) => n.parentId === id);
+      const children = nodes.filter((n) => n.parentId === id)
       for (const child of children) {
-        queue.push({ id: child.id, level: level + 1 });
+        queue.push({ id: child.id, level: level + 1 })
       }
     }
 
     // Positionner les noeuds par niveau
-    const nodesByLevel = new Map<number, string[]>();
+    const nodesByLevel = new Map<number, string[]>()
     for (const [nodeId, level] of levels) {
       if (!nodesByLevel.has(level)) {
-        nodesByLevel.set(level, []);
+        nodesByLevel.set(level, [])
       }
-      nodesByLevel.get(level)!.push(nodeId);
+      nodesByLevel.get(level)!.push(nodeId)
     }
 
-    const positions = new Map<string, { x: number; y: number }>();
+    const positions = new Map<string, { x: number; y: number }>()
 
     for (const [level, nodeIds] of nodesByLevel) {
-      const y = direction === 'top-bottom' ? level * levelSpacing : 0;
-      const x = direction === 'left-right' ? level * levelSpacing : 0;
+      const y = direction === 'top-bottom' ? level * levelSpacing : 0
+      const x = direction === 'left-right' ? level * levelSpacing : 0
 
       nodeIds.forEach((nodeId, index) => {
-        const offsetX = index * spacing - (nodeIds.length * spacing) / 2;
-        const offsetY = index * spacing - (nodeIds.length * spacing) / 2;
+        const offsetX = index * spacing - (nodeIds.length * spacing) / 2
+        const offsetY = index * spacing - (nodeIds.length * spacing) / 2
 
         positions.set(nodeId, {
           x: direction === 'top-bottom' || direction === 'bottom-top' ? offsetX : x,
           y: direction === 'top-bottom' || direction === 'bottom-top' ? y : offsetY,
-        });
-      });
+        })
+      })
     }
 
     // Appliquer les positions
     if (animate) {
-      await new Promise((resolve) => setTimeout(resolve, duration));
+      await new Promise((resolve) => setTimeout(resolve, duration))
     }
 
     for (const [nodeId, pos] of positions) {
@@ -271,7 +276,7 @@ export function useLayoutable(): LayoutableState & LayoutableHandlers {
           x: pos.x + 400,
           y: pos.y + 300,
         },
-      });
+      })
     }
   }
 
@@ -279,28 +284,28 @@ export function useLayoutable(): LayoutableState & LayoutableHandlers {
    * Layout circulaire.
    */
   async function applyCircularLayout(options: LayoutOptions = {}): Promise<void> {
-    const { spacing = 200, animate = true, duration = 1000 } = options;
+    const { spacing = 200, animate = true, duration = 1000 } = options
 
-    const nodes = Object.values(graphStore.nodes);
-    const nodeCount = nodes.length;
+    const nodes = Object.values(graphStore.nodes)
+    const nodeCount = nodes.length
 
-    if (nodeCount === 0) return;
+    if (nodeCount === 0) return
 
-    const radius = spacing;
-    const angleStep = (2 * Math.PI) / nodeCount;
+    const radius = spacing
+    const angleStep = (2 * Math.PI) / nodeCount
 
     // Positionner en cercle
     const positions = nodes.map((node, index) => {
-      const angle = index * angleStep;
+      const angle = index * angleStep
       return {
         id: node.id,
         x: 400 + radius * Math.cos(angle),
         y: 300 + radius * Math.sin(angle),
-      };
-    });
+      }
+    })
 
     if (animate) {
-      await new Promise((resolve) => setTimeout(resolve, duration));
+      await new Promise((resolve) => setTimeout(resolve, duration))
     }
 
     for (const pos of positions) {
@@ -310,7 +315,7 @@ export function useLayoutable(): LayoutableState & LayoutableHandlers {
           x: pos.x,
           y: pos.y,
         },
-      });
+      })
     }
   }
 
@@ -318,28 +323,28 @@ export function useLayoutable(): LayoutableState & LayoutableHandlers {
    * Layout en grille.
    */
   async function applyGridLayout(options: LayoutOptions = {}): Promise<void> {
-    const { spacing = 150, animate = true, duration = 1000 } = options;
+    const { spacing = 150, animate = true, duration = 1000 } = options
 
-    const nodes = Object.values(graphStore.nodes);
-    const nodeCount = nodes.length;
+    const nodes = Object.values(graphStore.nodes)
+    const nodeCount = nodes.length
 
-    if (nodeCount === 0) return;
+    if (nodeCount === 0) return
 
-    const cols = Math.ceil(Math.sqrt(nodeCount));
+    const cols = Math.ceil(Math.sqrt(nodeCount))
 
     const positions = nodes.map((node, index) => {
-      const col = index % cols;
-      const row = Math.floor(index / cols);
+      const col = index % cols
+      const row = Math.floor(index / cols)
 
       return {
         id: node.id,
         x: col * spacing,
         y: row * spacing,
-      };
-    });
+      }
+    })
 
     if (animate) {
-      await new Promise((resolve) => setTimeout(resolve, duration));
+      await new Promise((resolve) => setTimeout(resolve, duration))
     }
 
     for (const pos of positions) {
@@ -349,7 +354,7 @@ export function useLayoutable(): LayoutableState & LayoutableHandlers {
           x: pos.x + 100,
           y: pos.y + 100,
         },
-      });
+      })
     }
   }
 
@@ -357,34 +362,34 @@ export function useLayoutable(): LayoutableState & LayoutableHandlers {
    * Layout en arbre avec d3-hierarchy.
    */
   async function applyTreeLayout(options: LayoutOptions = {}): Promise<void> {
-    const { spacing = 100, animate = true, duration = 1000 } = options;
+    const { spacing = 100, animate = true, duration = 1000 } = options
 
-    const nodes = Object.values(graphStore.nodes);
-    const rootNodes = nodes.filter((n) => n.parentId === null);
+    const nodes = Object.values(graphStore.nodes)
+    const rootNodes = nodes.filter((n) => n.parentId === null)
 
-    if (rootNodes.length === 0) return;
+    if (rootNodes.length === 0) return
 
     // Utiliser le premier root trouvé
-    const rootNode = rootNodes[0];
+    const rootNode = rootNodes[0]
 
     // Construire la hiérarchie
     const buildHierarchy = (nodeId: string): any => {
-      const children = nodes.filter((n) => n.parentId === nodeId);
+      const children = nodes.filter((n) => n.parentId === nodeId)
 
       return {
         id: nodeId,
         children: children.map((c) => buildHierarchy(c.id)),
-      };
-    };
+      }
+    }
 
-    const root = hierarchy(buildHierarchy(rootNode.id));
-    const treeLayout = tree().nodeSize([spacing, spacing]);
+    const root = hierarchy(buildHierarchy(rootNode.id))
+    const treeLayout = tree().nodeSize([spacing, spacing])
 
-    treeLayout(root);
+    treeLayout(root)
 
     // Appliquer les positions
     if (animate) {
-      await new Promise((resolve) => setTimeout(resolve, duration));
+      await new Promise((resolve) => setTimeout(resolve, duration))
     }
 
     root.descendants().forEach((d: any) => {
@@ -394,8 +399,8 @@ export function useLayoutable(): LayoutableState & LayoutableHandlers {
           x: d.x + 400,
           y: d.y + 100,
         },
-      });
-    });
+      })
+    })
   }
 
   /**
@@ -405,30 +410,30 @@ export function useLayoutable(): LayoutableState & LayoutableHandlers {
     algorithm: LayoutAlgorithm,
     options: LayoutOptions = {}
   ): Promise<void> {
-    isLayouting.value = true;
-    currentAlgorithm.value = algorithm;
+    isLayouting.value = true
+    currentAlgorithm.value = algorithm
 
     try {
       switch (algorithm) {
         case 'force':
-          await applyForceLayout(options as ForceLayoutOptions);
-          break;
+          await applyForceLayout(options as ForceLayoutOptions)
+          break
         case 'hierarchical':
-          await applyHierarchicalLayout(options as HierarchicalLayoutOptions);
-          break;
+          await applyHierarchicalLayout(options as HierarchicalLayoutOptions)
+          break
         case 'circular':
-          await applyCircularLayout(options);
-          break;
+          await applyCircularLayout(options)
+          break
         case 'grid':
-          await applyGridLayout(options);
-          break;
+          await applyGridLayout(options)
+          break
         case 'tree':
-          await applyTreeLayout(options);
-          break;
+          await applyTreeLayout(options)
+          break
       }
     } finally {
-      isLayouting.value = false;
-      currentAlgorithm.value = null;
+      isLayouting.value = false
+      currentAlgorithm.value = null
     }
   }
 
@@ -437,18 +442,18 @@ export function useLayoutable(): LayoutableState & LayoutableHandlers {
    */
   function stopLayout(): void {
     if (simulation) {
-      simulation.stop();
-      simulation = null;
+      simulation.stop()
+      simulation = null
     }
-    isLayouting.value = false;
-    currentAlgorithm.value = null;
+    isLayouting.value = false
+    currentAlgorithm.value = null
   }
 
   /**
    * Réinitialise les positions.
    */
   function resetLayout(): void {
-    const nodes = Object.values(graphStore.nodes);
+    const nodes = Object.values(graphStore.nodes)
 
     nodes.forEach((node, index) => {
       graphStore.updateNode(node.id, {
@@ -457,8 +462,8 @@ export function useLayoutable(): LayoutableState & LayoutableHandlers {
           x: 100 + (index % 10) * 150,
           y: 100 + Math.floor(index / 10) * 150,
         },
-      });
-    });
+      })
+    })
   }
 
   return {
@@ -467,5 +472,5 @@ export function useLayoutable(): LayoutableState & LayoutableHandlers {
     applyLayout,
     stopLayout,
     resetLayout,
-  };
+  }
 }

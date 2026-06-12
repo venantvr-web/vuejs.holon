@@ -1,8 +1,8 @@
 // src/composables/traits/useRelationTypeable.ts
 // Gestion des types de relations Archimate avec validation
-import { ref, computed, type Ref } from 'vue';
-import { useGraphStore } from '../../stores/graph';
-import { ArrowType } from './useArrowable';
+import { ref, computed, type Ref } from 'vue'
+import { useGraphStore } from '../../stores/graph'
+import { ArrowType } from './useArrowable'
 
 // Types de relations Archimate
 export enum RelationType {
@@ -42,52 +42,52 @@ export type ArchimateLayer =
   | 'technology'
   | 'physical'
   | 'motivation'
-  | 'implementation';
+  | 'implementation'
 
 // Type d'accès pour la relation Access
-export type AccessType = 'read' | 'write' | 'readwrite';
+export type AccessType = 'read' | 'write' | 'readwrite'
 
 // Force d'influence pour la relation Influence
-export type InfluenceStrength = '+' | '++' | '-' | '--' | '?' | '0';
+export type InfluenceStrength = '+' | '++' | '-' | '--' | '?' | '0'
 
 // Type de flux pour la relation Flow
-export type FlowType = 'information' | 'material' | 'money' | 'energy';
+export type FlowType = 'information' | 'material' | 'money' | 'energy'
 
 // Configuration d'une relation
 export interface RelationConfig {
-  type: RelationType;
-  category: RelationCategory;
-  name: string;
-  description: string;
+  type: RelationType
+  category: RelationCategory
+  name: string
+  description: string
   // Style visuel
-  lineStyle: 'solid' | 'dashed' | 'dotted';
-  sourceMarker: ArrowType;
-  targetMarker: ArrowType;
-  defaultColor: string;
+  lineStyle: 'solid' | 'dashed' | 'dotted'
+  sourceMarker: ArrowType
+  targetMarker: ArrowType
+  defaultColor: string
   // Validation
-  validation: RelationValidation;
+  validation: RelationValidation
   // Propriétés spécifiques (optionnelles)
   properties?: {
-    accessType?: AccessType;
-    influenceStrength?: InfluenceStrength;
-    flowType?: FlowType;
-    bidirectional?: boolean;
-  };
+    accessType?: AccessType
+    influenceStrength?: InfluenceStrength
+    flowType?: FlowType
+    bidirectional?: boolean
+  }
 }
 
 // Règles de validation pour une relation
 export interface RelationValidation {
   // Layers autorisés
-  allowedSourceLayers?: ArchimateLayer[];
-  allowedTargetLayers?: ArchimateLayer[];
+  allowedSourceLayers?: ArchimateLayer[]
+  allowedTargetLayers?: ArchimateLayer[]
   // Types spécifiques autorisés (si vide = tous du layer)
-  allowedSourceTypes?: string[];
-  allowedTargetTypes?: string[];
+  allowedSourceTypes?: string[]
+  allowedTargetTypes?: string[]
   // Contraintes
-  sameLayerOnly?: boolean;
-  crossLayerDirection?: 'up' | 'down' | 'both'; // up = tech→app→business
+  sameLayerOnly?: boolean
+  crossLayerDirection?: 'up' | 'down' | 'both' // up = tech→app→business
   // Self-reference
-  allowSelfLoop?: boolean;
+  allowSelfLoop?: boolean
 }
 
 // Configuration de toutes les relations Archimate
@@ -296,7 +296,7 @@ export const RELATION_CONFIGS: Record<RelationType, RelationConfig> = {
       allowSelfLoop: false,
     },
   },
-};
+}
 
 // Labels pour l'UI
 export const RELATION_TYPE_LABELS: Record<RelationType, string> = {
@@ -313,48 +313,82 @@ export const RELATION_TYPE_LABELS: Record<RelationType, string> = {
   [RelationType.Specialization]: 'Specialization ─▷',
   [RelationType.AndJunction]: 'AND Junction ●',
   [RelationType.OrJunction]: 'OR Junction ○',
-};
+}
 
 // Mapping Layer → types d'éléments autorisés (simplifié)
 const LAYER_ELEMENTS: Record<ArchimateLayer, string[]> = {
   strategy: [
-    'strategy-resource', 'strategy-capability', 'strategy-value-stream',
+    'strategy-resource',
+    'strategy-capability',
+    'strategy-value-stream',
     'strategy-course-of-action',
   ],
   business: [
-    'business-actor', 'business-role', 'business-collaboration',
-    'business-interface', 'business-process', 'business-function',
-    'business-interaction', 'business-event', 'business-service',
-    'business-object', 'business-contract', 'business-representation',
+    'business-actor',
+    'business-role',
+    'business-collaboration',
+    'business-interface',
+    'business-process',
+    'business-function',
+    'business-interaction',
+    'business-event',
+    'business-service',
+    'business-object',
+    'business-contract',
+    'business-representation',
     'business-product',
   ],
   application: [
-    'application-component', 'application-collaboration', 'application-interface',
-    'application-function', 'application-process', 'application-interaction',
-    'application-event', 'application-service', 'application-data-object',
+    'application-component',
+    'application-collaboration',
+    'application-interface',
+    'application-function',
+    'application-process',
+    'application-interaction',
+    'application-event',
+    'application-service',
+    'application-data-object',
   ],
   technology: [
-    'technology-node', 'technology-device', 'technology-system-software',
-    'technology-collaboration', 'technology-interface', 'technology-path',
-    'technology-communication-network', 'technology-function', 'technology-process',
-    'technology-interaction', 'technology-event', 'technology-service',
+    'technology-node',
+    'technology-device',
+    'technology-system-software',
+    'technology-collaboration',
+    'technology-interface',
+    'technology-path',
+    'technology-communication-network',
+    'technology-function',
+    'technology-process',
+    'technology-interaction',
+    'technology-event',
+    'technology-service',
     'technology-artifact',
   ],
   physical: [
-    'physical-equipment', 'physical-facility', 'physical-distribution-network',
+    'physical-equipment',
+    'physical-facility',
+    'physical-distribution-network',
     'physical-material',
   ],
   motivation: [
-    'motivation-stakeholder', 'motivation-driver', 'motivation-assessment',
-    'motivation-goal', 'motivation-outcome', 'motivation-principle',
-    'motivation-requirement', 'motivation-constraint', 'motivation-meaning',
+    'motivation-stakeholder',
+    'motivation-driver',
+    'motivation-assessment',
+    'motivation-goal',
+    'motivation-outcome',
+    'motivation-principle',
+    'motivation-requirement',
+    'motivation-constraint',
+    'motivation-meaning',
     'motivation-value',
   ],
   implementation: [
-    'implementation-work-package', 'implementation-deliverable',
-    'implementation-plateau', 'implementation-gap',
+    'implementation-work-package',
+    'implementation-deliverable',
+    'implementation-plateau',
+    'implementation-gap',
   ],
-};
+}
 
 // Hiérarchie des layers (pour crossLayerDirection)
 const LAYER_HIERARCHY: ArchimateLayer[] = [
@@ -365,14 +399,14 @@ const LAYER_HIERARCHY: ArchimateLayer[] = [
   'strategy',
   'motivation',
   'implementation',
-];
+]
 
 /**
  * Options de configuration pour le trait RelationTypeable.
  */
 export interface RelationTypeableOptions {
   /** Identifiant réactif de l'arête */
-  edgeId: Ref<string>;
+  edgeId: Ref<string>
 }
 
 /**
@@ -380,21 +414,21 @@ export interface RelationTypeableOptions {
  */
 export interface RelationTypeableState {
   /** Type de relation ArchiMate actuel */
-  relationType: Ref<RelationType>;
+  relationType: Ref<RelationType>
   /** Configuration complète de la relation (style, validation, etc.) */
-  relationConfig: Ref<RelationConfig>;
+  relationConfig: Ref<RelationConfig>
   /** Catégorie de la relation (structural, dependency, dynamic, other) */
-  relationCategory: Ref<RelationCategory>;
+  relationCategory: Ref<RelationCategory>
   /** Type d'accès pour les relations Access (read, write, readwrite) */
-  accessType: Ref<AccessType | null>;
+  accessType: Ref<AccessType | null>
   /** Force d'influence pour les relations Influence (+, ++, -, --, ?, 0) */
-  influenceStrength: Ref<InfluenceStrength | null>;
+  influenceStrength: Ref<InfluenceStrength | null>
   /** Type de flux pour les relations Flow (information, material, money, energy) */
-  flowType: Ref<FlowType | null>;
+  flowType: Ref<FlowType | null>
   /** Indique si la relation est valide selon les règles ArchiMate */
-  isValid: Ref<boolean>;
+  isValid: Ref<boolean>
   /** Message d'erreur de validation si invalide */
-  validationError: Ref<string | null>;
+  validationError: Ref<string | null>
 }
 
 /**
@@ -402,17 +436,17 @@ export interface RelationTypeableState {
  */
 export interface RelationTypeableHandlers {
   /** Définit le type de relation ArchiMate */
-  setRelationType: (type: RelationType) => void;
+  setRelationType: (type: RelationType) => void
   /** Définit le type d'accès (pour relations Access uniquement) */
-  setAccessType: (type: AccessType) => void;
+  setAccessType: (type: AccessType) => void
   /** Définit la force d'influence (pour relations Influence uniquement) */
-  setInfluenceStrength: (strength: InfluenceStrength) => void;
+  setInfluenceStrength: (strength: InfluenceStrength) => void
   /** Définit le type de flux (pour relations Flow uniquement) */
-  setFlowType: (type: FlowType) => void;
+  setFlowType: (type: FlowType) => void
   /** Valide la relation selon les règles ArchiMate et retourne le résultat */
-  validateRelation: () => { valid: boolean; error?: string };
+  validateRelation: () => { valid: boolean; error?: string }
   /** Retourne les types de relations autorisés entre deux types de noeuds */
-  getAvailableRelationTypes: (sourceType: string, targetType: string) => RelationType[];
+  getAvailableRelationTypes: (sourceType: string, targetType: string) => RelationType[]
 }
 
 /**
@@ -433,108 +467,117 @@ export interface RelationTypeableHandlers {
  * const { valid, error } = validateRelation();
  * ```
  */
-export function useRelationTypeable(options: RelationTypeableOptions): RelationTypeableState & RelationTypeableHandlers {
-  const graphStore = useGraphStore();
+export function useRelationTypeable(
+  options: RelationTypeableOptions
+): RelationTypeableState & RelationTypeableHandlers {
+  const graphStore = useGraphStore()
 
   // État local
-  const validationError = ref<string | null>(null);
+  const validationError = ref<string | null>(null)
 
   // Type de relation actuel (stocké dans edge.data pour cohérence avec
   // useValidatable, useExportable, useImportable qui lisent tous edge.data.*).
   const relationType = computed((): RelationType => {
-    const edge = graphStore.edges[options.edgeId.value];
-    if (!edge) return RelationType.Association;
-    return (edge.data?.relationType as RelationType) ?? RelationType.Association;
-  });
+    const edge = graphStore.edges[options.edgeId.value]
+    if (!edge) return RelationType.Association
+    return (edge.data?.relationType as RelationType) ?? RelationType.Association
+  })
 
-  const relationConfig = computed((): RelationConfig => RELATION_CONFIGS[relationType.value]);
-  const relationCategory = computed((): RelationCategory => relationConfig.value.category);
+  const relationConfig = computed((): RelationConfig => RELATION_CONFIGS[relationType.value])
+  const relationCategory = computed((): RelationCategory => relationConfig.value.category)
 
   const accessType = computed((): AccessType | null => {
-    if (relationType.value !== RelationType.Access) return null;
-    return (graphStore.edges[options.edgeId.value]?.data?.accessType as AccessType) ?? 'readwrite';
-  });
+    if (relationType.value !== RelationType.Access) return null
+    return (graphStore.edges[options.edgeId.value]?.data?.accessType as AccessType) ?? 'readwrite'
+  })
 
   const influenceStrength = computed((): InfluenceStrength | null => {
-    if (relationType.value !== RelationType.Influence) return null;
-    return (graphStore.edges[options.edgeId.value]?.data?.influenceStrength as InfluenceStrength) ?? '+';
-  });
+    if (relationType.value !== RelationType.Influence) return null
+    return (
+      (graphStore.edges[options.edgeId.value]?.data?.influenceStrength as InfluenceStrength) ?? '+'
+    )
+  })
 
   const flowType = computed((): FlowType | null => {
-    if (relationType.value !== RelationType.Flow) return null;
-    return (graphStore.edges[options.edgeId.value]?.data?.flowType as FlowType) ?? 'information';
-  });
+    if (relationType.value !== RelationType.Flow) return null
+    return (graphStore.edges[options.edgeId.value]?.data?.flowType as FlowType) ?? 'information'
+  })
 
   // Validation
   const isValid = computed((): boolean => {
-    const result = validateRelation();
-    return result.valid;
-  });
+    const result = validateRelation()
+    return result.valid
+  })
 
   // Récupère le layer d'un type d'élément
   function getLayerForType(elementType: string): ArchimateLayer | null {
     for (const [layer, types] of Object.entries(LAYER_ELEMENTS)) {
       if (types.includes(elementType)) {
-        return layer as ArchimateLayer;
+        return layer as ArchimateLayer
       }
     }
-    return null;
+    return null
   }
 
   // Vérifie si un layer est "au-dessus" d'un autre dans la hiérarchie
   function isLayerAbove(layer1: ArchimateLayer, layer2: ArchimateLayer): boolean {
-    const idx1 = LAYER_HIERARCHY.indexOf(layer1);
-    const idx2 = LAYER_HIERARCHY.indexOf(layer2);
-    return idx1 > idx2;
+    const idx1 = LAYER_HIERARCHY.indexOf(layer1)
+    const idx2 = LAYER_HIERARCHY.indexOf(layer2)
+    return idx1 > idx2
   }
 
   // Valide la relation actuelle
   function validateRelation(): { valid: boolean; error?: string } {
-    const edge = graphStore.edges[options.edgeId.value];
+    const edge = graphStore.edges[options.edgeId.value]
     if (!edge) {
-      return { valid: false, error: 'Edge introuvable' };
+      return { valid: false, error: 'Edge introuvable' }
     }
 
-    const sourceNode = graphStore.nodes[edge.sourceId];
-    const targetNode = graphStore.nodes[edge.targetId];
+    const sourceNode = graphStore.nodes[edge.sourceId]
+    const targetNode = graphStore.nodes[edge.targetId]
 
     if (!sourceNode || !targetNode) {
-      return { valid: false, error: 'Noeuds source ou cible introuvables' };
+      return { valid: false, error: 'Noeuds source ou cible introuvables' }
     }
 
-    const config = relationConfig.value;
-    const validation = config.validation;
+    const config = relationConfig.value
+    const validation = config.validation
 
     // Vérifier self-loop
     if (!validation.allowSelfLoop && edge.sourceId === edge.targetId) {
-      validationError.value = `${config.name} ne peut pas être une boucle sur soi-même`;
-      return { valid: false, error: validationError.value };
+      validationError.value = `${config.name} ne peut pas être une boucle sur soi-même`
+      return { valid: false, error: validationError.value }
     }
 
     // Récupérer les types Archimate
-    const sourceType = (sourceNode.data?.archimateType as string) ?? sourceNode.type;
-    const targetType = (targetNode.data?.archimateType as string) ?? targetNode.type;
+    const sourceType = (sourceNode.data?.archimateType as string) ?? sourceNode.type
+    const targetType = (targetNode.data?.archimateType as string) ?? targetNode.type
 
-    const sourceLayer = getLayerForType(sourceType);
-    const targetLayer = getLayerForType(targetType);
+    const sourceLayer = getLayerForType(sourceType)
+    const targetLayer = getLayerForType(targetType)
 
     // Vérifier sameLayerOnly
     if (validation.sameLayerOnly && sourceLayer && targetLayer && sourceLayer !== targetLayer) {
-      validationError.value = `${config.name} doit rester dans le même layer`;
-      return { valid: false, error: validationError.value };
+      validationError.value = `${config.name} doit rester dans le même layer`
+      return { valid: false, error: validationError.value }
     }
 
     // Vérifier crossLayerDirection
-    if (validation.crossLayerDirection && sourceLayer && targetLayer && sourceLayer !== targetLayer) {
+    if (
+      validation.crossLayerDirection &&
+      sourceLayer &&
+      targetLayer &&
+      sourceLayer !== targetLayer
+    ) {
       if (validation.crossLayerDirection === 'up') {
         if (!isLayerAbove(targetLayer, sourceLayer)) {
-          validationError.value = `${config.name} doit aller vers un layer supérieur`;
-          return { valid: false, error: validationError.value };
+          validationError.value = `${config.name} doit aller vers un layer supérieur`
+          return { valid: false, error: validationError.value }
         }
       } else if (validation.crossLayerDirection === 'down') {
         if (!isLayerAbove(sourceLayer, targetLayer)) {
-          validationError.value = `${config.name} doit aller vers un layer inférieur`;
-          return { valid: false, error: validationError.value };
+          validationError.value = `${config.name} doit aller vers un layer inférieur`
+          return { valid: false, error: validationError.value }
         }
       }
     }
@@ -542,135 +585,140 @@ export function useRelationTypeable(options: RelationTypeableOptions): RelationT
     // Vérifier allowedSourceLayers
     if (validation.allowedSourceLayers && sourceLayer) {
       if (!validation.allowedSourceLayers.includes(sourceLayer)) {
-        validationError.value = `Source non autorisée pour ${config.name}`;
-        return { valid: false, error: validationError.value };
+        validationError.value = `Source non autorisée pour ${config.name}`
+        return { valid: false, error: validationError.value }
       }
     }
 
     // Vérifier allowedTargetLayers
     if (validation.allowedTargetLayers && targetLayer) {
       if (!validation.allowedTargetLayers.includes(targetLayer)) {
-        validationError.value = `Cible non autorisée pour ${config.name}`;
-        return { valid: false, error: validationError.value };
+        validationError.value = `Cible non autorisée pour ${config.name}`
+        return { valid: false, error: validationError.value }
       }
     }
 
     // Vérifier allowedSourceTypes
     if (validation.allowedSourceTypes && validation.allowedSourceTypes.length > 0) {
       if (!validation.allowedSourceTypes.includes(sourceType)) {
-        validationError.value = `Type source non autorisé pour ${config.name}`;
-        return { valid: false, error: validationError.value };
+        validationError.value = `Type source non autorisé pour ${config.name}`
+        return { valid: false, error: validationError.value }
       }
     }
 
     // Vérifier allowedTargetTypes
     if (validation.allowedTargetTypes && validation.allowedTargetTypes.length > 0) {
       if (!validation.allowedTargetTypes.includes(targetType)) {
-        validationError.value = `Type cible non autorisé pour ${config.name}`;
-        return { valid: false, error: validationError.value };
+        validationError.value = `Type cible non autorisé pour ${config.name}`
+        return { valid: false, error: validationError.value }
       }
     }
 
-    validationError.value = null;
-    return { valid: true };
+    validationError.value = null
+    return { valid: true }
   }
 
   function updateEdgeData(patch: Record<string, unknown>) {
-    const edge = graphStore.edges[options.edgeId.value];
-    if (!edge) return;
+    const edge = graphStore.edges[options.edgeId.value]
+    if (!edge) return
     graphStore.updateEdge(options.edgeId.value, {
       data: { ...(edge.data ?? {}), ...patch },
-    });
+    })
   }
 
   // Définit le type de relation et ses métadonnées visuelles associées
   function setRelationType(type: RelationType) {
-    const config = RELATION_CONFIGS[type];
+    const config = RELATION_CONFIGS[type]
     updateEdgeData({
       relationType: type,
       lineStyle: config.lineStyle,
       sourceMarker: config.sourceMarker,
       targetMarker: config.targetMarker,
-    });
+    })
     // Les marqueurs d'arêtes vivent aussi dans les champs startArrow/endArrow
     // lus par EdgeLayer ; synchroniser pour cohérence visuelle.
     graphStore.updateEdge(options.edgeId.value, {
       startArrow: config.sourceMarker,
       endArrow: config.targetMarker,
-    });
+    })
   }
 
   function setAccessType(type: AccessType) {
-    if (relationType.value !== RelationType.Access) return;
-    updateEdgeData({ accessType: type });
+    if (relationType.value !== RelationType.Access) return
+    updateEdgeData({ accessType: type })
   }
 
   function setInfluenceStrength(strength: InfluenceStrength) {
-    if (relationType.value !== RelationType.Influence) return;
-    updateEdgeData({ influenceStrength: strength });
+    if (relationType.value !== RelationType.Influence) return
+    updateEdgeData({ influenceStrength: strength })
   }
 
   function setFlowType(type: FlowType) {
-    if (relationType.value !== RelationType.Flow) return;
-    updateEdgeData({ flowType: type });
+    if (relationType.value !== RelationType.Flow) return
+    updateEdgeData({ flowType: type })
   }
 
   // Retourne les types de relations disponibles pour une paire source/target
   function getAvailableRelationTypes(sourceType: string, targetType: string): RelationType[] {
-    const available: RelationType[] = [];
-    const sourceLayer = getLayerForType(sourceType);
-    const targetLayer = getLayerForType(targetType);
+    const available: RelationType[] = []
+    const sourceLayer = getLayerForType(sourceType)
+    const targetLayer = getLayerForType(targetType)
 
     for (const [type, config] of Object.entries(RELATION_CONFIGS)) {
-      const validation = config.validation;
+      const validation = config.validation
 
       // Vérifier sameLayerOnly
       if (validation.sameLayerOnly && sourceLayer !== targetLayer) {
-        continue;
+        continue
       }
 
       // Vérifier crossLayerDirection
-      if (validation.crossLayerDirection && sourceLayer && targetLayer && sourceLayer !== targetLayer) {
+      if (
+        validation.crossLayerDirection &&
+        sourceLayer &&
+        targetLayer &&
+        sourceLayer !== targetLayer
+      ) {
         if (validation.crossLayerDirection === 'up' && !isLayerAbove(targetLayer, sourceLayer)) {
-          continue;
+          continue
         }
         if (validation.crossLayerDirection === 'down' && !isLayerAbove(sourceLayer, targetLayer)) {
-          continue;
+          continue
         }
       }
 
       // Vérifier allowedSourceLayers
       if (validation.allowedSourceLayers && sourceLayer) {
         if (!validation.allowedSourceLayers.includes(sourceLayer)) {
-          continue;
+          continue
         }
       }
 
       // Vérifier allowedTargetLayers
       if (validation.allowedTargetLayers && targetLayer) {
         if (!validation.allowedTargetLayers.includes(targetLayer)) {
-          continue;
+          continue
         }
       }
 
       // Vérifier allowedSourceTypes
       if (validation.allowedSourceTypes && validation.allowedSourceTypes.length > 0) {
         if (!validation.allowedSourceTypes.includes(sourceType)) {
-          continue;
+          continue
         }
       }
 
       // Vérifier allowedTargetTypes
       if (validation.allowedTargetTypes && validation.allowedTargetTypes.length > 0) {
         if (!validation.allowedTargetTypes.includes(targetType)) {
-          continue;
+          continue
         }
       }
 
-      available.push(type as RelationType);
+      available.push(type as RelationType)
     }
 
-    return available;
+    return available
   }
 
   return {
@@ -688,20 +736,18 @@ export function useRelationTypeable(options: RelationTypeableOptions): RelationT
     setFlowType,
     validateRelation,
     getAvailableRelationTypes,
-  };
+  }
 }
 
 // Helpers exportés
 export function getRelationsByCategory(category: RelationCategory): RelationType[] {
-  return Object.values(RelationType).filter(
-    type => RELATION_CONFIGS[type].category === category
-  );
+  return Object.values(RelationType).filter((type) => RELATION_CONFIGS[type].category === category)
 }
 
 export function getAllRelationTypes(): RelationType[] {
-  return Object.values(RelationType);
+  return Object.values(RelationType)
 }
 
 export function getRelationConfig(type: RelationType): RelationConfig {
-  return RELATION_CONFIGS[type];
+  return RELATION_CONFIGS[type]
 }

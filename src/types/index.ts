@@ -1,17 +1,16 @@
-
 // src/types/index.ts
 
 // Export des types utilitaires
-export * from './trait-utilities';
+export * from './trait-utilities'
 
 /**
  * La géométrie d'un noeud, relative à son parent.
  */
 export interface Geometry {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
+  x: number
+  y: number
+  w: number
+  h: number
 }
 
 /**
@@ -19,10 +18,10 @@ export interface Geometry {
  * Utilise des propriétés compatibles avec SVG.
  */
 export interface Styling {
-  fill: string;
-  stroke: string;
-  strokeWidth: number;
-  opacity: number;
+  fill: string
+  stroke: string
+  strokeWidth: number
+  opacity: number
 }
 
 /**
@@ -30,11 +29,11 @@ export interface Styling {
  * Il peut être un conteneur ou une forme simple.
  */
 export interface Node {
-  id: string;
-  parentId: string | null; // null pour les noeuds à la racine du canvas
-  type: 'container' | 'shape';
-  geometry: Geometry;
-  styling: Styling;
+  id: string
+  parentId: string | null // null pour les noeuds à la racine du canvas
+  type: 'container' | 'shape'
+  geometry: Geometry
+  styling: Styling
   /**
    * Données libres du noeud (métadonnées, configuration, état applicatif).
    *
@@ -58,13 +57,13 @@ export interface Node {
    *   defaultAnchor: AnchorPosition.Auto
    * }
    */
-  data: Record<string, any>;
+  data: Record<string, any>
 }
 
 /**
  * Type de routage pour les liens.
  */
-export type EdgeRouting = 'straight' | 'orthogonal' | 'curved' | 'bezier';
+export type EdgeRouting = 'straight' | 'orthogonal' | 'curved' | 'bezier'
 
 /**
  * Types de flèches pour les marqueurs d'edges.
@@ -89,18 +88,18 @@ export type ArrowType =
   | 'archi-access'
   | 'archi-influence'
   | 'archi-trigger'
-  | 'archi-flow';
+  | 'archi-flow'
 
 /**
  * Élément de la bibliothèque de blocs réutilisables.
  * Sert de modèle pour instancier de nouveaux noeuds sur le canevas.
  */
 export interface LibraryItem {
-  id: string;
-  name: string;
-  isBuiltIn: boolean;
-  createdAt: number;
-  template: Omit<Node, 'id' | 'parentId'>;
+  id: string
+  name: string
+  isBuiltIn: boolean
+  createdAt: number
+  template: Omit<Node, 'id' | 'parentId'>
 }
 
 /**
@@ -108,22 +107,22 @@ export interface LibraryItem {
  * Les liens existent indépendamment de la hiérarchie des noeuds.
  */
 export interface Edge {
-  id: string;
-  sourceId: string;
-  targetId: string;
-  routing: EdgeRouting;
+  id: string
+  sourceId: string
+  targetId: string
+  routing: EdgeRouting
   /**
    * Type de flèche au départ de l'edge (optionnel, défaut: 'dot').
    */
-  startArrow?: ArrowType;
+  startArrow?: ArrowType
   /**
    * Type de flèche à l'arrivée de l'edge (optionnel, défaut: 'arrow').
    */
-  endArrow?: ArrowType;
+  endArrow?: ArrowType
   /**
    * Taille des marqueurs de flèche (optionnel, défaut: 10).
    */
-  arrowSize?: number;
+  arrowSize?: number
   /**
    * Données libres de l'arête : nom affiché, commentaire, type de relation,
    * labels avancés, métadonnées applicatives.
@@ -131,5 +130,5 @@ export interface Edge {
    * Champs usuels : `name` (string), `comment` (string), `relationType` (RelationType),
    * `labels` (EdgeLabel[]).
    */
-  data?: Record<string, any>;
+  data?: Record<string, any>
 }

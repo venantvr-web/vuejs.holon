@@ -1,17 +1,17 @@
 <!-- src/components/ui/controls/base/BaseSlider.vue -->
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from 'vue'
 
 interface BaseSliderProps {
-  modelValue: number;
-  min?: number;
-  max?: number;
-  step?: number;
-  label?: string;
-  unit?: string;
-  showValue?: boolean;
-  disabled?: boolean;
-  vertical?: boolean;
+  modelValue: number
+  min?: number
+  max?: number
+  step?: number
+  label?: string
+  unit?: string
+  showValue?: boolean
+  disabled?: boolean
+  vertical?: boolean
 }
 
 const props = withDefaults(defineProps<BaseSliderProps>(), {
@@ -22,20 +22,20 @@ const props = withDefaults(defineProps<BaseSliderProps>(), {
   showValue: true,
   disabled: false,
   vertical: false,
-});
+})
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: number): void;
-}>();
+  (e: 'update:modelValue', value: number): void
+}>()
 
 const displayValue = computed(() => {
-  return `${props.modelValue}${props.unit}`;
-});
+  return `${props.modelValue}${props.unit}`
+})
 
 function handleInput(event: Event) {
-  const target = event.target as HTMLInputElement;
-  const value = parseFloat(target.value);
-  emit('update:modelValue', value);
+  const target = event.target as HTMLInputElement
+  const value = parseFloat(target.value)
+  emit('update:modelValue', value)
 }
 </script>
 

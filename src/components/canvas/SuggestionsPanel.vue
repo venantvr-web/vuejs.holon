@@ -1,8 +1,7 @@
-
 <!-- src/components/canvas/SuggestionsPanel.vue -->
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import type { Component } from 'vue';
+import { ref, computed } from 'vue'
+import type { Component } from 'vue'
 import {
   ArrowUpRight,
   Diamond,
@@ -13,35 +12,42 @@ import {
   Recycle,
   X,
   Zap,
-} from 'lucide-vue-next';
-import { useSuggestable, useSelectionState } from '../../composables/traits';
-import type { Suggestion, SuggestionPriority } from '../../composables/traits';
+} from 'lucide-vue-next'
+import { useSuggestable, useSelectionState } from '../../composables/traits'
+import type { Suggestion, SuggestionPriority } from '../../composables/traits'
 
-const { activeSuggestions, generateSuggestions, applySuggestion, dismissSuggestion, clearSuggestions, isGenerating } = useSuggestable();
-const { selectedNodeIds, focusedNodeId } = useSelectionState();
+const {
+  activeSuggestions,
+  generateSuggestions,
+  applySuggestion,
+  dismissSuggestion,
+  clearSuggestions,
+  isGenerating,
+} = useSuggestable()
+const { selectedNodeIds, focusedNodeId } = useSelectionState()
 
-const isOpen = ref(false);
+const isOpen = ref(false)
 
 function handleGenerate() {
-  const selected = Array.from(selectedNodeIds.value);
+  const selected = Array.from(selectedNodeIds.value)
   generateSuggestions({
     selectedNodeId: selected[0],
     visibleNodeIds: selected,
-  });
-  isOpen.value = true;
+  })
+  isOpen.value = true
 }
 
 const PRIORITY_CLS: Record<SuggestionPriority, string> = {
   high: 'app-badge app-badge-danger',
   medium: 'app-badge app-badge-warning',
   low: 'app-badge app-badge-info',
-};
+}
 
 const PRIORITY_LABEL: Record<SuggestionPriority, string> = {
   high: 'Prioritaire',
   medium: 'Moyenne',
   low: 'Basse',
-};
+}
 
 // Icônes lucide par type de suggestion (fallback : Diamond).
 const TYPE_ICON: Record<string, Component> = {
@@ -51,16 +57,16 @@ const TYPE_ICON: Record<string, Component> = {
   naming: Pencil,
   completion: Ellipsis,
   optimization: Zap,
-};
+}
 
 function focusSuggestion(s: Suggestion) {
   if (s.nodeIds && s.nodeIds.length > 0) {
-    selectedNodeIds.value = new Set(s.nodeIds);
-    focusedNodeId.value = s.nodeIds[0];
+    selectedNodeIds.value = new Set(s.nodeIds)
+    focusedNodeId.value = s.nodeIds[0]
   }
 }
 
-const count = computed(() => activeSuggestions.value.length);
+const count = computed(() => activeSuggestions.value.length)
 </script>
 
 <template>
@@ -113,13 +119,13 @@ const count = computed(() => activeSuggestions.value.length);
       </div>
 
       <ul class="overflow-y-auto divide-y divide-[var(--border)]">
-        <li
-          v-for="s in activeSuggestions"
-          :key="s.id"
-          class="px-3 py-2 app-hover"
-        >
+        <li v-for="s in activeSuggestions" :key="s.id" class="px-3 py-2 app-hover">
           <div class="flex items-start gap-2">
-            <component :is="TYPE_ICON[s.type] ?? Diamond" :size="16" class="app-muted mt-0.5 flex-shrink-0" />
+            <component
+              :is="TYPE_ICON[s.type] ?? Diamond"
+              :size="16"
+              class="app-muted mt-0.5 flex-shrink-0"
+            />
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1">
                 <span :class="PRIORITY_CLS[s.priority]">

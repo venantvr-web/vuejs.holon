@@ -13,7 +13,8 @@
 :root {
   /* Typographie. Inter Variable est importée dans main.ts via @fontsource. */
   --font-sans: 'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  --font-mono:
+    ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
 
   /* Rayons de bordure — trois niveaux suffisent pour toute l'UI. */
   --radius-sm: 4px;
@@ -25,117 +26,119 @@
   --shadow-2: 0 2px 4px rgba(15, 23, 42, 0.07), 0 6px 16px rgba(15, 23, 42, 0.08);
   --shadow-3: 0 4px 8px rgba(15, 23, 42, 0.08), 0 16px 40px rgba(15, 23, 42, 0.14);
 
-  --bg:          #ffffff;   /* fond principal app */
-  --surface:     #ffffff;   /* surfaces neutres (inspecteur, panneaux) */
-  --surface-2:   #f3f4f6;   /* en-têtes, barres, boutons neutres */
-  --surface-3:   #e5e7eb;   /* hover des boutons neutres */
-  --fg:          #111827;   /* texte principal */
-  --fg-muted:    #4b5563;   /* labels, sous-titres */
-  --fg-subtle:   #6b7280;   /* meta, hints */
-  --border:      #e5e7eb;
-  --input-bg:    #ffffff;
-  --input-fg:    #111827;
+  --bg: #ffffff; /* fond principal app */
+  --surface: #ffffff; /* surfaces neutres (inspecteur, panneaux) */
+  --surface-2: #f3f4f6; /* en-têtes, barres, boutons neutres */
+  --surface-3: #e5e7eb; /* hover des boutons neutres */
+  --fg: #111827; /* texte principal */
+  --fg-muted: #4b5563; /* labels, sous-titres */
+  --fg-subtle: #6b7280; /* meta, hints */
+  --border: #e5e7eb;
+  --input-bg: #ffffff;
+  --input-fg: #111827;
 
   /* Accents SVG (canvas). */
-  --grid:             #d1d5db;   /* lignes de grille */
-  --edge-stroke:      #333333;   /* trait d'arête par défaut */
-  --accent:           #3b82f6;   /* bleu sélection/liens */
-  --accent-selected:  #3b82f6;   /* halo sélection noeud / arête / marquee */
-  --accent-valid:     #22c55e;   /* drop target, succès */
-  --accent-guide:     #ec4899;   /* guides de magnétisme */
+  --grid: #d1d5db; /* lignes de grille */
+  --edge-stroke: #333333; /* trait d'arête par défaut */
+  --accent: #3b82f6; /* bleu sélection/liens */
+  --accent-selected: #3b82f6; /* halo sélection noeud / arête / marquee */
+  --accent-valid: #22c55e; /* drop target, succès */
+  --accent-guide: #ec4899; /* guides de magnétisme */
 
   /* Déclinaisons de l'accent pour les états interactifs. */
-  --accent-hover:   #2563eb;                    /* survol des boutons primaires */
-  --accent-soft:    rgba(59, 130, 246, 0.12);   /* fonds de sélection légers */
-  --accent-strong:  #1e40af;                    /* texte sur fond accent-soft */
+  --accent-hover: #2563eb; /* survol des boutons primaires */
+  --accent-soft: rgba(59, 130, 246, 0.12); /* fonds de sélection légers */
+  --accent-strong: #1e40af; /* texte sur fond accent-soft */
 
   /* Couleurs sémantiques (texte + fond léger associé). */
-  --danger:        #dc2626;
+  --danger: #dc2626;
   --danger-strong: #b91c1c;
-  --danger-bg:     rgba(239, 68, 68, 0.10);
-  --warning:       #d97706;
-  --warning-bg:    rgba(245, 158, 11, 0.12);
-  --success:       #16a34a;
-  --success-bg:    rgba(34, 197, 94, 0.12);
+  --danger-bg: rgba(239, 68, 68, 0.1);
+  --warning: #d97706;
+  --warning-bg: rgba(245, 158, 11, 0.12);
+  --success: #16a34a;
+  --success-bg: rgba(34, 197, 94, 0.12);
 
   /* Boutons danger pleins : rouge identique dans les deux modes. */
-  --danger-solid:       #dc2626;
+  --danger-solid: #dc2626;
   --danger-solid-hover: #b91c1c;
 
   /* Voile des modales et bulle de statut (inversée selon le mode). */
-  --overlay:    rgba(15, 23, 42, 0.45);
+  --overlay: rgba(15, 23, 42, 0.45);
   --tooltip-bg: #1f2937;
   --tooltip-fg: #f9fafb;
 
   /* Badges sémantiques (couleurs de fond, bordure, texte). */
-  --badge-danger-bg:    rgba(239, 68, 68, 0.12);
-  --badge-danger-fg:    #b91c1c;
-  --badge-danger-brd:   rgba(239, 68, 68, 0.30);
-  --badge-warning-bg:   rgba(245, 158, 11, 0.14);
-  --badge-warning-fg:   #92400e;
-  --badge-warning-brd:  rgba(245, 158, 11, 0.32);
-  --badge-info-bg:      rgba(59, 130, 246, 0.12);
-  --badge-info-fg:      #1e40af;
-  --badge-info-brd:     rgba(59, 130, 246, 0.30);
-  --badge-success-bg:   rgba(34, 197, 94, 0.12);
-  --badge-success-fg:   #166534;
-  --badge-success-brd:  rgba(34, 197, 94, 0.30);
+  --badge-danger-bg: rgba(239, 68, 68, 0.12);
+  --badge-danger-fg: #b91c1c;
+  --badge-danger-brd: rgba(239, 68, 68, 0.3);
+  --badge-warning-bg: rgba(245, 158, 11, 0.14);
+  --badge-warning-fg: #92400e;
+  --badge-warning-brd: rgba(245, 158, 11, 0.32);
+  --badge-info-bg: rgba(59, 130, 246, 0.12);
+  --badge-info-fg: #1e40af;
+  --badge-info-brd: rgba(59, 130, 246, 0.3);
+  --badge-success-bg: rgba(34, 197, 94, 0.12);
+  --badge-success-fg: #166534;
+  --badge-success-brd: rgba(34, 197, 94, 0.3);
 }
 
 .dark {
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
-  --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.50), 0 6px 18px rgba(0, 0, 0, 0.40);
-  --shadow-3: 0 6px 16px rgba(0, 0, 0, 0.55), 0 18px 48px rgba(0, 0, 0, 0.50);
+  --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.5), 0 6px 18px rgba(0, 0, 0, 0.4);
+  --shadow-3: 0 6px 16px rgba(0, 0, 0, 0.55), 0 18px 48px rgba(0, 0, 0, 0.5);
 
-  --bg:          #0f172a;
-  --surface:     #1f2937;
-  --surface-2:   #111827;
-  --surface-3:   #374151;
-  --fg:          #f3f4f6;
-  --fg-muted:    #d1d5db;
-  --fg-subtle:   #9ca3af;
-  --border:      #374151;
-  --input-bg:    #374151;
-  --input-fg:    #f3f4f6;
+  --bg: #0f172a;
+  --surface: #1f2937;
+  --surface-2: #111827;
+  --surface-3: #374151;
+  --fg: #f3f4f6;
+  --fg-muted: #d1d5db;
+  --fg-subtle: #9ca3af;
+  --border: #374151;
+  --input-bg: #374151;
+  --input-fg: #f3f4f6;
 
-  --grid:             #374151;
-  --edge-stroke:      #d1d5db;
-  --accent:           #60a5fa;
-  --accent-selected:  #60a5fa;
-  --accent-valid:     #4ade80;
-  --accent-guide:     #f472b6;
+  --grid: #374151;
+  --edge-stroke: #d1d5db;
+  --accent: #60a5fa;
+  --accent-selected: #60a5fa;
+  --accent-valid: #4ade80;
+  --accent-guide: #f472b6;
 
-  --accent-hover:   #3b82f6;
-  --accent-soft:    rgba(96, 165, 250, 0.18);
-  --accent-strong:  #93c5fd;
+  --accent-hover: #3b82f6;
+  --accent-soft: rgba(96, 165, 250, 0.18);
+  --accent-strong: #93c5fd;
 
-  --danger:        #f87171;
+  --danger: #f87171;
   --danger-strong: #fca5a5;
-  --danger-bg:     rgba(239, 68, 68, 0.18);
-  --warning:       #fbbf24;
-  --warning-bg:    rgba(245, 158, 11, 0.20);
-  --success:       #4ade80;
-  --success-bg:    rgba(34, 197, 94, 0.18);
+  --danger-bg: rgba(239, 68, 68, 0.18);
+  --warning: #fbbf24;
+  --warning-bg: rgba(245, 158, 11, 0.2);
+  --success: #4ade80;
+  --success-bg: rgba(34, 197, 94, 0.18);
 
-  --overlay:    rgba(2, 6, 23, 0.65);
+  --overlay: rgba(2, 6, 23, 0.65);
   --tooltip-bg: #f3f4f6;
   --tooltip-fg: #111827;
 
-  --badge-danger-bg:    rgba(239, 68, 68, 0.20);
-  --badge-danger-fg:    #fca5a5;
-  --badge-danger-brd:   rgba(239, 68, 68, 0.45);
-  --badge-warning-bg:   rgba(245, 158, 11, 0.22);
-  --badge-warning-fg:   #fbbf24;
-  --badge-warning-brd:  rgba(245, 158, 11, 0.45);
-  --badge-info-bg:      rgba(96, 165, 250, 0.22);
-  --badge-info-fg:      #93c5fd;
-  --badge-info-brd:     rgba(96, 165, 250, 0.45);
-  --badge-success-bg:   rgba(74, 222, 128, 0.22);
-  --badge-success-fg:   #86efac;
-  --badge-success-brd:  rgba(74, 222, 128, 0.45);
+  --badge-danger-bg: rgba(239, 68, 68, 0.2);
+  --badge-danger-fg: #fca5a5;
+  --badge-danger-brd: rgba(239, 68, 68, 0.45);
+  --badge-warning-bg: rgba(245, 158, 11, 0.22);
+  --badge-warning-fg: #fbbf24;
+  --badge-warning-brd: rgba(245, 158, 11, 0.45);
+  --badge-info-bg: rgba(96, 165, 250, 0.22);
+  --badge-info-fg: #93c5fd;
+  --badge-info-brd: rgba(96, 165, 250, 0.45);
+  --badge-success-bg: rgba(74, 222, 128, 0.22);
+  --badge-success-fg: #86efac;
+  --badge-success-brd: rgba(74, 222, 128, 0.45);
 }
 
-html, body, #app {
+html,
+body,
+#app {
   height: 100%;
   margin: 0;
   background-color: var(--bg);
@@ -147,23 +150,44 @@ html, body, #app {
 /* La couleur de bordure par défaut de Tailwind (gray-200) ne suit pas le
    thème : on la remappe globalement sur la variable, pour que `border-b`
    sans classe de couleur reste correct en mode nuit. */
-*, ::before, ::after {
+*,
+::before,
+::after {
   border-color: var(--border);
 }
 
 /* Les curseurs (sliders) suivent l'accent du thème partout. */
-input[type="range"] {
+input[type='range'] {
   accent-color: var(--accent);
 }
 
 /* Surfaces nommées — utilisées par Toolbar, Sidebar, PropertyInspector, etc. */
-.app-surface     { background-color: var(--surface);   color: var(--fg); border-color: var(--border); }
-.app-surface-2   { background-color: var(--surface-2); color: var(--fg); border-color: var(--border); }
-.app-surface-3   { background-color: var(--surface-3); color: var(--fg); }
-.app-fg          { color: var(--fg); }
-.app-muted       { color: var(--fg-muted); }
-.app-subtle      { color: var(--fg-subtle); }
-.app-border      { border-color: var(--border); }
+.app-surface {
+  background-color: var(--surface);
+  color: var(--fg);
+  border-color: var(--border);
+}
+.app-surface-2 {
+  background-color: var(--surface-2);
+  color: var(--fg);
+  border-color: var(--border);
+}
+.app-surface-3 {
+  background-color: var(--surface-3);
+  color: var(--fg);
+}
+.app-fg {
+  color: var(--fg);
+}
+.app-muted {
+  color: var(--fg-muted);
+}
+.app-subtle {
+  color: var(--fg-subtle);
+}
+.app-border {
+  border-color: var(--border);
+}
 
 /* Bouton neutre : fond surface-2, hover surface-3, désactivable.
    Usage : <button class="app-btn px-3 py-1.5 rounded text-sm"> */
@@ -217,7 +241,9 @@ input[type="range"] {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   outline: none;
-  transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+  transition:
+    border-color 0.15s ease-out,
+    box-shadow 0.15s ease-out;
 }
 .app-input::placeholder {
   color: var(--fg-subtle);
@@ -270,7 +296,10 @@ input[type="range"] {
   color: var(--fg);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  transition: background-color 0.15s ease-out, border-color 0.15s ease-out, color 0.15s ease-out;
+  transition:
+    background-color 0.15s ease-out,
+    border-color 0.15s ease-out,
+    color 0.15s ease-out;
 }
 .app-toggle:hover {
   background-color: var(--surface-2);
@@ -363,8 +392,12 @@ input[type="range"] {
   margin: 0.5rem 0 0.5rem 1.25rem;
   padding: 0;
 }
-.user-manual-content ul { list-style: disc; }
-.user-manual-content ol { list-style: decimal; }
+.user-manual-content ul {
+  list-style: disc;
+}
+.user-manual-content ol {
+  list-style: decimal;
+}
 .user-manual-content li {
   margin: 0.25rem 0;
   color: var(--fg);
@@ -407,19 +440,35 @@ input[type="range"] {
   font-size: 0.75rem;
   line-height: 1rem;
 }
-.app-badge-danger  { background: var(--badge-danger-bg);  color: var(--badge-danger-fg);  border-color: var(--badge-danger-brd); }
-.app-badge-warning { background: var(--badge-warning-bg); color: var(--badge-warning-fg); border-color: var(--badge-warning-brd); }
-.app-badge-info    { background: var(--badge-info-bg);    color: var(--badge-info-fg);    border-color: var(--badge-info-brd); }
-.app-badge-success { background: var(--badge-success-bg); color: var(--badge-success-fg); border-color: var(--badge-success-brd); }
+.app-badge-danger {
+  background: var(--badge-danger-bg);
+  color: var(--badge-danger-fg);
+  border-color: var(--badge-danger-brd);
+}
+.app-badge-warning {
+  background: var(--badge-warning-bg);
+  color: var(--badge-warning-fg);
+  border-color: var(--badge-warning-brd);
+}
+.app-badge-info {
+  background: var(--badge-info-bg);
+  color: var(--badge-info-fg);
+  border-color: var(--badge-info-brd);
+}
+.app-badge-success {
+  background: var(--badge-success-bg);
+  color: var(--badge-success-fg);
+  border-color: var(--badge-success-brd);
+}
 
 /* Inputs et selects : un seul style pour les deux modes. */
-input[type="text"],
-input[type="number"],
-input[type="url"],
-input[type="email"],
-input[type="date"],
-input[type="password"],
-input[type="search"],
+input[type='text'],
+input[type='number'],
+input[type='url'],
+input[type='email'],
+input[type='date'],
+input[type='password'],
+input[type='search'],
 input:not([type]),
 textarea,
 select {
@@ -436,7 +485,7 @@ textarea::placeholder {
 /* Ombre portée légère sur les noeuds. */
 g.holon-node > rect:first-of-type,
 g.holon-node > path:first-of-type {
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.10));
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
   transition: filter 0.15s ease-out;
 }
 g.holon-node:hover > rect:first-of-type,

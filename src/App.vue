@@ -19,10 +19,7 @@ const { clearHistory } = useUndoable()
 
 // Charger les données depuis IndexedDB au démarrage
 onMounted(async () => {
-  await Promise.all([
-    graphStore.loadFromDB(),
-    libraryStore.loadFromDB(),
-  ])
+  await Promise.all([graphStore.loadFromDB(), libraryStore.loadFromDB()])
   // Baseline d'historique : l'état chargé devient le point 0, pas undoable.
   // clearHistory() crée déjà le snapshot initial.
   clearHistory()

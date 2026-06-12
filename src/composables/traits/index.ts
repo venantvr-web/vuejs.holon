@@ -2,7 +2,12 @@
 // Export de tous les traits pour une utilisation facile
 
 // === Traits de base ===
-export { useDraggable, type DraggableOptions, type DraggableState, type DraggableHandlers } from './useDraggable';
+export {
+  useDraggable,
+  type DraggableOptions,
+  type DraggableState,
+  type DraggableHandlers,
+} from './useDraggable'
 export {
   useResizable,
   DEFAULT_AUTOSIZE_CONFIG,
@@ -10,22 +15,71 @@ export {
   type ChildrenBounds,
   type ResizableOptions,
   type ResizableState,
-  type ResizableHandlers
-} from './useResizable';
-export { useDockable, useContainmentRules, DEFAULT_CONTAINMENT_RULES, type DockableOptions, type DockableState, type DockableHandlers, type ContainmentRule } from './useDockable';
-export { useEditable, type EditableOptions, type EditableState, type EditableHandlers } from './useEditable';
-export { useStyleable, type StyleableOptions, type StyleableState, type StyleableHandlers, PRESET_COLORS, FILL_TYPES, type FillType } from './useStyleable';
-export { useConnectable, useConnectionState, type ConnectableOptions, type ConnectableState, type ConnectableHandlers } from './useConnectable';
-export { useSelectable, useSelectionState, type SelectableOptions, type SelectableState, type SelectableHandlers } from './useSelectable';
-export { useTooltipable, type TooltipableOptions, type TooltipableState, type TooltipableHandlers } from './useTooltipable';
+  type ResizableHandlers,
+} from './useResizable'
+export {
+  useDockable,
+  useContainmentRules,
+  DEFAULT_CONTAINMENT_RULES,
+  type DockableOptions,
+  type DockableState,
+  type DockableHandlers,
+  type ContainmentRule,
+} from './useDockable'
+export {
+  useEditable,
+  type EditableOptions,
+  type EditableState,
+  type EditableHandlers,
+} from './useEditable'
+export {
+  useStyleable,
+  type StyleableOptions,
+  type StyleableState,
+  type StyleableHandlers,
+  PRESET_COLORS,
+  FILL_TYPES,
+  type FillType,
+} from './useStyleable'
+export {
+  useConnectable,
+  useConnectionState,
+  type ConnectableOptions,
+  type ConnectableState,
+  type ConnectableHandlers,
+} from './useConnectable'
+export {
+  useSelectable,
+  useSelectionState,
+  type SelectableOptions,
+  type SelectableState,
+  type SelectableHandlers,
+} from './useSelectable'
+export {
+  useTooltipable,
+  type TooltipableOptions,
+  type TooltipableState,
+  type TooltipableHandlers,
+} from './useTooltipable'
 
 // === Nouveaux traits ===
 
 // Collapse/Expand
-export { useCollapsible, type CollapsibleOptions, type CollapsibleState, type CollapsibleHandlers } from './useCollapsible';
+export {
+  useCollapsible,
+  type CollapsibleOptions,
+  type CollapsibleState,
+  type CollapsibleHandlers,
+} from './useCollapsible'
 
 // Z-Index / Ordre d'affichage
-export { useZIndexable, useZIndexState, type ZIndexableOptions, type ZIndexableState, type ZIndexableHandlers } from './useZIndexable';
+export {
+  useZIndexable,
+  useZIndexState,
+  type ZIndexableOptions,
+  type ZIndexableState,
+  type ZIndexableHandlers,
+} from './useZIndexable'
 
 // Types Archimate
 export {
@@ -36,11 +90,18 @@ export {
   type ArchimateType,
   type TypeableOptions,
   type TypeableState,
-  type TypeableHandlers
-} from './useTypeable';
+  type TypeableHandlers,
+} from './useTypeable'
 
 // Undo/Redo
-export { useUndoable, useAutoSnapshot, useUndoState, type UndoableOptions, type UndoableState, type UndoableHandlers } from './useUndoable';
+export {
+  useUndoable,
+  useAutoSnapshot,
+  useUndoState,
+  type UndoableOptions,
+  type UndoableState,
+  type UndoableHandlers,
+} from './useUndoable'
 
 // Raccourcis clavier
 export {
@@ -50,11 +111,17 @@ export {
   type KeyboardShortcut,
   type KeyboardableOptions,
   type KeyboardableState,
-  type KeyboardableHandlers
-} from './useKeyboardable';
+  type KeyboardableHandlers,
+} from './useKeyboardable'
 
 // Verrouillage
-export { useLockable, type LockableOptions, type LockableState, type LockableHandlers, type LockState } from './useLockable';
+export {
+  useLockable,
+  type LockableOptions,
+  type LockableState,
+  type LockableHandlers,
+  type LockState,
+} from './useLockable'
 
 // Formes
 export {
@@ -65,20 +132,45 @@ export {
   SHAPE_METADATA,
   type ShapeableOptions,
   type ShapeableState,
-  type ShapeableHandlers
-} from './useShapeable';
+  type ShapeableHandlers,
+} from './useShapeable'
 
 // Snap / Grille
-export { useSnappable, useSnapState, type SnapConfig, type SnapGuide, type SnappableOptions, type SnappableState, type SnappableHandlers } from './useSnappable';
+export {
+  useSnappable,
+  useSnapState,
+  type SnapConfig,
+  type SnapGuide,
+  type SnappableOptions,
+  type SnappableState,
+  type SnappableHandlers,
+} from './useSnappable'
 
 // Groupes
-export { useGroupable, useGroupState, type NodeGroup, type GroupableOptions, type GroupableState, type GroupableHandlers } from './useGroupable';
+export {
+  useGroupable,
+  useGroupState,
+  type NodeGroup,
+  type GroupableOptions,
+  type GroupableState,
+  type GroupableHandlers,
+} from './useGroupable'
 
 // Alignement
-export { useAlignable, type AlignmentType, type DistributionType, type AlignableHandlers } from './useAlignable';
+export {
+  useAlignable,
+  type AlignmentType,
+  type DistributionType,
+  type AlignableHandlers,
+} from './useAlignable'
 
 // Clipboard
-export { useClipboardable, useClipboardState, type ClipboardData, type ClipboardableHandlers } from './useClipboardable';
+export {
+  useClipboardable,
+  useClipboardState,
+  type ClipboardData,
+  type ClipboardableHandlers,
+} from './useClipboardable'
 
 // Filtrage
 export {
@@ -87,9 +179,9 @@ export {
   type SavedFilter,
   type FilterDisplayMode,
   type FilterableState,
-  type FilterableHandlers
-} from './useFilterable';
-export { parseFilterQuery, layerOfNode, type ParseResult } from './utils/filter-dsl';
+  type FilterableHandlers,
+} from './useFilterable'
+export { parseFilterQuery, layerOfNode, type ParseResult } from './utils/filter-dsl'
 
 // === Traits de connexions (edges) ===
 
@@ -102,8 +194,8 @@ export {
   type AnchorPoint,
   type AnchorableOptions,
   type AnchorableState,
-  type AnchorableHandlers
-} from './useAnchorable';
+  type AnchorableHandlers,
+} from './useAnchorable'
 
 // Routage des liens
 export {
@@ -117,8 +209,8 @@ export {
   type EdgeRoute,
   type RoutableOptions,
   type RoutableState,
-  type RoutableHandlers
-} from './useRoutable';
+  type RoutableHandlers,
+} from './useRoutable'
 
 // Flèches
 export {
@@ -131,8 +223,8 @@ export {
   type ArrowConfig,
   type ArrowableOptions,
   type ArrowableState,
-  type ArrowableHandlers
-} from './useArrowable';
+  type ArrowableHandlers,
+} from './useArrowable'
 
 // Types de relations Archimate
 export {
@@ -151,8 +243,8 @@ export {
   type FlowType,
   type RelationTypeableOptions,
   type RelationTypeableState,
-  type RelationTypeableHandlers
-} from './useRelationTypeable';
+  type RelationTypeableHandlers,
+} from './useRelationTypeable'
 
 // Z-order et visibilité des edges
 export {
@@ -168,8 +260,8 @@ export {
   type EdgeLayeringState,
   type EdgeLayeringHandlers,
   type EdgeLayeringGlobalState,
-  type EdgeLayeringGlobalHandlers
-} from './useEdgeLayering';
+  type EdgeLayeringGlobalHandlers,
+} from './useEdgeLayering'
 
 // === Traits globaux (Application) ===
 
@@ -181,8 +273,8 @@ export {
   type Theme,
   type ColorPalette,
   type ThemeableState,
-  type ThemeableHandlers
-} from './useThemeable';
+  type ThemeableHandlers,
+} from './useThemeable'
 
 // Event Sourcing & Lignage
 export {
@@ -193,8 +285,8 @@ export {
   type ObjectLineage,
   type HistorableOptions,
   type HistorableState,
-  type HistorableHandlers
-} from './useHistorable';
+  type HistorableHandlers,
+} from './useHistorable'
 
 // Confiance et maturité de modélisation
 export {
@@ -222,16 +314,16 @@ export {
   type ModelingMetadata,
   type ModelingConfidenceOptions,
   type ModelingConfidenceState,
-  type ModelingConfidenceHandlers
-} from './useModelingConfidence';
+  type ModelingConfidenceHandlers,
+} from './useModelingConfidence'
 
 // Export/Import
 export {
   useExportable,
   type ExportFormat,
   type ExportOptions,
-  type ExportableHandlers
-} from './useExportable';
+  type ExportableHandlers,
+} from './useExportable'
 
 export {
   useImportable,
@@ -239,16 +331,16 @@ export {
   type MergeStrategy,
   type ImportOptions,
   type ImportResult,
-  type ImportableHandlers
-} from './useImportable';
+  type ImportableHandlers,
+} from './useImportable'
 
 // Navigation et visualisation
 export {
   useViewable,
   type SavedView,
   type ViewableState,
-  type ViewableHandlers
-} from './useViewable';
+  type ViewableHandlers,
+} from './useViewable'
 
 export {
   useSearchable,
@@ -256,30 +348,30 @@ export {
   type SearchOptions,
   type SearchResult,
   type SearchableState,
-  type SearchableHandlers
-} from './useSearchable';
+  type SearchableHandlers,
+} from './useSearchable'
 
 export {
   useZoomable,
   type ZoomableOptions,
   type ZoomableState,
-  type ZoomableHandlers
-} from './useZoomable';
+  type ZoomableHandlers,
+} from './useZoomable'
 
 export {
   usePannable,
   type PannableOptions,
   type PannableState,
-  type PannableHandlers
-} from './usePannable';
+  type PannableHandlers,
+} from './usePannable'
 
 export {
   useFocusable,
   useFocusTrap,
   type FocusableOptions,
   type FocusableState,
-  type FocusableHandlers
-} from './useFocusable';
+  type FocusableHandlers,
+} from './useFocusable'
 
 // === Données et Layout (Sprint 6) ===
 
@@ -292,8 +384,8 @@ export {
   type PropertyTemplate,
   type PropertyableOptions,
   type PropertyableState,
-  type PropertyableHandlers
-} from './usePropertyable';
+  type PropertyableHandlers,
+} from './usePropertyable'
 
 // Tags
 export {
@@ -302,8 +394,8 @@ export {
   type Tag,
   type TaggableOptions,
   type TaggableState,
-  type TaggableHandlers
-} from './useTaggable';
+  type TaggableHandlers,
+} from './useTaggable'
 
 // Labels sur arêtes
 export {
@@ -311,8 +403,8 @@ export {
   type EdgeLabel,
   type LabelableEdgeOptions,
   type LabelableEdgeState,
-  type LabelableEdgeHandlers
-} from './useLabelableEdge';
+  type LabelableEdgeHandlers,
+} from './useLabelableEdge'
 
 // Layout automatique
 export {
@@ -322,8 +414,8 @@ export {
   type ForceLayoutOptions,
   type HierarchicalLayoutOptions,
   type LayoutableState,
-  type LayoutableHandlers
-} from './useLayoutable';
+  type LayoutableHandlers,
+} from './useLayoutable'
 
 // === Validation et Qualité (Sprint 7) ===
 
@@ -336,8 +428,8 @@ export {
   type ValidationResult,
   type ValidationRule,
   type ValidatableState,
-  type ValidatableHandlers
-} from './useValidatable';
+  type ValidatableHandlers,
+} from './useValidatable'
 
 // Contraintes architecturales
 export {
@@ -350,8 +442,8 @@ export {
   type ConstraintAnalysisResult,
   type ArchitecturalMetric,
   type ConstrainableState,
-  type ConstrainableHandlers
-} from './useConstrainable';
+  type ConstrainableHandlers,
+} from './useConstrainable'
 
 // === Intelligence et Polish (Sprint 8) ===
 
@@ -365,8 +457,8 @@ export {
   type PatternSuggestion,
   type SuggestionContext,
   type SuggestableState,
-  type SuggestableHandlers
-} from './useSuggestable';
+  type SuggestableHandlers,
+} from './useSuggestable'
 
 // Gestion de versions
 export {
@@ -378,5 +470,5 @@ export {
   type GraphDiff,
   type VersionBranch,
   type VersionableState,
-  type VersionableHandlers
-} from './useVersionable';
+  type VersionableHandlers,
+} from './useVersionable'

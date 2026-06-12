@@ -3,47 +3,51 @@
 ## Traits Implémentés ✅
 
 ### Traits de base (Noeuds)
-| Trait | Description | Fichier |
-|-------|-------------|---------|
-| `useDraggable` | Déplacement avec zoom + notification parent autosize | useDraggable.ts |
-| `useResizable` | Redimensionnement + autosize automatique parent/enfants | useResizable.ts |
-| `useDockable` | Hiérarchie + règles de containment Archimate | useDockable.ts |
-| `useEditable` | Édition inline du label | useEditable.ts |
-| `useStyleable` | Couleurs fill/stroke, opacité | useStyleable.ts |
-| `useConnectable` | Création de liens entre noeuds | useConnectable.ts |
-| `useSelectable` | Sélection simple et multiple | useSelectable.ts |
-| `useTooltipable` | Commentaires/tooltips sur noeuds | useTooltipable.ts |
-| `useCollapsible` | Collapse/expand des containers | useCollapsible.ts |
-| `useZIndexable` | Z-order (devant/derrière) | useZIndexable.ts |
-| `useTypeable` | 60+ types Archimate, 7 layers | useTypeable.ts |
-| `useLockable` | Verrouillage position/taille/style | useLockable.ts |
-| `useShapeable` | 22 formes SVG avec enum | useShapeable.ts |
+
+| Trait            | Description                                             | Fichier           |
+| ---------------- | ------------------------------------------------------- | ----------------- |
+| `useDraggable`   | Déplacement avec zoom + notification parent autosize    | useDraggable.ts   |
+| `useResizable`   | Redimensionnement + autosize automatique parent/enfants | useResizable.ts   |
+| `useDockable`    | Hiérarchie + règles de containment Archimate            | useDockable.ts    |
+| `useEditable`    | Édition inline du label                                 | useEditable.ts    |
+| `useStyleable`   | Couleurs fill/stroke, opacité                           | useStyleable.ts   |
+| `useConnectable` | Création de liens entre noeuds                          | useConnectable.ts |
+| `useSelectable`  | Sélection simple et multiple                            | useSelectable.ts  |
+| `useTooltipable` | Commentaires/tooltips sur noeuds                        | useTooltipable.ts |
+| `useCollapsible` | Collapse/expand des containers                          | useCollapsible.ts |
+| `useZIndexable`  | Z-order (devant/derrière)                               | useZIndexable.ts  |
+| `useTypeable`    | 60+ types Archimate, 7 layers                           | useTypeable.ts    |
+| `useLockable`    | Verrouillage position/taille/style                      | useLockable.ts    |
+| `useShapeable`   | 22 formes SVG avec enum                                 | useShapeable.ts   |
 
 ### Traits globaux (Canvas/Selection)
-| Trait | Description | Fichier |
-|-------|-------------|---------|
-| `useUndoable` | Undo/Redo avec historique | useUndoable.ts |
-| `useKeyboardable` | Raccourcis clavier | useKeyboardable.ts |
-| `useSnappable` | Snap to grid/nodes/guides | useSnappable.ts |
-| `useGroupable` | Groupes de noeuds nommés | useGroupable.ts |
-| `useAlignable` | Alignement et distribution | useAlignable.ts |
-| `useClipboardable` | Copier/Couper/Coller/Dupliquer | useClipboardable.ts |
-| `useFilterable` | Filtrage par type/tag/propriété | useFilterable.ts |
+
+| Trait              | Description                     | Fichier             |
+| ------------------ | ------------------------------- | ------------------- |
+| `useUndoable`      | Undo/Redo avec historique       | useUndoable.ts      |
+| `useKeyboardable`  | Raccourcis clavier              | useKeyboardable.ts  |
+| `useSnappable`     | Snap to grid/nodes/guides       | useSnappable.ts     |
+| `useGroupable`     | Groupes de noeuds nommés        | useGroupable.ts     |
+| `useAlignable`     | Alignement et distribution      | useAlignable.ts     |
+| `useClipboardable` | Copier/Couper/Coller/Dupliquer  | useClipboardable.ts |
+| `useFilterable`    | Filtrage par type/tag/propriété | useFilterable.ts    |
 
 ### Traits de connexions (Edges)
-| Trait | Description | Fichier |
-|-------|-------------|---------|
-| `useAnchorable` | Points d'ancrage avec intersection | useAnchorable.ts |
-| `useRoutable` | 4 types de routage | useRoutable.ts |
-| `useArrowable` | 18 types de flèches | useArrowable.ts |
-| `useRelationTypeable` | 13 types de relations Archimate + validation | useRelationTypeable.ts |
-| `useEdgeLayering` | Z-order edges, visibilité contextuelle, boost noeuds | useEdgeLayering.ts |
+
+| Trait                 | Description                                          | Fichier                |
+| --------------------- | ---------------------------------------------------- | ---------------------- |
+| `useAnchorable`       | Points d'ancrage avec intersection                   | useAnchorable.ts       |
+| `useRoutable`         | 4 types de routage                                   | useRoutable.ts         |
+| `useArrowable`        | 18 types de flèches                                  | useArrowable.ts        |
+| `useRelationTypeable` | 13 types de relations Archimate + validation         | useRelationTypeable.ts |
+| `useEdgeLayering`     | Z-order edges, visibilité contextuelle, boost noeuds | useEdgeLayering.ts     |
 
 ### Traits globaux (Application)
-| Trait | Description | Fichier |
-|-------|-------------|---------|
-| `useThemeable` | Thèmes globaux avec 5 presets | useThemeable.ts |
-| `useHistorable` | Event sourcing & lignage objets | useHistorable.ts |
+
+| Trait                   | Description                           | Fichier                  |
+| ----------------------- | ------------------------------------- | ------------------------ |
+| `useThemeable`          | Thèmes globaux avec 5 presets         | useThemeable.ts          |
+| `useHistorable`         | Event sourcing & lignage objets       | useHistorable.ts         |
 | `useModelingConfidence` | Maturité, sources, questions ouvertes | useModelingConfidence.ts |
 
 ---
@@ -53,20 +57,22 @@
 Le trait `useDockable` gère maintenant les règles de containment Archimate :
 
 ### ContainmentRule
+
 ```typescript
 interface ContainmentRule {
-  canContain?: boolean;           // Peut avoir des enfants
-  canBeContained?: boolean;       // Peut être mis dans un container
-  allowedParentTypes?: string[];  // Types de parents autorisés
-  allowedChildTypes?: string[];   // Types d'enfants autorisés
-  forbiddenParentTypes?: string[];// Types de parents interdits
-  forbiddenChildTypes?: string[]; // Types d'enfants interdits
-  maxChildren?: number;           // Nombre max d'enfants
-  maxDepth?: number;              // Profondeur max de nesting
+  canContain?: boolean // Peut avoir des enfants
+  canBeContained?: boolean // Peut être mis dans un container
+  allowedParentTypes?: string[] // Types de parents autorisés
+  allowedChildTypes?: string[] // Types d'enfants autorisés
+  forbiddenParentTypes?: string[] // Types de parents interdits
+  forbiddenChildTypes?: string[] // Types d'enfants interdits
+  maxChildren?: number // Nombre max d'enfants
+  maxDepth?: number // Profondeur max de nesting
 }
 ```
 
 ### Règles par défaut
+
 - `generic-location` : peut contenir, ne peut pas être contenu
 - `business-process` : peut contenir business-function, business-event, business-interaction
 - `application-component` : peut contenir application-function, application-process, application-data-object
@@ -89,12 +95,12 @@ Le trait `useResizable` gère l'autosize automatique des parents pour englober l
 
 ```typescript
 interface AutosizeConfig {
-  enabled: boolean;              // Activer l'autosize
-  padding: number;               // Marge intérieure (défaut: 20px)
-  paddingScaleWithZoom: boolean; // Adapter au zoom
-  minPaddingAtZoom: number;      // Padding min (défaut: 10px)
-  maxPaddingAtZoom: number;      // Padding max (défaut: 40px)
-  debounceMs: number;            // Délai avant recalcul (défaut: 50ms)
+  enabled: boolean // Activer l'autosize
+  padding: number // Marge intérieure (défaut: 20px)
+  paddingScaleWithZoom: boolean // Adapter au zoom
+  minPaddingAtZoom: number // Padding min (défaut: 10px)
+  maxPaddingAtZoom: number // Padding max (défaut: 40px)
+  debounceMs: number // Délai avant recalcul (défaut: 50ms)
 }
 ```
 
@@ -103,9 +109,11 @@ interface AutosizeConfig {
 Quand un enfant est déplacé (`useDraggable`), un événement `child-moved` est émis :
 
 ```typescript
-window.dispatchEvent(new CustomEvent('child-moved', {
-  detail: { childId, parentId }
-}));
+window.dispatchEvent(
+  new CustomEvent('child-moved', {
+    detail: { childId, parentId },
+  })
+)
 ```
 
 Le parent écoute cet événement et déclenche `applyAutosize()` automatiquement.
@@ -131,17 +139,20 @@ Le parent écoute cet événement et déclenche `applyAutosize()` automatiquemen
 ### 1. INTERACTION & NAVIGATION
 
 #### `useZoomable`
+
 - Zoom sur un noeud spécifique (focus)
 - "Drill-down" : entrer dans un container pour le voir en plein écran
 - Breadcrumb de navigation dans la hiérarchie
 - Zoom-to-fit automatique
 
 #### `usePannable`
+
 - Pan du canvas (déjà dans GraphCanvas, à extraire)
 - Mini-map pour navigation rapide
 - Scroll infini avec lazy loading
 
 #### `useFocusable`
+
 - Navigation clavier entre noeuds (Tab, flèches)
 - Focus visuel distinct de la sélection
 - Skip-links pour accessibilité
@@ -151,17 +162,20 @@ Le parent écoute cet événement et déclenche `applyAutosize()` automatiquemen
 ### 2. DONNÉES & MÉTADONNÉES
 
 #### `useTaggable`
+
 - Tags/labels multiples par noeud
 - Catégorisation avec couleurs
 - Filtrage par tags
 
 #### `usePropertyable`
+
 - Propriétés clé-valeur personnalisées
 - Schéma de propriétés par type
 - Propriétés calculées (formules)
 - Héritage de propriétés parent→enfant
 
 #### `useVersionable`
+
 - Branches/variantes du diagramme
 - Diff visuel entre versions
 
@@ -170,18 +184,21 @@ Le parent écoute cet événement et déclenche `applyAutosize()` automatiquemen
 ### 3. FILTRAGE & VUES
 
 #### `useLayerable`
+
 - Calques nommés (comme Figma/Illustrator)
 - Visibilité par calque
 - Verrouillage par calque
 - Ordre z-index par calque
 
 #### `useViewable`
+
 - Vues sauvegardées (combinaison filtre + zoom + position)
 - Vues prédéfinies par stakeholder
 - Export de vue spécifique
 - Présentation mode (slideshow de vues)
 
 #### `useSearchable`
+
 - Recherche textuelle globale
 - Recherche par expression régulière
 - Navigation entre résultats
@@ -191,21 +208,25 @@ Le parent écoute cet événement et déclenche `applyAutosize()` automatiquemen
 ### 4. APPARENCE & RENDU
 
 #### `useThemeable`
+
 - Thèmes globaux (light/dark/custom)
 - Palettes Archimate standards
 - Variables CSS/tokens
 
 #### `useIconable`
+
 - Icônes intégrées dans les noeuds
 - Bibliothèque d'icônes
 - Position de l'icône configurable
 
 #### `useBorderable`
+
 - Styles de bordure (solid, dashed, dotted)
 - Bordures doubles
 - Ombres portées
 
 #### `useGradientable`
+
 - Dégradés linéaires/radiaux
 - Presets de dégradés
 
@@ -214,11 +235,13 @@ Le parent écoute cet événement et déclenche `applyAutosize()` automatiquemen
 ### 5. CONNEXIONS & RELATIONS
 
 #### `useLabelableEdge`
+
 - Labels sur les liens
 - Position du label (start, middle, end)
 - Rotation du label
 
 #### `useRelationTypeable`
+
 - Types de relations Archimate (flow, trigger, access, etc.)
 - Validation de compatibilité source→target
 - Style automatique par type
@@ -228,16 +251,19 @@ Le parent écoute cet événement et déclenche `applyAutosize()` automatiquemen
 ### 6. IMPORT/EXPORT & INTEROP
 
 #### `useExportable`
+
 - Export PNG/JPEG avec résolution
 - Export PDF
 - Export JSON (données brutes)
 
 #### `useImportable`
+
 - Import JSON
 - Import SVG (parsing)
 - Import Archimate Open Exchange
 
 #### `useShareable`
+
 - URL partageable (état encodé)
 - Embed code (iframe)
 - Collaboration temps réel (future)
@@ -247,11 +273,13 @@ Le parent écoute cet événement et déclenche `applyAutosize()` automatiquemen
 ### 7. VALIDATION & CONTRAINTES
 
 #### `useValidatable`
+
 - Règles de validation Archimate
 - Validation des connexions
 - Affichage des erreurs/warnings
 
 #### `useConstrainable`
+
 - Contraintes de taille min/max
 - Contraintes de position (bounds)
 - Contraintes de ratio
@@ -261,6 +289,7 @@ Le parent écoute cet événement et déclenche `applyAutosize()` automatiquemen
 ### 8. ANIMATION & TRANSITIONS
 
 #### `useAnimatable`
+
 - Transitions CSS sur changements
 - Animations d'entrée/sortie
 - Animation de flux (pour les liens)
@@ -270,11 +299,13 @@ Le parent écoute cet événement et déclenche `applyAutosize()` automatiquemen
 ### 9. INTELLIGENCE & AUTOMATISATION
 
 #### `useLayoutable`
+
 - Auto-layout (tree, grid, force-directed)
 - Layout hiérarchique
 - Layout par couches Archimate
 
 #### `useSuggestable`
+
 - Suggestions de connexions
 - Auto-complétion de types
 
@@ -283,11 +314,13 @@ Le parent écoute cet événement et déclenche `applyAutosize()` automatiquemen
 ### 10. PERSISTANCE & SYNC
 
 #### `useSyncable`
+
 - Sync avec backend
 - Sync offline-first
 - Résolution de conflits
 
 #### `useBackupable`
+
 - Backup automatique
 - Historique de backups
 
@@ -296,24 +329,28 @@ Le parent écoute cet événement et déclenche `applyAutosize()` automatiquemen
 ## Priorités suggérées
 
 ### Phase 1 - Fondations (P0) ✅ DONE
+
 - ✅ `useCollapsible` - essentiel pour les grands diagrammes
 - ✅ `useTypeable` - base d'Archimate
 - ✅ `useUndoable` - UX critique
 - ✅ `useKeyboardable` - productivité
 
 ### Phase 2 - Organisation (P1) ✅ DONE
+
 - ✅ `useFilterable` - navigation dans complexité
 - ✅ `useAlignable` + `useSnappable` - précision
 - ✅ `useGroupable` - manipulation multiple
 - ✅ `useZIndexable` - ordre d'affichage
 
 ### Phase 3 - Connexions (P2) ✅ DONE
+
 - ✅ `useAnchorable` - points d'ancrage avec intersection
 - ✅ `useRoutable` - liens propres
 - ✅ `useArrowable` - flèches Archimate
 - ✅ `useShapeable` - formes SVG
 
 ### Phase 4 - Pro (P3)
+
 - `useViewable` - présentations
 - `useValidatable` - qualité
 - `useLayoutable` - auto-organisation

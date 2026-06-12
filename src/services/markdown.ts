@@ -1,7 +1,6 @@
-
 // src/services/markdown.ts
 
-import type { Node } from '../types';
+import type { Node } from '../types'
 
 // Dépendances à installer plus tard (par ex. `gray-matter`)
 // Pour l'instant, une implémentation factice.
@@ -17,7 +16,7 @@ export function parseMarkdown(content: string): Partial<Node> {
   // 2. Mapper les champs YAML aux propriétés du noeud (geometry, styling).
   // 3. Utiliser le body pour le champ `data.text`.
 
-  console.warn('Parsing Markdown non implémenté. Utilisation de données factices.');
+  console.warn('Parsing Markdown non implémenté. Utilisation de données factices.')
 
   // Exemple factice
   return {
@@ -27,5 +26,5 @@ export function parseMarkdown(content: string): Partial<Node> {
     data: {
       text: content.substring(0, 100), // Extrait du body
     },
-  };
+  }
 }

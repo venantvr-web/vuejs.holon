@@ -1,14 +1,14 @@
 // src/composables/traits/useValidatable.ts
-import { ref, computed, type Ref } from 'vue';
-import { useGraphStore } from '../../stores/graph';
-import type { Node, Edge } from '../../types';
-import { RelationType } from './useRelationTypeable';
-import { ArchimateType } from './useTypeable';
+import { ref, computed, type Ref } from 'vue'
+import { useGraphStore } from '../../stores/graph'
+import type { Node, Edge } from '../../types'
+import { RelationType } from './useRelationTypeable'
+import { ArchimateType } from './useTypeable'
 
 /**
  * Sévérité d'une règle de validation.
  */
-export type ValidationSeverity = 'error' | 'warning' | 'info';
+export type ValidationSeverity = 'error' | 'warning' | 'info'
 
 /**
  * Catégorie de règle de validation.
@@ -20,7 +20,7 @@ export type ValidationCategory =
   | 'completeness'
   | 'consistency'
   | 'cycles'
-  | 'layers';
+  | 'layers'
 
 /**
  * Issue de validation détectée.
@@ -29,31 +29,31 @@ export interface ValidationIssue {
   /**
    * ID de la règle violée.
    */
-  ruleId: string;
+  ruleId: string
   /**
    * Sévérité de l'issue.
    */
-  severity: ValidationSeverity;
+  severity: ValidationSeverity
   /**
    * Message descriptif.
    */
-  message: string;
+  message: string
   /**
    * IDs des noeuds concernés.
    */
-  nodeIds?: string[];
+  nodeIds?: string[]
   /**
    * IDs des arêtes concernées.
    */
-  edgeIds?: string[];
+  edgeIds?: string[]
   /**
    * Suggestion de correction.
    */
-  suggestion?: string;
+  suggestion?: string
   /**
    * Catégorie de la règle.
    */
-  category: ValidationCategory;
+  category: ValidationCategory
 }
 
 /**
@@ -63,23 +63,23 @@ export interface ValidationResult {
   /**
    * Le graphe est-il valide ?
    */
-  valid: boolean;
+  valid: boolean
   /**
    * Liste des issues détectées.
    */
-  issues: ValidationIssue[];
+  issues: ValidationIssue[]
   /**
    * Statistiques par sévérité.
    */
   stats: {
-    errors: number;
-    warnings: number;
-    infos: number;
-  };
+    errors: number
+    warnings: number
+    infos: number
+  }
   /**
    * Timestamp de validation.
    */
-  timestamp: number;
+  timestamp: number
 }
 
 /**
@@ -89,31 +89,31 @@ export interface ValidationRule {
   /**
    * ID unique de la règle.
    */
-  id: string;
+  id: string
   /**
    * Nom de la règle.
    */
-  name: string;
+  name: string
   /**
    * Description de la règle.
    */
-  description: string;
+  description: string
   /**
    * Catégorie.
    */
-  category: ValidationCategory;
+  category: ValidationCategory
   /**
    * Sévérité par défaut.
    */
-  severity: ValidationSeverity;
+  severity: ValidationSeverity
   /**
    * Règle activée ?
    */
-  enabled: boolean;
+  enabled: boolean
   /**
    * Fonction de validation.
    */
-  validate: (nodes: Record<string, Node>, edges: Record<string, Edge>) => ValidationIssue[];
+  validate: (nodes: Record<string, Node>, edges: Record<string, Edge>) => ValidationIssue[]
 }
 
 /**
@@ -123,23 +123,23 @@ export interface ValidatableState {
   /**
    * Résultat de la dernière validation.
    */
-  lastValidationResult: Ref<ValidationResult | null>;
+  lastValidationResult: Ref<ValidationResult | null>
   /**
    * Validation en cours.
    */
-  isValidating: Ref<boolean>;
+  isValidating: Ref<boolean>
   /**
    * Règles actives.
    */
-  activeRules: Ref<ValidationRule[]>;
+  activeRules: Ref<ValidationRule[]>
   /**
    * Nombre total d'erreurs.
    */
-  errorCount: Ref<number>;
+  errorCount: Ref<number>
   /**
    * Nombre total d'avertissements.
    */
-  warningCount: Ref<number>;
+  warningCount: Ref<number>
 }
 
 /**
@@ -150,46 +150,46 @@ export interface ValidatableHandlers {
    * Valide le graphe complet.
    * @returns Résultat de validation
    */
-  validateGraph: () => ValidationResult;
+  validateGraph: () => ValidationResult
   /**
    * Valide un noeud spécifique.
    * @param nodeId - ID du noeud
    * @returns Issues concernant ce noeud
    */
-  validateNode: (nodeId: string) => ValidationIssue[];
+  validateNode: (nodeId: string) => ValidationIssue[]
   /**
    * Valide une arête spécifique.
    * @param edgeId - ID de l'arête
    * @returns Issues concernant cette arête
    */
-  validateEdge: (edgeId: string) => ValidationIssue[];
+  validateEdge: (edgeId: string) => ValidationIssue[]
   /**
    * Active une règle de validation.
    * @param ruleId - ID de la règle
    */
-  enableRule: (ruleId: string) => void;
+  enableRule: (ruleId: string) => void
   /**
    * Désactive une règle de validation.
    * @param ruleId - ID de la règle
    */
-  disableRule: (ruleId: string) => void;
+  disableRule: (ruleId: string) => void
   /**
    * Modifie la sévérité d'une règle.
    * @param ruleId - ID de la règle
    * @param severity - Nouvelle sévérité
    */
-  setRuleSeverity: (ruleId: string, severity: ValidationSeverity) => void;
+  setRuleSeverity: (ruleId: string, severity: ValidationSeverity) => void
   /**
    * Obtient toutes les règles disponibles.
    * @returns Liste des règles
    */
-  getAllRules: () => ValidationRule[];
+  getAllRules: () => ValidationRule[]
   /**
    * Filtre les issues par catégorie.
    * @param category - Catégorie à filtrer
    * @returns Issues de cette catégorie
    */
-  filterIssuesByCategory: (category: ValidationCategory) => ValidationIssue[];
+  filterIssuesByCategory: (category: ValidationCategory) => ValidationIssue[]
 }
 
 /**
@@ -276,7 +276,7 @@ const ALLOWED_RELATIONSHIPS: Partial<
   [RelationType.Association]: {
     // Association allowed between any elements of same layer
   },
-};
+}
 
 /**
  * Règles de validation prédéfinies (50+ règles).
@@ -291,20 +291,20 @@ const VALIDATION_RULES: ValidationRule[] = [
     severity: 'error',
     enabled: true,
     validate: (nodes, edges) => {
-      const issues: ValidationIssue[] = [];
+      const issues: ValidationIssue[] = []
       for (const edge of Object.values(edges)) {
-        const sourceNode = nodes[edge.sourceId];
-        const targetNode = nodes[edge.targetId];
+        const sourceNode = nodes[edge.sourceId]
+        const targetNode = nodes[edge.targetId]
 
-        if (!sourceNode || !targetNode) continue;
+        if (!sourceNode || !targetNode) continue
 
-        const relationType = edge.data?.relationType as RelationType;
-        const sourceType = sourceNode.data?.archimateType as ArchimateType;
-        const targetType = targetNode.data?.archimateType as ArchimateType;
+        const relationType = edge.data?.relationType as RelationType
+        const sourceType = sourceNode.data?.archimateType as ArchimateType
+        const targetType = targetNode.data?.archimateType as ArchimateType
 
-        if (!relationType || !sourceType || !targetType) continue;
+        if (!relationType || !sourceType || !targetType) continue
 
-        const allowedTargets = ALLOWED_RELATIONSHIPS[relationType]?.[sourceType];
+        const allowedTargets = ALLOWED_RELATIONSHIPS[relationType]?.[sourceType]
         if (allowedTargets && !allowedTargets.includes(targetType)) {
           issues.push({
             ruleId: 'REL-001',
@@ -314,10 +314,10 @@ const VALIDATION_RULES: ValidationRule[] = [
             edgeIds: [edge.id],
             nodeIds: [edge.sourceId, edge.targetId],
             suggestion: `Changer le type de relation ou les types d'éléments`,
-          });
+          })
         }
       }
-      return issues;
+      return issues
     },
   },
 
@@ -329,10 +329,10 @@ const VALIDATION_RULES: ValidationRule[] = [
     severity: 'error',
     enabled: true,
     validate: (_nodes, edges) => {
-      const issues: ValidationIssue[] = [];
+      const issues: ValidationIssue[] = []
       for (const edge of Object.values(edges)) {
         if (edge.sourceId === edge.targetId) {
-          const relationType = edge.data?.relationType;
+          const relationType = edge.data?.relationType
           if (relationType !== RelationType.Specialization) {
             issues.push({
               ruleId: 'REL-002',
@@ -342,11 +342,11 @@ const VALIDATION_RULES: ValidationRule[] = [
               edgeIds: [edge.id],
               nodeIds: [edge.sourceId],
               suggestion: 'Supprimer cette relation ou utiliser Specialization',
-            });
+            })
           }
         }
       }
-      return issues;
+      return issues
     },
   },
 
@@ -358,27 +358,27 @@ const VALIDATION_RULES: ValidationRule[] = [
     severity: 'warning',
     enabled: true,
     validate: (nodes, edges) => {
-      const issues: ValidationIssue[] = [];
+      const issues: ValidationIssue[] = []
       const getLayer = (type: ArchimateType): string => {
-        if (type.startsWith('business-')) return 'business';
-        if (type.startsWith('application-')) return 'application';
-        if (type.startsWith('technology-')) return 'technology';
-        if (type.startsWith('motivation-')) return 'motivation';
-        if (type.startsWith('strategy-')) return 'strategy';
-        if (type.startsWith('implementation-')) return 'implementation';
-        return 'physical';
-      };
+        if (type.startsWith('business-')) return 'business'
+        if (type.startsWith('application-')) return 'application'
+        if (type.startsWith('technology-')) return 'technology'
+        if (type.startsWith('motivation-')) return 'motivation'
+        if (type.startsWith('strategy-')) return 'strategy'
+        if (type.startsWith('implementation-')) return 'implementation'
+        return 'physical'
+      }
 
       for (const edge of Object.values(edges)) {
-        if (edge.data?.relationType !== RelationType.Association) continue;
+        if (edge.data?.relationType !== RelationType.Association) continue
 
-        const sourceNode = nodes[edge.sourceId];
-        const targetNode = nodes[edge.targetId];
-        if (!sourceNode || !targetNode) continue;
+        const sourceNode = nodes[edge.sourceId]
+        const targetNode = nodes[edge.targetId]
+        if (!sourceNode || !targetNode) continue
 
-        const sourceType = sourceNode.data?.archimateType as ArchimateType;
-        const targetType = targetNode.data?.archimateType as ArchimateType;
-        if (!sourceType || !targetType) continue;
+        const sourceType = sourceNode.data?.archimateType as ArchimateType
+        const targetType = targetNode.data?.archimateType as ArchimateType
+        if (!sourceType || !targetType) continue
 
         if (getLayer(sourceType) !== getLayer(targetType)) {
           issues.push({
@@ -388,10 +388,10 @@ const VALIDATION_RULES: ValidationRule[] = [
             message: 'Association devrait relier des éléments de la même couche',
             edgeIds: [edge.id],
             suggestion: 'Utiliser un autre type de relation inter-couches',
-          });
+          })
         }
       }
-      return issues;
+      return issues
     },
   },
 
@@ -404,32 +404,32 @@ const VALIDATION_RULES: ValidationRule[] = [
     severity: 'error',
     enabled: true,
     validate: (nodes, edges) => {
-      const issues: ValidationIssue[] = [];
+      const issues: ValidationIssue[] = []
       const compositionEdges = Object.values(edges).filter(
         (e) => e.data?.relationType === RelationType.Composition
-      );
+      )
 
       // Build adjacency list
-      const graph: Record<string, string[]> = {};
+      const graph: Record<string, string[]> = {}
       for (const edge of compositionEdges) {
-        if (!graph[edge.sourceId]) graph[edge.sourceId] = [];
-        graph[edge.sourceId].push(edge.targetId);
+        if (!graph[edge.sourceId]) graph[edge.sourceId] = []
+        graph[edge.sourceId].push(edge.targetId)
       }
 
       // DFS cycle detection
-      const visited = new Set<string>();
-      const recStack = new Set<string>();
+      const visited = new Set<string>()
+      const recStack = new Set<string>()
       const detectCycle = (nodeId: string, path: string[]): boolean => {
-        visited.add(nodeId);
-        recStack.add(nodeId);
+        visited.add(nodeId)
+        recStack.add(nodeId)
 
         for (const neighbor of graph[nodeId] || []) {
           if (!visited.has(neighbor)) {
             if (detectCycle(neighbor, [...path, neighbor])) {
               // Dépiler avant chaque retour anticipé : un noeud laissé dans
               // recStack provoquait de faux cycles sur les parcours suivants.
-              recStack.delete(nodeId);
-              return true;
+              recStack.delete(nodeId)
+              return true
             }
           } else if (recStack.has(neighbor)) {
             issues.push({
@@ -439,23 +439,23 @@ const VALIDATION_RULES: ValidationRule[] = [
               message: `Cycle de composition détecté: ${[...path, neighbor].join(' → ')}`,
               nodeIds: [...path, neighbor],
               suggestion: 'Supprimer une des relations de composition du cycle',
-            });
-            recStack.delete(nodeId);
-            return true;
+            })
+            recStack.delete(nodeId)
+            return true
           }
         }
 
-        recStack.delete(nodeId);
-        return false;
-      };
+        recStack.delete(nodeId)
+        return false
+      }
 
       for (const nodeId of Object.keys(nodes)) {
         if (!visited.has(nodeId)) {
-          detectCycle(nodeId, [nodeId]);
+          detectCycle(nodeId, [nodeId])
         }
       }
 
-      return issues;
+      return issues
     },
   },
 
@@ -467,12 +467,12 @@ const VALIDATION_RULES: ValidationRule[] = [
     severity: 'warning',
     enabled: true,
     validate: (nodes, edges) => {
-      const issues: ValidationIssue[] = [];
+      const issues: ValidationIssue[] = []
       for (const edge of Object.values(edges)) {
-        if (edge.data?.relationType !== RelationType.Composition) continue;
+        if (edge.data?.relationType !== RelationType.Composition) continue
 
-        const targetNode = nodes[edge.targetId];
-        if (!targetNode) continue;
+        const targetNode = nodes[edge.targetId]
+        if (!targetNode) continue
 
         if (targetNode.parentId !== edge.sourceId) {
           issues.push({
@@ -482,10 +482,10 @@ const VALIDATION_RULES: ValidationRule[] = [
             message: 'Composition devrait correspondre à la relation parent-enfant',
             edgeIds: [edge.id],
             suggestion: `Définir ${edge.sourceId} comme parent de ${edge.targetId}`,
-          });
+          })
         }
       }
-      return issues;
+      return issues
     },
   },
 
@@ -498,9 +498,9 @@ const VALIDATION_RULES: ValidationRule[] = [
     severity: 'warning',
     enabled: true,
     validate: (nodes) => {
-      const issues: ValidationIssue[] = [];
+      const issues: ValidationIssue[] = []
       for (const node of Object.values(nodes)) {
-        const name = node.data?.name;
+        const name = node.data?.name
         if (!name || name.trim().length === 0) {
           issues.push({
             ruleId: 'NAME-001',
@@ -509,10 +509,10 @@ const VALIDATION_RULES: ValidationRule[] = [
             message: 'Élément sans nom',
             nodeIds: [node.id],
             suggestion: 'Ajouter un nom descriptif',
-          });
+          })
         }
       }
-      return issues;
+      return issues
     },
   },
 
@@ -524,9 +524,9 @@ const VALIDATION_RULES: ValidationRule[] = [
     severity: 'info',
     enabled: true,
     validate: (nodes) => {
-      const issues: ValidationIssue[] = [];
+      const issues: ValidationIssue[] = []
       for (const node of Object.values(nodes)) {
-        const name = node.data?.name as string;
+        const name = node.data?.name as string
         if (name && (name.length < 3 || name.length > 100)) {
           issues.push({
             ruleId: 'NAME-002',
@@ -535,10 +535,10 @@ const VALIDATION_RULES: ValidationRule[] = [
             message: `Nom trop ${name.length < 3 ? 'court' : 'long'} (${name.length} caractères)`,
             nodeIds: [node.id],
             suggestion: 'Utiliser un nom entre 3 et 100 caractères',
-          });
+          })
         }
       }
-      return issues;
+      return issues
     },
   },
 
@@ -550,19 +550,19 @@ const VALIDATION_RULES: ValidationRule[] = [
     severity: 'info',
     enabled: true,
     validate: (nodes) => {
-      const issues: ValidationIssue[] = [];
-      const namesByType: Record<string, Map<string, string[]>> = {};
+      const issues: ValidationIssue[] = []
+      const namesByType: Record<string, Map<string, string[]>> = {}
 
       for (const node of Object.values(nodes)) {
-        const name = node.data?.name as string;
-        const type = node.data?.archimateType as string;
-        if (!name || !type) continue;
+        const name = node.data?.name as string
+        const type = node.data?.archimateType as string
+        if (!name || !type) continue
 
-        if (!namesByType[type]) namesByType[type] = new Map();
+        if (!namesByType[type]) namesByType[type] = new Map()
         if (!namesByType[type].has(name)) {
-          namesByType[type].set(name, []);
+          namesByType[type].set(name, [])
         }
-        namesByType[type].get(name)!.push(node.id);
+        namesByType[type].get(name)!.push(node.id)
       }
 
       for (const [type, names] of Object.entries(namesByType)) {
@@ -575,12 +575,12 @@ const VALIDATION_RULES: ValidationRule[] = [
               message: `${nodeIds.length} éléments de type ${type} ont le nom "${name}"`,
               nodeIds,
               suggestion: 'Utiliser des noms distincts pour éviter la confusion',
-            });
+            })
           }
         }
       }
 
-      return issues;
+      return issues
     },
   },
 
@@ -593,7 +593,7 @@ const VALIDATION_RULES: ValidationRule[] = [
     severity: 'error',
     enabled: true,
     validate: (nodes) => {
-      const issues: ValidationIssue[] = [];
+      const issues: ValidationIssue[] = []
       for (const node of Object.values(nodes)) {
         if (!node.data?.archimateType) {
           issues.push({
@@ -603,10 +603,10 @@ const VALIDATION_RULES: ValidationRule[] = [
             message: 'Élément sans type Archimate',
             nodeIds: [node.id],
             suggestion: 'Définir un type Archimate pour cet élément',
-          });
+          })
         }
       }
-      return issues;
+      return issues
     },
   },
 
@@ -618,7 +618,7 @@ const VALIDATION_RULES: ValidationRule[] = [
     severity: 'error',
     enabled: true,
     validate: (_nodes, edges) => {
-      const issues: ValidationIssue[] = [];
+      const issues: ValidationIssue[] = []
       for (const edge of Object.values(edges)) {
         if (!edge.data?.relationType) {
           issues.push({
@@ -628,10 +628,10 @@ const VALIDATION_RULES: ValidationRule[] = [
             message: 'Relation sans type',
             edgeIds: [edge.id],
             suggestion: 'Définir un type de relation',
-          });
+          })
         }
       }
-      return issues;
+      return issues
     },
   },
 
@@ -643,12 +643,12 @@ const VALIDATION_RULES: ValidationRule[] = [
     severity: 'info',
     enabled: true,
     validate: (nodes, edges) => {
-      const issues: ValidationIssue[] = [];
-      const connectedNodes = new Set<string>();
+      const issues: ValidationIssue[] = []
+      const connectedNodes = new Set<string>()
 
       for (const edge of Object.values(edges)) {
-        connectedNodes.add(edge.sourceId);
-        connectedNodes.add(edge.targetId);
+        connectedNodes.add(edge.sourceId)
+        connectedNodes.add(edge.targetId)
       }
 
       for (const node of Object.values(nodes)) {
@@ -660,11 +660,11 @@ const VALIDATION_RULES: ValidationRule[] = [
             message: 'Élément isolé sans relations',
             nodeIds: [node.id],
             suggestion: 'Connecter cet élément au reste du modèle',
-          });
+          })
         }
       }
 
-      return issues;
+      return issues
     },
   },
 
@@ -677,7 +677,7 @@ const VALIDATION_RULES: ValidationRule[] = [
     severity: 'error',
     enabled: true,
     validate: (nodes, edges) => {
-      const issues: ValidationIssue[] = [];
+      const issues: ValidationIssue[] = []
       for (const edge of Object.values(edges)) {
         if (!nodes[edge.sourceId]) {
           issues.push({
@@ -687,7 +687,7 @@ const VALIDATION_RULES: ValidationRule[] = [
             message: `Arête avec source invalide: ${edge.sourceId}`,
             edgeIds: [edge.id],
             suggestion: 'Supprimer cette arête orpheline',
-          });
+          })
         }
         if (!nodes[edge.targetId]) {
           issues.push({
@@ -697,10 +697,10 @@ const VALIDATION_RULES: ValidationRule[] = [
             message: `Arête avec cible invalide: ${edge.targetId}`,
             edgeIds: [edge.id],
             suggestion: 'Supprimer cette arête orpheline',
-          });
+          })
         }
       }
-      return issues;
+      return issues
     },
   },
 
@@ -712,7 +712,7 @@ const VALIDATION_RULES: ValidationRule[] = [
     severity: 'error',
     enabled: true,
     validate: (nodes) => {
-      const issues: ValidationIssue[] = [];
+      const issues: ValidationIssue[] = []
       for (const node of Object.values(nodes)) {
         if (node.parentId && !nodes[node.parentId]) {
           issues.push({
@@ -722,10 +722,10 @@ const VALIDATION_RULES: ValidationRule[] = [
             message: `Parent inexistant: ${node.parentId}`,
             nodeIds: [node.id],
             suggestion: 'Supprimer la référence au parent ou recréer le parent',
-          });
+          })
         }
       }
-      return issues;
+      return issues
     },
   },
 
@@ -737,38 +737,35 @@ const VALIDATION_RULES: ValidationRule[] = [
     severity: 'warning',
     enabled: true,
     validate: (nodes, edges) => {
-      const issues: ValidationIssue[] = [];
+      const issues: ValidationIssue[] = []
       const crossLayerAllowed = [
         RelationType.Serving,
         RelationType.Realization,
         RelationType.Association,
-      ];
+      ]
 
       const getLayer = (type: ArchimateType): string => {
-        if (type.startsWith('business-')) return 'business';
-        if (type.startsWith('application-')) return 'application';
-        if (type.startsWith('technology-')) return 'technology';
-        return 'other';
-      };
+        if (type.startsWith('business-')) return 'business'
+        if (type.startsWith('application-')) return 'application'
+        if (type.startsWith('technology-')) return 'technology'
+        return 'other'
+      }
 
       for (const edge of Object.values(edges)) {
-        const sourceNode = nodes[edge.sourceId];
-        const targetNode = nodes[edge.targetId];
-        if (!sourceNode || !targetNode) continue;
+        const sourceNode = nodes[edge.sourceId]
+        const targetNode = nodes[edge.targetId]
+        if (!sourceNode || !targetNode) continue
 
-        const sourceType = sourceNode.data?.archimateType as ArchimateType;
-        const targetType = targetNode.data?.archimateType as ArchimateType;
-        const relationType = edge.data?.relationType as RelationType;
+        const sourceType = sourceNode.data?.archimateType as ArchimateType
+        const targetType = targetNode.data?.archimateType as ArchimateType
+        const relationType = edge.data?.relationType as RelationType
 
-        if (!sourceType || !targetType || !relationType) continue;
+        if (!sourceType || !targetType || !relationType) continue
 
-        const sourceLayer = getLayer(sourceType);
-        const targetLayer = getLayer(targetType);
+        const sourceLayer = getLayer(sourceType)
+        const targetLayer = getLayer(targetType)
 
-        if (
-          sourceLayer !== targetLayer &&
-          !crossLayerAllowed.includes(relationType)
-        ) {
+        if (sourceLayer !== targetLayer && !crossLayerAllowed.includes(relationType)) {
           issues.push({
             ruleId: 'LAYER-001',
             severity: 'warning',
@@ -776,14 +773,14 @@ const VALIDATION_RULES: ValidationRule[] = [
             message: `Relation ${relationType} entre couches ${sourceLayer} et ${targetLayer}`,
             edgeIds: [edge.id],
             suggestion: `Utiliser ${crossLayerAllowed.join(', ')} pour les relations inter-couches`,
-          });
+          })
         }
       }
 
-      return issues;
+      return issues
     },
   },
-];
+]
 
 /**
  * Trait permettant de valider la conformité Archimate du graphe.
@@ -816,72 +813,72 @@ const VALIDATION_RULES: ValidationRule[] = [
  */
 // État global partagé entre toutes les instances (permet au bouton Toolbar
 // et au panneau Validation d'observer le même résultat).
-const lastValidationResult = ref<ValidationResult | null>(null);
-const isValidating = ref(false);
-const activeRules = ref<ValidationRule[]>([...VALIDATION_RULES]);
+const lastValidationResult = ref<ValidationResult | null>(null)
+const isValidating = ref(false)
+const activeRules = ref<ValidationRule[]>([...VALIDATION_RULES])
 
-const errorCount = computed(() => lastValidationResult.value?.stats.errors ?? 0);
-const warningCount = computed(() => lastValidationResult.value?.stats.warnings ?? 0);
+const errorCount = computed(() => lastValidationResult.value?.stats.errors ?? 0)
+const warningCount = computed(() => lastValidationResult.value?.stats.warnings ?? 0)
 
 export function useValidatable(): ValidatableState & ValidatableHandlers {
-  const graphStore = useGraphStore();
+  const graphStore = useGraphStore()
 
   /**
    * Valide le graphe complet.
    */
   function validateGraph(): ValidationResult {
-    isValidating.value = true;
+    isValidating.value = true
 
-    const issues: ValidationIssue[] = [];
-    const enabledRules = activeRules.value.filter((r) => r.enabled);
+    const issues: ValidationIssue[] = []
+    const enabledRules = activeRules.value.filter((r) => r.enabled)
 
     for (const rule of enabledRules) {
-      const ruleIssues = rule.validate(graphStore.nodes, graphStore.edges);
-      issues.push(...ruleIssues);
+      const ruleIssues = rule.validate(graphStore.nodes, graphStore.edges)
+      issues.push(...ruleIssues)
     }
 
     const stats = {
       errors: issues.filter((i) => i.severity === 'error').length,
       warnings: issues.filter((i) => i.severity === 'warning').length,
       infos: issues.filter((i) => i.severity === 'info').length,
-    };
+    }
 
     const result: ValidationResult = {
       valid: stats.errors === 0,
       issues,
       stats,
       timestamp: Date.now(),
-    };
+    }
 
-    lastValidationResult.value = result;
-    isValidating.value = false;
+    lastValidationResult.value = result
+    isValidating.value = false
 
-    return result;
+    return result
   }
 
   /**
    * Valide un noeud spécifique.
    */
   function validateNode(nodeId: string): ValidationIssue[] {
-    const result = validateGraph();
-    return result.issues.filter((issue) => issue.nodeIds?.includes(nodeId));
+    const result = validateGraph()
+    return result.issues.filter((issue) => issue.nodeIds?.includes(nodeId))
   }
 
   /**
    * Valide une arête spécifique.
    */
   function validateEdge(edgeId: string): ValidationIssue[] {
-    const result = validateGraph();
-    return result.issues.filter((issue) => issue.edgeIds?.includes(edgeId));
+    const result = validateGraph()
+    return result.issues.filter((issue) => issue.edgeIds?.includes(edgeId))
   }
 
   /**
    * Active une règle.
    */
   function enableRule(ruleId: string): void {
-    const rule = activeRules.value.find((r) => r.id === ruleId);
+    const rule = activeRules.value.find((r) => r.id === ruleId)
     if (rule) {
-      rule.enabled = true;
+      rule.enabled = true
     }
   }
 
@@ -889,9 +886,9 @@ export function useValidatable(): ValidatableState & ValidatableHandlers {
    * Désactive une règle.
    */
   function disableRule(ruleId: string): void {
-    const rule = activeRules.value.find((r) => r.id === ruleId);
+    const rule = activeRules.value.find((r) => r.id === ruleId)
     if (rule) {
-      rule.enabled = false;
+      rule.enabled = false
     }
   }
 
@@ -899,9 +896,9 @@ export function useValidatable(): ValidatableState & ValidatableHandlers {
    * Modifie la sévérité d'une règle.
    */
   function setRuleSeverity(ruleId: string, severity: ValidationSeverity): void {
-    const rule = activeRules.value.find((r) => r.id === ruleId);
+    const rule = activeRules.value.find((r) => r.id === ruleId)
     if (rule) {
-      rule.severity = severity;
+      rule.severity = severity
     }
   }
 
@@ -909,15 +906,15 @@ export function useValidatable(): ValidatableState & ValidatableHandlers {
    * Obtient toutes les règles.
    */
   function getAllRules(): ValidationRule[] {
-    return [...activeRules.value];
+    return [...activeRules.value]
   }
 
   /**
    * Filtre les issues par catégorie.
    */
   function filterIssuesByCategory(category: ValidationCategory): ValidationIssue[] {
-    if (!lastValidationResult.value) return [];
-    return lastValidationResult.value.issues.filter((i) => i.category === category);
+    if (!lastValidationResult.value) return []
+    return lastValidationResult.value.issues.filter((i) => i.category === category)
   }
 
   return {
@@ -934,5 +931,5 @@ export function useValidatable(): ValidatableState & ValidatableHandlers {
     setRuleSeverity,
     getAllRules,
     filterIssuesByCategory,
-  };
+  }
 }

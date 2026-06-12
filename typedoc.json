@@ -33,21 +33,9 @@
     "includeGroups": true
   },
   "categorizeByGroup": true,
-  "categoryOrder": [
-    "Traits",
-    "Types",
-    "Stores",
-    "Utilities",
-    "*"
-  ],
+  "categoryOrder": ["Traits", "Types", "Stores", "Utilities", "*"],
   "sort": ["source-order"],
-  "kindSortOrder": [
-    "Function",
-    "Interface",
-    "TypeAlias",
-    "Enum",
-    "Class"
-  ],
+  "kindSortOrder": ["Function", "Interface", "TypeAlias", "Enum", "Class"],
   "searchInComments": true,
   "visibilityFilters": {
     "protected": false,

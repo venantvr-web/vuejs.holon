@@ -1,24 +1,23 @@
-
 <!-- src/components/inspectors/sections/NameSection.vue -->
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useGraphStore } from '../../../stores/graph';
+import { computed } from 'vue'
+import { useGraphStore } from '../../../stores/graph'
 
 interface Props {
-  nodeId: string;
+  nodeId: string
 }
-const props = defineProps<Props>();
-const graphStore = useGraphStore();
-const node = computed(() => graphStore.nodes[props.nodeId]);
+const props = defineProps<Props>()
+const graphStore = useGraphStore()
+const node = computed(() => graphStore.nodes[props.nodeId])
 
 const name = computed({
   get: () => (node.value?.data?.name as string) ?? '',
   set: (value: string) => {
-    const current = node.value;
-    if (!current) return;
-    graphStore.updateNode(props.nodeId, { data: { ...(current.data ?? {}), name: value } });
+    const current = node.value
+    if (!current) return
+    graphStore.updateNode(props.nodeId, { data: { ...(current.data ?? {}), name: value } })
   },
-});
+})
 </script>
 
 <template>

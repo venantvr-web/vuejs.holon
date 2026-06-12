@@ -1,6 +1,6 @@
 // src/composables/traits/useTypeable.ts
-import { computed, type Ref } from 'vue';
-import { useGraphStore } from '../../stores/graph';
+import { computed, type Ref } from 'vue'
+import { useGraphStore } from '../../stores/graph'
 
 // Types Archimate standards
 export const ARCHIMATE_TYPES = {
@@ -122,9 +122,9 @@ export const ARCHIMATE_TYPES = {
       'generic-note': { label: 'Note', icon: '📝' },
     },
   },
-} as const;
+} as const
 
-export type ArchimateLayer = keyof typeof ARCHIMATE_TYPES;
+export type ArchimateLayer = keyof typeof ARCHIMATE_TYPES
 
 /**
  * Enum des types Archimate (pour compatibilité avec nouveaux traits).
@@ -210,14 +210,14 @@ export enum ArchimateType {
 }
 
 // Type alias pour compatibilité avec code existant
-export type ArchimateTypeString = string;
+export type ArchimateTypeString = string
 
 /**
  * Options de configuration pour le trait Typeable.
  */
 export interface TypeableOptions {
   /** Identifiant réactif du noeud */
-  nodeId: Ref<string>;
+  nodeId: Ref<string>
 }
 
 /**
@@ -225,17 +225,17 @@ export interface TypeableOptions {
  */
 export interface TypeableState {
   /** Type ArchiMate du noeud */
-  archimateType: Ref<ArchimateType | null>;
+  archimateType: Ref<ArchimateType | null>
   /** Couche ArchiMate à laquelle appartient le type */
-  archimateLayer: Ref<ArchimateLayer | null>;
+  archimateLayer: Ref<ArchimateLayer | null>
   /** Libellé du type en toutes lettres */
-  typeLabel: Ref<string>;
+  typeLabel: Ref<string>
   /** Icône associée au type */
-  typeIcon: Ref<string>;
+  typeIcon: Ref<string>
   /** Couleur de la couche ArchiMate (hex opaque) */
-  typeColor: Ref<string>;
+  typeColor: Ref<string>
   /** Couleur de remplissage teintée (rgba avec alpha) pour le fond du noeud */
-  typeTintFill: Ref<string>;
+  typeTintFill: Ref<string>
 }
 
 /**
@@ -243,9 +243,9 @@ export interface TypeableState {
  */
 export interface TypeableHandlers {
   /** Définit le type ArchiMate et applique automatiquement la couleur de couche */
-  setType: (type: ArchimateType) => void;
+  setType: (type: ArchimateType) => void
   /** Supprime le type ArchiMate du noeud */
-  clearType: () => void;
+  clearType: () => void
 }
 
 /**
@@ -259,54 +259,54 @@ export interface TypeableHandlers {
  * @returns État réactif et gestionnaires pour le typage ArchiMate
  */
 export function useTypeable(options: TypeableOptions): TypeableState & TypeableHandlers {
-  const graphStore = useGraphStore();
+  const graphStore = useGraphStore()
 
   const archimateType = computed(() => {
-    const node = graphStore.nodes[options.nodeId.value];
-    return node?.data?.archimateType ?? null;
-  });
+    const node = graphStore.nodes[options.nodeId.value]
+    return node?.data?.archimateType ?? null
+  })
 
   const archimateLayer = computed((): ArchimateLayer | null => {
-    const type = archimateType.value;
-    if (!type) return null;
+    const type = archimateType.value
+    if (!type) return null
 
     for (const [layer, config] of Object.entries(ARCHIMATE_TYPES)) {
       if (type in config.types) {
-        return layer as ArchimateLayer;
+        return layer as ArchimateLayer
       }
     }
-    return null;
-  });
+    return null
+  })
 
   const typeLabel = computed(() => {
-    const type = archimateType.value;
-    if (!type) return '';
+    const type = archimateType.value
+    if (!type) return ''
 
     for (const config of Object.values(ARCHIMATE_TYPES)) {
       if (type in config.types) {
-        return (config.types as Record<string, { label: string }>)[type]?.label ?? '';
+        return (config.types as Record<string, { label: string }>)[type]?.label ?? ''
       }
     }
-    return '';
-  });
+    return ''
+  })
 
   const typeIcon = computed(() => {
-    const type = archimateType.value;
-    if (!type) return '';
+    const type = archimateType.value
+    if (!type) return ''
 
     for (const config of Object.values(ARCHIMATE_TYPES)) {
       if (type in config.types) {
-        return (config.types as Record<string, { icon: string }>)[type]?.icon ?? '';
+        return (config.types as Record<string, { icon: string }>)[type]?.icon ?? ''
       }
     }
-    return '';
-  });
+    return ''
+  })
 
   const typeColor = computed(() => {
-    const layer = archimateLayer.value;
-    if (!layer) return '#ffffff';
-    return ARCHIMATE_TYPES[layer]?.color ?? '#ffffff';
-  });
+    const layer = archimateLayer.value
+    if (!layer) return '#ffffff'
+    return ARCHIMATE_TYPES[layer]?.color ?? '#ffffff'
+  })
 
   /**
    * Convertit un hex (#RGB ou #RRGGBB) en rgba avec l'alpha donné.
@@ -314,41 +314,45 @@ export function useTypeable(options: TypeableOptions): TypeableState & TypeableH
    * de la layer reste reconnaissable tout en laissant passer le fond.
    */
   function hexToRgba(hex: string, alpha: number): string {
-    let h = hex.replace('#', '');
-    if (h.length === 3) h = h.split('').map(c => c + c).join('');
-    const r = parseInt(h.slice(0, 2), 16);
-    const g = parseInt(h.slice(2, 4), 16);
-    const b = parseInt(h.slice(4, 6), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    let h = hex.replace('#', '')
+    if (h.length === 3)
+      h = h
+        .split('')
+        .map((c) => c + c)
+        .join('')
+    const r = parseInt(h.slice(0, 2), 16)
+    const g = parseInt(h.slice(2, 4), 16)
+    const b = parseInt(h.slice(4, 6), 16)
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`
   }
 
   const typeTintFill = computed(() => {
-    const color = typeColor.value;
-    if (color === '#ffffff') return '';
-    return hexToRgba(color, 0.35);
-  });
+    const color = typeColor.value
+    if (color === '#ffffff') return ''
+    return hexToRgba(color, 0.35)
+  })
 
   function setType(type: ArchimateType) {
-    const node = graphStore.nodes[options.nodeId.value];
-    if (!node) return;
+    const node = graphStore.nodes[options.nodeId.value]
+    if (!node) return
     // On stocke uniquement le type — le fill reste piloté par le trait
     // Styleable + le tint Archimate est calculé à l'affichage. Permet à
     // l'utilisateur de surcharger la couleur sans perdre le type.
     graphStore.updateNode(options.nodeId.value, {
       data: { ...node.data, archimateType: type },
-    });
+    })
   }
 
   function clearType() {
-    const node = graphStore.nodes[options.nodeId.value];
-    if (!node) return;
+    const node = graphStore.nodes[options.nodeId.value]
+    if (!node) return
 
-    const newData = { ...node.data };
-    delete newData.archimateType;
+    const newData = { ...node.data }
+    delete newData.archimateType
 
     graphStore.updateNode(options.nodeId.value, {
       data: newData,
-    });
+    })
   }
 
   return {
@@ -360,26 +364,26 @@ export function useTypeable(options: TypeableOptions): TypeableState & TypeableH
     typeTintFill,
     setType,
     clearType,
-  };
+  }
 }
 
 // Helper pour obtenir tous les types à plat
 export function getAllArchimateTypes(): Array<{
-  type: string;
-  label: string;
-  icon: string;
-  layer: string;
-  layerLabel: string;
-  color: string;
+  type: string
+  label: string
+  icon: string
+  layer: string
+  layerLabel: string
+  color: string
 }> {
   const result: Array<{
-    type: string;
-    label: string;
-    icon: string;
-    layer: string;
-    layerLabel: string;
-    color: string;
-  }> = [];
+    type: string
+    label: string
+    icon: string
+    layer: string
+    layerLabel: string
+    color: string
+  }> = []
 
   for (const [layer, config] of Object.entries(ARCHIMATE_TYPES)) {
     for (const [type, typeConfig] of Object.entries(config.types)) {
@@ -390,9 +394,9 @@ export function getAllArchimateTypes(): Array<{
         layer,
         layerLabel: config.label,
         color: config.color,
-      });
+      })
     }
   }
 
-  return result;
+  return result
 }

@@ -1,18 +1,18 @@
 // src/composables/traits/useImportable.ts
-import { useGraphStore } from '../../stores/graph';
-import { z } from 'zod';
-import type { Node, Edge } from '../../types';
-import { nanoid } from 'nanoid';
+import { useGraphStore } from '../../stores/graph'
+import { z } from 'zod'
+import type { Node, Edge } from '../../types'
+import { nanoid } from 'nanoid'
 
 /**
  * Stratégies de gestion des conflits d'IDs lors de l'import.
  */
-export type ConflictStrategy = 'replace' | 'rename' | 'skip';
+export type ConflictStrategy = 'replace' | 'rename' | 'skip'
 
 /**
  * Stratégies de fusion avec le graphe existant.
  */
-export type MergeStrategy = 'append' | 'replace' | 'merge';
+export type MergeStrategy = 'append' | 'replace' | 'merge'
 
 /**
  * Options de configuration pour l'import.
@@ -25,12 +25,12 @@ export interface ImportOptions {
    * - skip: Ignore les noeuds en conflit
    * @default 'rename'
    */
-  onConflict?: ConflictStrategy;
+  onConflict?: ConflictStrategy
   /**
    * Valider les données avant import.
    * @default true
    */
-  validateBeforeImport?: boolean;
+  validateBeforeImport?: boolean
   /**
    * Stratégie de fusion avec le graphe existant.
    * - append: Ajoute aux données existantes
@@ -38,7 +38,7 @@ export interface ImportOptions {
    * - merge: Fusionne intelligemment
    * @default 'append'
    */
-  mergeStrategy?: MergeStrategy;
+  mergeStrategy?: MergeStrategy
 }
 
 /**
@@ -48,23 +48,23 @@ export interface ImportResult {
   /**
    * Succès de l'import.
    */
-  success: boolean;
+  success: boolean
   /**
    * Nombre de noeuds importés.
    */
-  nodesImported: number;
+  nodesImported: number
   /**
    * Nombre d'arêtes importées.
    */
-  edgesImported: number;
+  edgesImported: number
   /**
    * Erreurs rencontrées lors de l'import.
    */
-  errors: string[];
+  errors: string[]
   /**
    * Avertissements non bloquants.
    */
-  warnings: string[];
+  warnings: string[]
 }
 
 /**
@@ -77,20 +77,20 @@ export interface ImportableHandlers {
    * @param options - Options d'import
    * @returns Résultat de l'import
    */
-  importFromJSON: (json: string, options?: ImportOptions) => Promise<ImportResult>;
+  importFromJSON: (json: string, options?: ImportOptions) => Promise<ImportResult>
   /**
    * Importe un graphe depuis XML Archimate.
    * @param xml - String XML à importer
    * @param options - Options d'import
    * @returns Résultat de l'import
    */
-  importFromArchimate: (xml: string, options?: ImportOptions) => Promise<ImportResult>;
+  importFromArchimate: (xml: string, options?: ImportOptions) => Promise<ImportResult>
   /**
    * Valide des données JSON avant import.
    * @param data - Données à valider
    * @returns Résultat de validation
    */
-  validateImport: (data: unknown) => { valid: boolean; errors: string[] };
+  validateImport: (data: unknown) => { valid: boolean; errors: string[] }
 }
 
 // Schémas Zod pour validation
@@ -103,7 +103,7 @@ const GeometrySchema = z.object({
   y: z.number(),
   w: z.number().positive('La largeur doit être positive'),
   h: z.number().positive('La hauteur doit être positive'),
-});
+})
 
 /**
  * Schéma de validation pour le style d'un noeud.
@@ -113,7 +113,7 @@ const StylingSchema = z.object({
   stroke: z.string(),
   strokeWidth: z.number().nonnegative(),
   opacity: z.number().min(0).max(1),
-});
+})
 
 /**
  * Schéma de validation pour un noeud.
@@ -125,7 +125,7 @@ const NodeSchema = z.object({
   geometry: GeometrySchema,
   styling: StylingSchema,
   data: z.record(z.string(), z.unknown()).default({}),
-});
+})
 
 /**
  * Schéma de validation pour une arête.
@@ -136,7 +136,7 @@ const EdgeSchema = z.object({
   targetId: z.string().min(1),
   routing: z.enum(['straight', 'orthogonal', 'curved', 'bezier']).default('straight'),
   data: z.record(z.string(), z.unknown()).optional(),
-});
+})
 
 /**
  * Schéma de validation pour un fichier JSON complet.
@@ -147,7 +147,7 @@ const ImportDataSchema = z.object({
   nodes: z.array(NodeSchema),
   edges: z.array(EdgeSchema),
   metadata: z.record(z.string(), z.unknown()).optional(),
-});
+})
 
 /**
  * Trait permettant d'importer des graphes depuis différents formats.
@@ -168,15 +168,15 @@ const ImportDataSchema = z.object({
  * ```
  */
 export function useImportable(): ImportableHandlers {
-  const graphStore = useGraphStore();
+  const graphStore = useGraphStore()
 
   /**
    * Valide des données JSON avec Zod.
    */
   function validateImport(data: unknown): { valid: boolean; errors: string[] } {
     try {
-      ImportDataSchema.parse(data);
-      return { valid: true, errors: [] };
+      ImportDataSchema.parse(data)
+      return { valid: true, errors: [] }
     } catch (error) {
       if (error instanceof z.ZodError) {
         // Zod 4 : l'API expose `issues`, pas `errors`. Ce bug masquait
@@ -184,9 +184,9 @@ export function useImportable(): ImportableHandlers {
         return {
           valid: false,
           errors: error.issues.map((e) => `${e.path.join('.')}: ${e.message}`),
-        };
+        }
       }
-      return { valid: false, errors: ['Erreur de validation inconnue'] };
+      return { valid: false, errors: ['Erreur de validation inconnue'] }
     }
   }
 
@@ -198,89 +198,86 @@ export function useImportable(): ImportableHandlers {
     edges: Edge[],
     strategy: ConflictStrategy
   ): { nodes: Node[]; edges: Edge[]; warnings: string[] } {
-    const warnings: string[] = [];
-    const idMapping = new Map<string, string>();
+    const warnings: string[] = []
+    const idMapping = new Map<string, string>()
 
     // Traiter les noeuds
-    const resolvedNodes = nodes.map((node) => {
-      const existingNode = graphStore.nodes[node.id];
+    const resolvedNodes = nodes
+      .map((node) => {
+        const existingNode = graphStore.nodes[node.id]
 
-      if (!existingNode) {
-        // Pas de conflit
-        return node;
-      }
+        if (!existingNode) {
+          // Pas de conflit
+          return node
+        }
 
-      // Conflit détecté
-      if (strategy === 'skip') {
-        warnings.push(`Noeud ${node.id} ignoré (déjà existant)`);
-        return null;
-      } else if (strategy === 'rename') {
-        const newId = nanoid();
-        idMapping.set(node.id, newId);
-        warnings.push(`Noeud ${node.id} renommé en ${newId}`);
-        return { ...node, id: newId };
-      } else {
-        // replace
-        warnings.push(`Noeud ${node.id} remplacé`);
-        return node;
-      }
-    }).filter((n): n is Node => n !== null);
+        // Conflit détecté
+        if (strategy === 'skip') {
+          warnings.push(`Noeud ${node.id} ignoré (déjà existant)`)
+          return null
+        } else if (strategy === 'rename') {
+          const newId = nanoid()
+          idMapping.set(node.id, newId)
+          warnings.push(`Noeud ${node.id} renommé en ${newId}`)
+          return { ...node, id: newId }
+        } else {
+          // replace
+          warnings.push(`Noeud ${node.id} remplacé`)
+          return node
+        }
+      })
+      .filter((n): n is Node => n !== null)
 
     // Remapper les parentId vers les IDs renommés : sans cela, les enfants
     // d'un conteneur renommé restaient rattachés au noeud PRÉ-EXISTANT du
     // graphe (hiérarchie silencieusement corrompue au ré-import).
     const reparentedNodes = resolvedNodes.map((node) => {
       if (node.parentId && idMapping.has(node.parentId)) {
-        return { ...node, parentId: idMapping.get(node.parentId)! };
+        return { ...node, parentId: idMapping.get(node.parentId)! }
       }
-      return node;
-    });
+      return node
+    })
 
     // Traiter les arêtes avec mise à jour des références
-    const resolvedEdges = edges.map((edge) => {
-      let updatedEdge = { ...edge };
+    const resolvedEdges = edges
+      .map((edge) => {
+        const updatedEdge = { ...edge }
 
-      // Mettre à jour les références si des noeuds ont été renommés
-      if (idMapping.has(edge.sourceId)) {
-        updatedEdge.sourceId = idMapping.get(edge.sourceId)!;
-      }
-      if (idMapping.has(edge.targetId)) {
-        updatedEdge.targetId = idMapping.get(edge.targetId)!;
-      }
-
-      // Vérifier conflit d'ID d'arête
-      const existingEdge = graphStore.edges[edge.id];
-      if (existingEdge) {
-        if (strategy === 'skip') {
-          warnings.push(`Arête ${edge.id} ignorée (déjà existante)`);
-          return null;
-        } else if (strategy === 'rename') {
-          const newId = nanoid();
-          warnings.push(`Arête ${edge.id} renommée en ${newId}`);
-          updatedEdge.id = newId;
-        } else {
-          warnings.push(`Arête ${edge.id} remplacée`);
+        // Mettre à jour les références si des noeuds ont été renommés
+        if (idMapping.has(edge.sourceId)) {
+          updatedEdge.sourceId = idMapping.get(edge.sourceId)!
         }
-      }
+        if (idMapping.has(edge.targetId)) {
+          updatedEdge.targetId = idMapping.get(edge.targetId)!
+        }
 
-      return updatedEdge;
-    }).filter((e): e is Edge => e !== null);
+        // Vérifier conflit d'ID d'arête
+        const existingEdge = graphStore.edges[edge.id]
+        if (existingEdge) {
+          if (strategy === 'skip') {
+            warnings.push(`Arête ${edge.id} ignorée (déjà existante)`)
+            return null
+          } else if (strategy === 'rename') {
+            const newId = nanoid()
+            warnings.push(`Arête ${edge.id} renommée en ${newId}`)
+            updatedEdge.id = newId
+          } else {
+            warnings.push(`Arête ${edge.id} remplacée`)
+          }
+        }
 
-    return { nodes: reparentedNodes, edges: resolvedEdges, warnings };
+        return updatedEdge
+      })
+      .filter((e): e is Edge => e !== null)
+
+    return { nodes: reparentedNodes, edges: resolvedEdges, warnings }
   }
 
   /**
    * Importe depuis JSON.
    */
-  async function importFromJSON(
-    json: string,
-    options: ImportOptions = {}
-  ): Promise<ImportResult> {
-    const {
-      onConflict = 'rename',
-      validateBeforeImport = true,
-      mergeStrategy = 'append',
-    } = options;
+  async function importFromJSON(json: string, options: ImportOptions = {}): Promise<ImportResult> {
+    const { onConflict = 'rename', validateBeforeImport = true, mergeStrategy = 'append' } = options
 
     const result: ImportResult = {
       success: false,
@@ -288,57 +285,57 @@ export function useImportable(): ImportableHandlers {
       edgesImported: 0,
       errors: [],
       warnings: [],
-    };
+    }
 
     try {
       // Parser le JSON
-      const data = JSON.parse(json);
+      const data = JSON.parse(json)
 
       // Validation
       if (validateBeforeImport) {
-        const validation = validateImport(data);
+        const validation = validateImport(data)
         if (!validation.valid) {
-          result.errors = validation.errors;
-          return result;
+          result.errors = validation.errors
+          return result
         }
       }
 
       // Extraire nodes et edges
-      let { nodes, edges } = data as { nodes: Node[]; edges: Edge[] };
+      let { nodes, edges } = data as { nodes: Node[]; edges: Edge[] }
 
       // Résoudre les conflits d'IDs (stratégie 'rename' remappe aussi les
       // références source/target des arêtes).
-      const resolved = resolveIDConflicts(nodes, edges, onConflict);
-      nodes = resolved.nodes;
-      edges = resolved.edges;
-      result.warnings = resolved.warnings;
+      const resolved = resolveIDConflicts(nodes, edges, onConflict)
+      nodes = resolved.nodes
+      edges = resolved.edges
+      result.warnings = resolved.warnings
 
       // Appliquer la stratégie de merge
       if (mergeStrategy === 'replace') {
-        await graphStore.clearAll();
+        await graphStore.clearAll()
       }
 
       // Importer les noeuds en préservant leurs IDs (importNode utilise
       // IndexedDB.put directement sans générer de nouvel identifiant).
       for (const node of nodes) {
-        await graphStore.importNode(node);
-        result.nodesImported++;
+        await graphStore.importNode(node)
+        result.nodesImported++
       }
 
       // Importer les arêtes en préservant leurs IDs.
       for (const edge of edges) {
-        await graphStore.importEdge(edge);
-        result.edgesImported++;
+        await graphStore.importEdge(edge)
+        result.edgesImported++
       }
 
-      result.success = true;
+      result.success = true
     } catch (error) {
       result.errors.push(
-        error instanceof Error ? error.message : 'Erreur inconnue lors de l\'import'
-      );
+        error instanceof Error ? error.message : "Erreur inconnue lors de l'import"
+      )
     }
 
-    return result;
+    return result
   }
 
   /**
@@ -354,29 +351,29 @@ export function useImportable(): ImportableHandlers {
       edgesImported: 0,
       errors: [],
       warnings: ['Import Archimate XML en mode simplifié'],
-    };
+    }
 
     try {
       // Parser le XML
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(xml, 'text/xml');
+      const parser = new DOMParser()
+      const xmlDoc = parser.parseFromString(xml, 'text/xml')
 
       // Vérifier erreurs de parsing
-      const parserError = xmlDoc.querySelector('parsererror');
+      const parserError = xmlDoc.querySelector('parsererror')
       if (parserError) {
-        result.errors.push('Erreur de parsing XML: ' + parserError.textContent);
-        return result;
+        result.errors.push('Erreur de parsing XML: ' + parserError.textContent)
+        return result
       }
 
       // Extraire les éléments (noeuds)
-      const elementNodes = xmlDoc.querySelectorAll('element');
-      const nodes: Node[] = [];
+      const elementNodes = xmlDoc.querySelectorAll('element')
+      const nodes: Node[] = []
 
       elementNodes.forEach((elem, index) => {
-        const id = elem.getAttribute('id') || nanoid();
-        const name = elem.getAttribute('name') || `Element ${index + 1}`;
-        const typeAttr = elem.getAttribute('xsi:type') || 'archimate:BusinessActor';
-        const archimateType = typeAttr.replace('archimate:', '');
+        const id = elem.getAttribute('id') || nanoid()
+        const name = elem.getAttribute('name') || `Element ${index + 1}`
+        const typeAttr = elem.getAttribute('xsi:type') || 'archimate:BusinessActor'
+        const archimateType = typeAttr.replace('archimate:', '')
 
         // Créer un noeud avec position par défaut
         nodes.push({
@@ -394,19 +391,19 @@ export function useImportable(): ImportableHandlers {
             name,
             archimateType,
           },
-        });
-      });
+        })
+      })
 
       // Extraire les relations (arêtes)
-      const relationshipNodes = xmlDoc.querySelectorAll('relationship');
-      const edges: Edge[] = [];
+      const relationshipNodes = xmlDoc.querySelectorAll('relationship')
+      const edges: Edge[] = []
 
       relationshipNodes.forEach((rel) => {
-        const id = rel.getAttribute('id') || nanoid();
-        const source = rel.getAttribute('source');
-        const target = rel.getAttribute('target');
-        const typeAttr = rel.getAttribute('xsi:type') || 'archimate:Association';
-        const relationType = typeAttr.replace('archimate:', '');
+        const id = rel.getAttribute('id') || nanoid()
+        const source = rel.getAttribute('source')
+        const target = rel.getAttribute('target')
+        const typeAttr = rel.getAttribute('xsi:type') || 'archimate:Association'
+        const relationType = typeAttr.replace('archimate:', '')
 
         if (source && target) {
           edges.push({
@@ -417,9 +414,9 @@ export function useImportable(): ImportableHandlers {
             data: {
               relationType,
             },
-          });
+          })
         }
-      });
+      })
 
       // Utiliser importFromJSON pour le reste du traitement
       const jsonData = {
@@ -428,25 +425,25 @@ export function useImportable(): ImportableHandlers {
         metadata: {
           importedFrom: 'archimate',
         },
-      };
+      }
 
-      const jsonResult = await importFromJSON(JSON.stringify(jsonData), options);
+      const jsonResult = await importFromJSON(JSON.stringify(jsonData), options)
       return {
         ...jsonResult,
         warnings: [...result.warnings, ...jsonResult.warnings],
-      };
+      }
     } catch (error) {
       result.errors.push(
-        error instanceof Error ? error.message : 'Erreur inconnue lors de l\'import Archimate'
-      );
+        error instanceof Error ? error.message : "Erreur inconnue lors de l'import Archimate"
+      )
     }
 
-    return result;
+    return result
   }
 
   return {
     importFromJSON,
     importFromArchimate,
     validateImport,
-  };
+  }
 }

@@ -9,7 +9,7 @@ export {
   EdgeNotFoundError,
   logError,
   withErrorHandling,
-} from './errors';
+} from './errors'
 
 export {
   createTraitComputedProperty,
@@ -22,4 +22,4 @@ export {
   getNodeDescendants,
   isAncestorOf,
   getNodeDepth,
-} from './trait-helpers';
+} from './trait-helpers'

@@ -1,25 +1,25 @@
-
 <!-- src/components/inspectors/sections/ConfidenceSection.vue -->
 <script setup lang="ts">
-import { toRef } from 'vue';
+import { toRef } from 'vue'
 import {
   useModelingConfidence,
   ModelingMaturity,
   MATURITY_LABELS,
   MATURITY_DESCRIPTIONS,
   MATURITY_VISUAL_STYLES,
-} from '../../../composables/traits/useModelingConfidence';
+} from '../../../composables/traits/useModelingConfidence'
 
 interface Props {
-  nodeId: string;
+  nodeId: string
 }
-const props = defineProps<Props>();
-const nodeIdRef = toRef(props, 'nodeId');
+const props = defineProps<Props>()
+const nodeIdRef = toRef(props, 'nodeId')
 
-const { maturity, confidence, visualStyle, setMaturity, setConfidence } =
-  useModelingConfidence({ nodeId: nodeIdRef });
+const { maturity, confidence, visualStyle, setMaturity, setConfidence } = useModelingConfidence({
+  nodeId: nodeIdRef,
+})
 
-const MATURITIES = Object.values(ModelingMaturity);
+const MATURITIES = Object.values(ModelingMaturity)
 </script>
 
 <template>
@@ -50,7 +50,8 @@ const MATURITIES = Object.values(ModelingMaturity);
             backgroundColor: MATURITY_VISUAL_STYLES[level].badgeColor,
             color: 'white',
             opacity: maturity === level ? 1 : 0.35,
-            borderColor: maturity === level ? MATURITY_VISUAL_STYLES[level].badgeColor : 'transparent',
+            borderColor:
+              maturity === level ? MATURITY_VISUAL_STYLES[level].badgeColor : 'transparent',
           }"
           :title="`${MATURITY_LABELS[level]} — ${MATURITY_DESCRIPTIONS[level]}`"
           @click="setMaturity(level)"

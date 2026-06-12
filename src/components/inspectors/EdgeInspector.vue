@@ -1,11 +1,13 @@
 <!-- src/components/inspectors/EdgeInspector.vue -->
 <script setup lang="ts">
-import ArrowSection from './sections/ArrowSection.vue';
-import LabelSection from './sections/LabelSection.vue';
-import RelationTypeSection from './sections/RelationTypeSection.vue';
+import ArrowSection from './sections/ArrowSection.vue'
+import LabelSection from './sections/LabelSection.vue'
+import RelationTypeSection from './sections/RelationTypeSection.vue'
 
-interface EdgeInspectorProps { edgeId: string; }
-defineProps<EdgeInspectorProps>();
+interface EdgeInspectorProps {
+  edgeId: string
+}
+defineProps<EdgeInspectorProps>()
 </script>
 
 <template>

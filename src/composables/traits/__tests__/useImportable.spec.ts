@@ -1,6 +1,6 @@
 // src/composables/traits/__tests__/useImportable.spec.ts
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { setActivePinia, createPinia } from 'pinia';
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { setActivePinia, createPinia } from 'pinia'
 
 vi.mock('../../../db', () => {
   const table = () => ({
@@ -10,7 +10,7 @@ vi.mock('../../../db', () => {
     bulkPut: vi.fn().mockResolvedValue(undefined),
     toArray: vi.fn().mockResolvedValue([]),
     update: vi.fn().mockResolvedValue(undefined),
-  });
+  })
   return {
     db: {
       nodes: table(),
@@ -18,11 +18,11 @@ vi.mock('../../../db', () => {
       library: table(),
       transaction: vi.fn(async (_mode, _t1, _t2, fn) => fn()),
     },
-  };
-});
+  }
+})
 
-import { useGraphStore } from '../../../stores/graph';
-import { useImportable } from '../useImportable';
+import { useGraphStore } from '../../../stores/graph'
+import { useImportable } from '../useImportable'
 
 /** Payload JSON valide (format d'export v1.0). */
 function validJson(opts?: { nodes?: unknown[]; edges?: unknown[] }): string {
@@ -40,30 +40,30 @@ function validJson(opts?: { nodes?: unknown[]; edges?: unknown[] }): string {
       },
     ],
     edges: opts?.edges ?? [],
-  });
+  })
 }
 
 describe('useImportable', () => {
   beforeEach(() => {
-    setActivePinia(createPinia());
-  });
+    setActivePinia(createPinia())
+  })
 
   describe('importFromJSON — happy path', () => {
     it('importe un noeud simple en préservant son ID', async () => {
-      const store = useGraphStore();
-      const { importFromJSON } = useImportable();
+      const store = useGraphStore()
+      const { importFromJSON } = useImportable()
 
-      const result = await importFromJSON(validJson());
+      const result = await importFromJSON(validJson())
 
-      expect(result.success).toBe(true);
-      expect(result.nodesImported).toBe(1);
-      expect(store.nodes['imported-a']).toBeDefined();
-      expect(store.nodes['imported-a'].data.name).toBe('Alpha');
-    });
+      expect(result.success).toBe(true)
+      expect(result.nodesImported).toBe(1)
+      expect(store.nodes['imported-a']).toBeDefined()
+      expect(store.nodes['imported-a'].data.name).toBe('Alpha')
+    })
 
     it('importe une hiérarchie parent/enfant cohérente', async () => {
-      const store = useGraphStore();
-      const { importFromJSON } = useImportable();
+      const store = useGraphStore()
+      const { importFromJSON } = useImportable()
 
       const json = validJson({
         nodes: [
@@ -84,157 +84,248 @@ describe('useImportable', () => {
             data: {},
           },
         ],
-      });
+      })
 
-      const result = await importFromJSON(json);
+      const result = await importFromJSON(json)
 
-      expect(result.success).toBe(true);
-      expect(store.nodes['p']).toBeDefined();
-      expect(store.nodes['c']).toBeDefined();
-      expect(store.nodes['c'].parentId).toBe('p');
-    });
+      expect(result.success).toBe(true)
+      expect(store.nodes['p']).toBeDefined()
+      expect(store.nodes['c']).toBeDefined()
+      expect(store.nodes['c'].parentId).toBe('p')
+    })
 
     it('importe les arêtes avec sourceId/targetId corrects', async () => {
-      const store = useGraphStore();
-      const { importFromJSON } = useImportable();
+      const store = useGraphStore()
+      const { importFromJSON } = useImportable()
 
       const json = validJson({
         nodes: [
-          { id: 'n1', parentId: null, type: 'shape', geometry: { x: 0, y: 0, w: 50, h: 50 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: {} },
-          { id: 'n2', parentId: null, type: 'shape', geometry: { x: 100, y: 0, w: 50, h: 50 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: {} },
+          {
+            id: 'n1',
+            parentId: null,
+            type: 'shape',
+            geometry: { x: 0, y: 0, w: 50, h: 50 },
+            styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 },
+            data: {},
+          },
+          {
+            id: 'n2',
+            parentId: null,
+            type: 'shape',
+            geometry: { x: 100, y: 0, w: 50, h: 50 },
+            styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 },
+            data: {},
+          },
         ],
-        edges: [
-          { id: 'e1', sourceId: 'n1', targetId: 'n2', routing: 'straight' },
-        ],
-      });
+        edges: [{ id: 'e1', sourceId: 'n1', targetId: 'n2', routing: 'straight' }],
+      })
 
-      const result = await importFromJSON(json);
+      const result = await importFromJSON(json)
 
-      expect(result.success).toBe(true);
-      expect(result.edgesImported).toBe(1);
-      expect(store.edges['e1']).toBeDefined();
-      expect(store.edges['e1'].sourceId).toBe('n1');
-      expect(store.edges['e1'].targetId).toBe('n2');
-    });
-  });
+      expect(result.success).toBe(true)
+      expect(result.edgesImported).toBe(1)
+      expect(store.edges['e1']).toBeDefined()
+      expect(store.edges['e1'].sourceId).toBe('n1')
+      expect(store.edges['e1'].targetId).toBe('n2')
+    })
+  })
 
-  describe('erreurs d\'entrée', () => {
-    it('rejette un JSON malformé avec un message d\'erreur', async () => {
-      const { importFromJSON } = useImportable();
-      const result = await importFromJSON('{ pas du tout du json');
+  describe("erreurs d'entrée", () => {
+    it("rejette un JSON malformé avec un message d'erreur", async () => {
+      const { importFromJSON } = useImportable()
+      const result = await importFromJSON('{ pas du tout du json')
 
-      expect(result.success).toBe(false);
-      expect(result.errors.length).toBeGreaterThan(0);
-    });
+      expect(result.success).toBe(false)
+      expect(result.errors.length).toBeGreaterThan(0)
+    })
 
     it('rejette un JSON valide mais sans la structure attendue', async () => {
-      const { importFromJSON } = useImportable();
-      const result = await importFromJSON('{"foo": "bar"}');
+      const { importFromJSON } = useImportable()
+      const result = await importFromJSON('{"foo": "bar"}')
 
-      expect(result.success).toBe(false);
-    });
-  });
+      expect(result.success).toBe(false)
+    })
+  })
 
-  describe('gestion des conflits d\'ID (rename strategy)', () => {
+  describe("gestion des conflits d'ID (rename strategy)", () => {
     it('renomme les noeuds en conflit et remappe les arêtes', async () => {
-      const store = useGraphStore();
-      const { importFromJSON } = useImportable();
+      const store = useGraphStore()
+      const { importFromJSON } = useImportable()
 
       // Import initial
-      await importFromJSON(validJson({
-        nodes: [
-          { id: 'dupe', parentId: null, type: 'shape', geometry: { x: 0, y: 0, w: 50, h: 50 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'original' } },
-        ],
-      }));
+      await importFromJSON(
+        validJson({
+          nodes: [
+            {
+              id: 'dupe',
+              parentId: null,
+              type: 'shape',
+              geometry: { x: 0, y: 0, w: 50, h: 50 },
+              styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 },
+              data: { name: 'original' },
+            },
+          ],
+        })
+      )
 
       // Import d'un noeud avec même ID + stratégie rename
-      const result = await importFromJSON(validJson({
-        nodes: [
-          { id: 'dupe', parentId: null, type: 'shape', geometry: { x: 50, y: 50, w: 50, h: 50 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { name: 'dupliqué' } },
-        ],
-      }), { onConflict: 'rename' });
+      const result = await importFromJSON(
+        validJson({
+          nodes: [
+            {
+              id: 'dupe',
+              parentId: null,
+              type: 'shape',
+              geometry: { x: 50, y: 50, w: 50, h: 50 },
+              styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 },
+              data: { name: 'dupliqué' },
+            },
+          ],
+        }),
+        { onConflict: 'rename' }
+      )
 
-      expect(result.success).toBe(true);
-      expect(result.warnings.length).toBeGreaterThan(0);
+      expect(result.success).toBe(true)
+      expect(result.warnings.length).toBeGreaterThan(0)
       // Le noeud original est préservé
-      expect(store.nodes['dupe'].data.name).toBe('original');
+      expect(store.nodes['dupe'].data.name).toBe('original')
       // Un noeud renommé a été ajouté (2 noeuds au total)
-      const all = Object.values(store.nodes);
-      expect(all.length).toBe(2);
-      expect(all.find(n => n.data.name === 'dupliqué')).toBeDefined();
-    });
+      const all = Object.values(store.nodes)
+      expect(all.length).toBe(2)
+      expect(all.find((n) => n.data.name === 'dupliqué')).toBeDefined()
+    })
 
     it('ignore (skip) les noeuds en conflit quand demandé', async () => {
-      const store = useGraphStore();
-      const { importFromJSON } = useImportable();
+      const store = useGraphStore()
+      const { importFromJSON } = useImportable()
 
-      await importFromJSON(validJson({
-        nodes: [
-          { id: 'x', parentId: null, type: 'shape', geometry: { x: 0, y: 0, w: 50, h: 50 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { version: 'first' } },
-        ],
-      }));
+      await importFromJSON(
+        validJson({
+          nodes: [
+            {
+              id: 'x',
+              parentId: null,
+              type: 'shape',
+              geometry: { x: 0, y: 0, w: 50, h: 50 },
+              styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 },
+              data: { version: 'first' },
+            },
+          ],
+        })
+      )
 
-      const result = await importFromJSON(validJson({
-        nodes: [
-          { id: 'x', parentId: null, type: 'shape', geometry: { x: 0, y: 0, w: 50, h: 50 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: { version: 'second' } },
-        ],
-      }), { onConflict: 'skip' });
+      const result = await importFromJSON(
+        validJson({
+          nodes: [
+            {
+              id: 'x',
+              parentId: null,
+              type: 'shape',
+              geometry: { x: 0, y: 0, w: 50, h: 50 },
+              styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 },
+              data: { version: 'second' },
+            },
+          ],
+        }),
+        { onConflict: 'skip' }
+      )
 
-      expect(result.success).toBe(true);
-      expect(store.nodes['x'].data.version).toBe('first');
-      expect(Object.keys(store.nodes)).toHaveLength(1);
-    });
-  });
+      expect(result.success).toBe(true)
+      expect(store.nodes['x'].data.version).toBe('first')
+      expect(Object.keys(store.nodes)).toHaveLength(1)
+    })
+  })
 
   describe('stratégie de fusion', () => {
     it('mergeStrategy "replace" efface le graphe avant import', async () => {
-      const store = useGraphStore();
-      const { importFromJSON } = useImportable();
+      const store = useGraphStore()
+      const { importFromJSON } = useImportable()
 
-      await importFromJSON(validJson({
-        nodes: [
-          { id: 'keep', parentId: null, type: 'shape', geometry: { x: 0, y: 0, w: 50, h: 50 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: {} },
-        ],
-      }));
+      await importFromJSON(
+        validJson({
+          nodes: [
+            {
+              id: 'keep',
+              parentId: null,
+              type: 'shape',
+              geometry: { x: 0, y: 0, w: 50, h: 50 },
+              styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 },
+              data: {},
+            },
+          ],
+        })
+      )
 
-      await importFromJSON(validJson({
-        nodes: [
-          { id: 'new', parentId: null, type: 'shape', geometry: { x: 0, y: 0, w: 50, h: 50 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: {} },
-        ],
-      }), { mergeStrategy: 'replace' });
+      await importFromJSON(
+        validJson({
+          nodes: [
+            {
+              id: 'new',
+              parentId: null,
+              type: 'shape',
+              geometry: { x: 0, y: 0, w: 50, h: 50 },
+              styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 },
+              data: {},
+            },
+          ],
+        }),
+        { mergeStrategy: 'replace' }
+      )
 
-      expect(store.nodes['keep']).toBeUndefined();
-      expect(store.nodes['new']).toBeDefined();
-    });
+      expect(store.nodes['keep']).toBeUndefined()
+      expect(store.nodes['new']).toBeDefined()
+    })
 
     it('mergeStrategy "append" (défaut) conserve l\'existant', async () => {
-      const store = useGraphStore();
-      const { importFromJSON } = useImportable();
+      const store = useGraphStore()
+      const { importFromJSON } = useImportable()
 
-      await importFromJSON(validJson({
-        nodes: [{ id: 'a', parentId: null, type: 'shape', geometry: { x: 0, y: 0, w: 50, h: 50 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: {} }],
-      }));
-      await importFromJSON(validJson({
-        nodes: [{ id: 'b', parentId: null, type: 'shape', geometry: { x: 0, y: 0, w: 50, h: 50 }, styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 }, data: {} }],
-      }));
+      await importFromJSON(
+        validJson({
+          nodes: [
+            {
+              id: 'a',
+              parentId: null,
+              type: 'shape',
+              geometry: { x: 0, y: 0, w: 50, h: 50 },
+              styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 },
+              data: {},
+            },
+          ],
+        })
+      )
+      await importFromJSON(
+        validJson({
+          nodes: [
+            {
+              id: 'b',
+              parentId: null,
+              type: 'shape',
+              geometry: { x: 0, y: 0, w: 50, h: 50 },
+              styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 },
+              data: {},
+            },
+          ],
+        })
+      )
 
-      expect(Object.keys(store.nodes).sort()).toEqual(['a', 'b']);
-    });
-  });
+      expect(Object.keys(store.nodes).sort()).toEqual(['a', 'b'])
+    })
+  })
 
   describe('validateImport', () => {
     it('accepte un payload complet', () => {
-      const { validateImport } = useImportable();
-      const data = JSON.parse(validJson());
-      const result = validateImport(data);
-      expect(result.valid).toBe(true);
-      expect(result.errors).toHaveLength(0);
-    });
+      const { validateImport } = useImportable()
+      const data = JSON.parse(validJson())
+      const result = validateImport(data)
+      expect(result.valid).toBe(true)
+      expect(result.errors).toHaveLength(0)
+    })
 
     it('rejette un payload sans nodes/edges', () => {
-      const { validateImport } = useImportable();
-      const result = validateImport({ version: '1.0' });
-      expect(result.valid).toBe(false);
-    });
-  });
-});
+      const { validateImport } = useImportable()
+      const result = validateImport({ version: '1.0' })
+      expect(result.valid).toBe(false)
+    })
+  })
+})

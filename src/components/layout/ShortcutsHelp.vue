@@ -1,45 +1,44 @@
-
 <!-- src/components/layout/ShortcutsHelp.vue -->
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import { HelpCircle, X } from 'lucide-vue-next';
-import { useKeyboardable, formatShortcut } from '../../composables/traits';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { HelpCircle, X } from 'lucide-vue-next'
+import { useKeyboardable, formatShortcut } from '../../composables/traits'
 
-const { getShortcutsByCategory } = useKeyboardable();
-const isOpen = ref(false);
+const { getShortcutsByCategory } = useKeyboardable()
+const isOpen = ref(false)
 
-const grouped = computed(() => getShortcutsByCategory());
+const grouped = computed(() => getShortcutsByCategory())
 
 // Raccourcis additionnels non gérés par useKeyboardable (listeners directs).
 const EXTRA_SHORTCUTS: Record<string, Array<{ keys: string; description: string }>> = {
-  'Navigation': [
+  Navigation: [
     { keys: 'Ctrl+F', description: 'Rechercher un noeud ou une relation' },
     { keys: 'F1', description: 'Afficher cette aide' },
   ],
-  'Sélection': [
+  Sélection: [
     { keys: 'Shift+glisser', description: 'Sélection rectangle (marquee)' },
     { keys: 'Ctrl+clic', description: 'Ajouter/retirer de la sélection' },
   ],
-  'Édition': [
+  Édition: [
     { keys: 'Ctrl+G', description: 'Grouper la sélection' },
     { keys: 'Ctrl+Maj+G', description: 'Dégrouper' },
     { keys: 'Alt+glisser', description: 'Déplacer sans magnétisme' },
     { keys: 'Double-clic', description: 'Éditer le nom / Entrer dans un container' },
   ],
-};
+}
 
 function handleKey(event: KeyboardEvent) {
   if (event.key === 'F1') {
-    event.preventDefault();
-    isOpen.value = !isOpen.value;
+    event.preventDefault()
+    isOpen.value = !isOpen.value
   }
   if (event.key === 'Escape' && isOpen.value) {
-    isOpen.value = false;
+    isOpen.value = false
   }
 }
 
-onMounted(() => window.addEventListener('keydown', handleKey));
-onBeforeUnmount(() => window.removeEventListener('keydown', handleKey));
+onMounted(() => window.addEventListener('keydown', handleKey))
+onBeforeUnmount(() => window.removeEventListener('keydown', handleKey))
 </script>
 
 <template>
@@ -58,7 +57,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey));
       class="app-overlay fixed inset-0 z-50 flex items-center justify-center"
       @click.self="isOpen = false"
     >
-      <div class="app-surface border app-border rounded-lg shadow-xl w-[640px] max-h-[80vh] flex flex-col">
+      <div
+        class="app-surface border app-border rounded-lg shadow-xl w-[640px] max-h-[80vh] flex flex-col"
+      >
         <div class="flex items-center justify-between px-4 py-3 border-b app-border">
           <h2 class="text-base font-semibold">Raccourcis clavier</h2>
           <button
@@ -73,7 +74,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey));
         <div class="overflow-y-auto p-4 space-y-4">
           <!-- Extras -->
           <div v-for="(items, category) in EXTRA_SHORTCUTS" :key="category">
-            <h3 class="text-xs font-semibold uppercase tracking-wide app-muted mb-2">{{ category }}</h3>
+            <h3 class="text-xs font-semibold uppercase tracking-wide app-muted mb-2">
+              {{ category }}
+            </h3>
             <ul class="space-y-1">
               <li
                 v-for="item in items"
@@ -88,7 +91,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey));
 
           <!-- Raccourcis enregistrés dans useKeyboardable -->
           <div v-for="(items, category) in grouped" :key="category">
-            <h3 class="text-xs font-semibold uppercase tracking-wide app-muted mb-2">{{ category }}</h3>
+            <h3 class="text-xs font-semibold uppercase tracking-wide app-muted mb-2">
+              {{ category }}
+            </h3>
             <ul class="space-y-1">
               <li
                 v-for="s in items"
@@ -102,7 +107,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey));
           </div>
         </div>
 
-        <div class="px-4 py-2 border-t app-border app-surface-2 text-xs app-subtle flex justify-between">
+        <div
+          class="px-4 py-2 border-t app-border app-surface-2 text-xs app-subtle flex justify-between"
+        >
           <span>Appuyez sur F1 pour ouvrir/fermer · Échap pour fermer</span>
         </div>
       </div>

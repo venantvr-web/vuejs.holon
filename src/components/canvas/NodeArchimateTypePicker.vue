@@ -1,4 +1,3 @@
-
 <!-- src/components/canvas/NodeArchimateTypePicker.vue -->
 <!--
   Popover de sélection du type Archimate pour un noeud.
@@ -6,22 +5,22 @@
   L'apply est délégué au parent via l'événement select.
 -->
 <script setup lang="ts">
-import { computed, ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import { Tag, X } from 'lucide-vue-next';
-import { ARCHIMATE_TYPES, type ArchimateLayer } from '../../composables/traits/useTypeable';
+import { computed, ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { Tag, X } from 'lucide-vue-next'
+import { ARCHIMATE_TYPES, type ArchimateLayer } from '../../composables/traits/useTypeable'
 
 interface Props {
-  currentType: string | null;
+  currentType: string | null
 }
 
-defineProps<Props>();
+defineProps<Props>()
 const emit = defineEmits<{
-  (e: 'select', type: string | null): void;
-  (e: 'close'): void;
-}>();
+  (e: 'select', type: string | null): void
+  (e: 'close'): void
+}>()
 
-const query = ref('');
-const inputRef = ref<HTMLInputElement | null>(null);
+const query = ref('')
+const inputRef = ref<HTMLInputElement | null>(null)
 
 /** Layers ordonnés comme dans Archimate officiel (top-down). */
 const LAYER_ORDER: ArchimateLayer[] = [
@@ -33,22 +32,22 @@ const LAYER_ORDER: ArchimateLayer[] = [
   'motivation',
   'implementation',
   'generic',
-];
+]
 
 interface Item {
-  type: string;
-  label: string;
-  icon: string;
-  layer: ArchimateLayer;
-  layerLabel: string;
-  layerColor: string;
+  type: string
+  label: string
+  icon: string
+  layer: ArchimateLayer
+  layerLabel: string
+  layerColor: string
 }
 
 const allItems = computed((): Item[] => {
-  const result: Item[] = [];
+  const result: Item[] = []
   for (const layer of LAYER_ORDER) {
-    const cfg = ARCHIMATE_TYPES[layer];
-    if (!cfg) continue;
+    const cfg = ARCHIMATE_TYPES[layer]
+    if (!cfg) continue
     for (const [type, def] of Object.entries(cfg.types)) {
       result.push({
         type,
@@ -57,55 +56,55 @@ const allItems = computed((): Item[] => {
         layer,
         layerLabel: cfg.label,
         layerColor: cfg.color,
-      });
+      })
     }
   }
-  return result;
-});
+  return result
+})
 
 const filtered = computed(() => {
-  const q = query.value.trim().toLowerCase();
-  if (!q) return allItems.value;
-  return allItems.value.filter(it =>
-    it.label.toLowerCase().includes(q) || it.layerLabel.toLowerCase().includes(q)
-  );
-});
+  const q = query.value.trim().toLowerCase()
+  if (!q) return allItems.value
+  return allItems.value.filter(
+    (it) => it.label.toLowerCase().includes(q) || it.layerLabel.toLowerCase().includes(q)
+  )
+})
 
 /** Regroupement pour l'affichage : Map<layer, items>. */
 const grouped = computed(() => {
-  const map = new Map<ArchimateLayer, Item[]>();
+  const map = new Map<ArchimateLayer, Item[]>()
   for (const item of filtered.value) {
-    if (!map.has(item.layer)) map.set(item.layer, []);
-    map.get(item.layer)!.push(item);
+    if (!map.has(item.layer)) map.set(item.layer, [])
+    map.get(item.layer)!.push(item)
   }
-  return map;
-});
+  return map
+})
 
 function handleSelect(type: string | null) {
-  emit('select', type);
-  emit('close');
+  emit('select', type)
+  emit('close')
 }
 
 function handleOutsideClick(event: MouseEvent) {
-  const target = event.target as HTMLElement;
-  if (!target.closest('.archimate-type-picker')) emit('close');
+  const target = event.target as HTMLElement
+  if (!target.closest('.archimate-type-picker')) emit('close')
 }
 
 function handleKey(event: KeyboardEvent) {
-  if (event.key === 'Escape') emit('close');
+  if (event.key === 'Escape') emit('close')
 }
 
 onMounted(async () => {
-  await nextTick();
-  inputRef.value?.focus();
-  window.addEventListener('mousedown', handleOutsideClick, true);
-  window.addEventListener('keydown', handleKey);
-});
+  await nextTick()
+  inputRef.value?.focus()
+  window.addEventListener('mousedown', handleOutsideClick, true)
+  window.addEventListener('keydown', handleKey)
+})
 
 onBeforeUnmount(() => {
-  window.removeEventListener('mousedown', handleOutsideClick, true);
-  window.removeEventListener('keydown', handleKey);
-});
+  window.removeEventListener('mousedown', handleOutsideClick, true)
+  window.removeEventListener('keydown', handleKey)
+})
 </script>
 
 <template>
@@ -147,7 +146,9 @@ onBeforeUnmount(() => {
     <!-- Liste groupée par layer -->
     <div class="flex-1 overflow-y-auto">
       <div v-for="[layer, items] in grouped" :key="layer">
-        <div class="px-3 py-1 app-section-title app-surface-2 sticky top-0 flex items-center gap-2 app-border border-b">
+        <div
+          class="px-3 py-1 app-section-title app-surface-2 sticky top-0 flex items-center gap-2 app-border border-b"
+        >
           <span
             class="inline-block w-3 h-3 rounded border app-border"
             :style="{ backgroundColor: items[0]?.layerColor }"

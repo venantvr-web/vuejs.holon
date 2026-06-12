@@ -1,33 +1,32 @@
-
 <!-- src/components/inspectors/sections/TagsSection.vue -->
 <script setup lang="ts">
-import { ref, toRef } from 'vue';
-import { Check, X } from 'lucide-vue-next';
-import { useTaggable } from '../../../composables/traits/useTaggable';
+import { ref, toRef } from 'vue'
+import { Check, X } from 'lucide-vue-next'
+import { useTaggable } from '../../../composables/traits/useTaggable'
 
 interface Props {
-  nodeId: string;
+  nodeId: string
 }
-const props = defineProps<Props>();
-const nodeIdRef = toRef(props, 'nodeId');
+const props = defineProps<Props>()
+const nodeIdRef = toRef(props, 'nodeId')
 
-const { tags, availableTags, toggleTag, createTag } = useTaggable({ nodeId: nodeIdRef });
+const { tags, availableTags, toggleTag, createTag } = useTaggable({ nodeId: nodeIdRef })
 
-const picker = ref(false);
-const newLabel = ref('');
-const newColor = ref('#3b82f6');
+const picker = ref(false)
+const newLabel = ref('')
+const newColor = ref('#3b82f6')
 
 function handleCreate() {
-  const label = newLabel.value.trim();
-  if (!label) return;
-  const tag = createTag(label, newColor.value);
-  toggleTag(tag.id);
-  newLabel.value = '';
-  picker.value = false;
+  const label = newLabel.value.trim()
+  if (!label) return
+  const tag = createTag(label, newColor.value)
+  toggleTag(tag.id)
+  newLabel.value = ''
+  picker.value = false
 }
 
 function isApplied(tagId: string): boolean {
-  return tags.value.some(t => t.id === tagId);
+  return tags.value.some((t) => t.id === tagId)
 }
 </script>
 
@@ -35,10 +34,7 @@ function isApplied(tagId: string): boolean {
   <section class="p-3 border-b app-border">
     <div class="flex items-center justify-between mb-2">
       <h3 class="app-section-title">Tags</h3>
-      <button
-        class="text-xs app-link"
-        @click="picker = !picker"
-      >
+      <button class="text-xs app-link" @click="picker = !picker">
         {{ picker ? 'Fermer' : '+ Ajouter' }}
       </button>
     </div>

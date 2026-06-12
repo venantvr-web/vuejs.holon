@@ -1,5 +1,5 @@
 // src/composables/traits/utils/filter-dsl.ts
-import type { Node } from '../../../types';
+import type { Node } from '../../../types'
 
 /**
  * Mini-langage de filtrage (DSL) pour sélectionner des noeuds du graphe.
@@ -35,7 +35,7 @@ import type { Node } from '../../../types';
 /** Résultat de l'analyse d'une requête DSL. */
 export type ParseResult =
   | { ok: true; matches: (node: Node) => boolean }
-  | { ok: false; error: string };
+  | { ok: false; error: string }
 
 // --- Normalisation (casse + accents) ---
 
@@ -43,14 +43,14 @@ function normalize(value: string): string {
   return value
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+    .replace(/[\u0300-\u036f]/g, '')
 }
 
 // --- Tokenizer ---
 
 type Token =
   | { kind: 'lparen' | 'rparen' | 'and' | 'or' | 'not'; pos: number }
-  | { kind: 'term'; field: string | null; op: ':' | '=' | '~'; value: string; pos: number };
+  | { kind: 'term'; field: string | null; op: ':' | '=' | '~'; value: string; pos: number }
 
 const KEYWORDS: Record<string, 'and' | 'or' | 'not'> = {
   et: 'and',
@@ -61,110 +61,117 @@ const KEYWORDS: Record<string, 'and' | 'or' | 'not'> = {
   '||': 'or',
   non: 'not',
   not: 'not',
-};
+}
 
 function tokenize(query: string): Token[] | { error: string } {
-  const tokens: Token[] = [];
-  let i = 0;
+  const tokens: Token[] = []
+  let i = 0
 
   const readQuoted = (): string | null => {
     // i pointe sur le guillemet ouvrant
-    const quote = query[i];
-    i++;
-    let out = '';
+    const quote = query[i]
+    i++
+    let out = ''
     while (i < query.length && query[i] !== quote) {
-      out += query[i];
-      i++;
+      out += query[i]
+      i++
     }
-    if (i >= query.length) return null; // guillemet non fermé
-    i++; // guillemet fermant
-    return out;
-  };
+    if (i >= query.length) return null // guillemet non fermé
+    i++ // guillemet fermant
+    return out
+  }
 
   const readWord = (): string => {
-    let out = '';
+    let out = ''
     while (i < query.length && !/[\s():=~"']/.test(query[i])) {
-      out += query[i];
-      i++;
+      out += query[i]
+      i++
     }
-    return out;
-  };
+    return out
+  }
 
   // Comme readWord mais autorise `=` : nécessaire pour `prop:clé=valeur`.
   const readValueWord = (): string => {
-    let out = '';
+    let out = ''
     while (i < query.length && !/[\s():~"']/.test(query[i])) {
-      out += query[i];
-      i++;
+      out += query[i]
+      i++
     }
-    return out;
-  };
+    return out
+  }
 
   while (i < query.length) {
-    const ch = query[i];
+    const ch = query[i]
     if (/\s/.test(ch)) {
-      i++;
-      continue;
+      i++
+      continue
     }
-    const pos = i;
+    const pos = i
     if (ch === '(') {
-      tokens.push({ kind: 'lparen', pos });
-      i++;
-      continue;
+      tokens.push({ kind: 'lparen', pos })
+      i++
+      continue
     }
     if (ch === ')') {
-      tokens.push({ kind: 'rparen', pos });
-      i++;
-      continue;
+      tokens.push({ kind: 'rparen', pos })
+      i++
+      continue
     }
     if (ch === '!' || (ch === '-' && isOperatorBefore(tokens))) {
-      tokens.push({ kind: 'not', pos });
-      i++;
-      continue;
+      tokens.push({ kind: 'not', pos })
+      i++
+      continue
     }
     if (ch === '"' || ch === "'") {
-      const value = readQuoted();
-      if (value === null) return { error: `Guillemet non fermé à la position ${pos + 1}` };
-      tokens.push({ kind: 'term', field: null, op: ':', value, pos });
-      continue;
+      const value = readQuoted()
+      if (value === null) return { error: `Guillemet non fermé à la position ${pos + 1}` }
+      tokens.push({ kind: 'term', field: null, op: ':', value, pos })
+      continue
     }
 
-    const word = readWord();
-    if (!word) return { error: `Caractère inattendu « ${ch} » à la position ${pos + 1}` };
+    const word = readWord()
+    if (!word) return { error: `Caractère inattendu « ${ch} » à la position ${pos + 1}` }
 
-    const keyword = KEYWORDS[normalize(word)];
+    const keyword = KEYWORDS[normalize(word)]
     // `champ:` collé au mot → c'est un terme, pas un mot-clé
     if (keyword && query[i] !== ':' && query[i] !== '=' && query[i] !== '~') {
-      tokens.push({ kind: keyword, pos });
-      continue;
+      tokens.push({ kind: keyword, pos })
+      continue
     }
 
     // Terme avec champ explicite ?
-    const opChar = query[i];
+    const opChar = query[i]
     if (opChar === ':' || opChar === '=' || opChar === '~') {
-      i++;
-      let value: string;
+      i++
+      let value: string
       if (query[i] === '"' || query[i] === "'") {
-        const quoted = readQuoted();
-        if (quoted === null) return { error: `Guillemet non fermé à la position ${i}` };
-        value = quoted;
+        const quoted = readQuoted()
+        if (quoted === null) return { error: `Guillemet non fermé à la position ${i}` }
+        value = quoted
       } else {
-        value = readValueWord();
+        value = readValueWord()
       }
-      if (!value) return { error: `Valeur manquante pour « ${word}${opChar} » (position ${pos + 1})` };
-      tokens.push({ kind: 'term', field: word, op: opChar, value, pos });
-      continue;
+      if (!value)
+        return { error: `Valeur manquante pour « ${word}${opChar} » (position ${pos + 1})` }
+      tokens.push({ kind: 'term', field: word, op: opChar, value, pos })
+      continue
     }
 
-    tokens.push({ kind: 'term', field: null, op: ':', value: word, pos });
+    tokens.push({ kind: 'term', field: null, op: ':', value: word, pos })
   }
 
-  return tokens;
+  return tokens
 }
 
 function isOperatorBefore(tokens: Token[]): boolean {
-  const last = tokens[tokens.length - 1];
-  return !last || last.kind === 'and' || last.kind === 'or' || last.kind === 'not' || last.kind === 'lparen';
+  const last = tokens[tokens.length - 1]
+  return (
+    !last ||
+    last.kind === 'and' ||
+    last.kind === 'or' ||
+    last.kind === 'not' ||
+    last.kind === 'lparen'
+  )
 }
 
 // --- AST et parseur (descente récursive) ---
@@ -172,12 +179,12 @@ function isOperatorBefore(tokens: Token[]): boolean {
 type Ast =
   | { kind: 'and' | 'or'; left: Ast; right: Ast }
   | { kind: 'not'; child: Ast }
-  | { kind: 'term'; field: string | null; op: ':' | '=' | '~'; value: string };
+  | { kind: 'term'; field: string | null; op: ':' | '=' | '~'; value: string }
 
 function parseTokens(tokens: Token[]): Ast | { error: string } {
-  let index = 0;
+  let index = 0
 
-  const peek = () => tokens[index];
+  const peek = () => tokens[index]
 
   // expression := orExpr
   // orExpr     := andExpr (OR andExpr)*
@@ -185,80 +192,83 @@ function parseTokens(tokens: Token[]): Ast | { error: string } {
   // unary      := NOT unary | '(' expression ')' | TERM
 
   function parseOr(): Ast | { error: string } {
-    let left = parseAnd();
-    if ('error' in left) return left;
+    let left = parseAnd()
+    if ('error' in left) return left
     while (peek()?.kind === 'or') {
-      index++;
-      const right = parseAnd();
-      if ('error' in right) return right;
-      left = { kind: 'or', left, right };
+      index++
+      const right = parseAnd()
+      if ('error' in right) return right
+      left = { kind: 'or', left, right }
     }
-    return left;
+    return left
   }
 
   function parseAnd(): Ast | { error: string } {
-    let left = parseUnary();
-    if ('error' in left) return left;
+    let left = parseUnary()
+    if ('error' in left) return left
     while (true) {
-      const next = peek();
-      if (!next) break;
+      const next = peek()
+      if (!next) break
       if (next.kind === 'and') {
-        index++;
-        const right = parseUnary();
-        if ('error' in right) return right;
-        left = { kind: 'and', left, right };
-        continue;
+        index++
+        const right = parseUnary()
+        if ('error' in right) return right
+        left = { kind: 'and', left, right }
+        continue
       }
       // ET implicite par juxtaposition
       if (next.kind === 'term' || next.kind === 'lparen' || next.kind === 'not') {
-        const right = parseUnary();
-        if ('error' in right) return right;
-        left = { kind: 'and', left, right };
-        continue;
+        const right = parseUnary()
+        if ('error' in right) return right
+        left = { kind: 'and', left, right }
+        continue
       }
-      break;
+      break
     }
-    return left;
+    return left
   }
 
   function parseUnary(): Ast | { error: string } {
-    const token = peek();
-    if (!token) return { error: 'Expression incomplète en fin de requête' };
+    const token = peek()
+    if (!token) return { error: 'Expression incomplète en fin de requête' }
     if (token.kind === 'not') {
-      index++;
-      const child = parseUnary();
-      if ('error' in child) return child;
-      return { kind: 'not', child };
+      index++
+      const child = parseUnary()
+      if ('error' in child) return child
+      return { kind: 'not', child }
     }
     if (token.kind === 'lparen') {
-      index++;
-      const inner = parseOr();
-      if ('error' in inner) return inner;
+      index++
+      const inner = parseOr()
+      if ('error' in inner) return inner
       if (peek()?.kind !== 'rparen') {
-        return { error: `Parenthèse fermante manquante (position ${token.pos + 1})` };
+        return { error: `Parenthèse fermante manquante (position ${token.pos + 1})` }
       }
-      index++;
-      return inner;
+      index++
+      return inner
     }
     if (token.kind === 'term') {
-      index++;
-      return { kind: 'term', field: token.field, op: token.op, value: token.value };
+      index++
+      return { kind: 'term', field: token.field, op: token.op, value: token.value }
     }
-    return { error: `Opérateur inattendu à la position ${token.pos + 1}` };
+    return { error: `Opérateur inattendu à la position ${token.pos + 1}` }
   }
 
-  const ast = parseOr();
-  if ('error' in ast) return ast;
-  const remaining = peek();
+  const ast = parseOr()
+  if ('error' in ast) return ast
+  const remaining = peek()
   if (remaining) {
-    return { error: `Élément inattendu à la position ${remaining.pos + 1}` };
+    return { error: `Élément inattendu à la position ${remaining.pos + 1}` }
   }
-  return ast;
+  return ast
 }
 
 // --- Évaluation ---
 
-const FIELD_ALIASES: Record<string, 'name' | 'type' | 'archi' | 'layer' | 'tag' | 'comment' | 'prop'> = {
+const FIELD_ALIASES: Record<
+  string,
+  'name' | 'type' | 'archi' | 'layer' | 'tag' | 'comment' | 'prop'
+> = {
   nom: 'name',
   name: 'name',
   label: 'name',
@@ -274,7 +284,7 @@ const FIELD_ALIASES: Record<string, 'name' | 'type' | 'archi' | 'layer' | 'tag' 
   comment: 'comment',
   prop: 'prop',
   propriete: 'prop',
-};
+}
 
 /** Synonymes de valeurs pour les couches Archimate (FR → canonique). */
 const LAYER_SYNONYMS: Record<string, string> = {
@@ -295,7 +305,7 @@ const LAYER_SYNONYMS: Record<string, string> = {
   physical: 'physical',
   generique: 'generic',
   generic: 'generic',
-};
+}
 
 const TYPE_SYNONYMS: Record<string, string> = {
   conteneur: 'container',
@@ -303,120 +313,127 @@ const TYPE_SYNONYMS: Record<string, string> = {
   forme: 'shape',
   shape: 'shape',
   boite: 'shape',
-};
+}
 
 /** Dérive la couche Archimate d'un noeud (préfixe du type, ex. business-actor → business). */
 export function layerOfNode(node: Node): string | null {
-  const archimateType = node.data?.archimateType as string | undefined;
+  const archimateType = node.data?.archimateType as string | undefined
   if (archimateType) {
-    const dash = archimateType.indexOf('-');
-    return dash > 0 ? archimateType.slice(0, dash) : archimateType;
+    const dash = archimateType.indexOf('-')
+    return dash > 0 ? archimateType.slice(0, dash) : archimateType
   }
-  const explicit = node.data?.layer as string | undefined;
-  return explicit ?? null;
+  const explicit = node.data?.layer as string | undefined
+  return explicit ?? null
 }
 
 function compareString(target: string, op: ':' | '=' | '~', rawValue: string): boolean {
-  const normalizedTarget = normalize(target);
-  const normalizedValue = normalize(rawValue);
+  const normalizedTarget = normalize(target)
+  const normalizedValue = normalize(rawValue)
   switch (op) {
     case '=':
-      return normalizedTarget === normalizedValue;
+      return normalizedTarget === normalizedValue
     case '~':
       try {
-        return new RegExp(rawValue, 'i').test(target);
+        return new RegExp(rawValue, 'i').test(target)
       } catch {
-        return false;
+        return false
       }
     case ':':
       if (normalizedValue.includes('*')) {
         const pattern = normalizedValue
           .split('*')
-          .map(part => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&'))
-          .join('.*');
-        return new RegExp(`^${pattern}$`).test(normalizedTarget) ||
-               new RegExp(pattern).test(normalizedTarget);
+          .map((part) => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&'))
+          .join('.*')
+        return (
+          new RegExp(`^${pattern}$`).test(normalizedTarget) ||
+          new RegExp(pattern).test(normalizedTarget)
+        )
       }
-      return normalizedTarget.includes(normalizedValue);
+      return normalizedTarget.includes(normalizedValue)
   }
 }
 
-function evaluateTerm(node: Node, field: string | null, op: ':' | '=' | '~', value: string): boolean {
-  const resolved = field ? FIELD_ALIASES[normalize(field)] : 'name';
+function evaluateTerm(
+  node: Node,
+  field: string | null,
+  op: ':' | '=' | '~',
+  value: string
+): boolean {
+  const resolved = field ? FIELD_ALIASES[normalize(field)] : 'name'
   if (field && !resolved) {
     // Champ inconnu : aucun noeud ne correspond (l'erreur est signalée au parsing).
-    return false;
+    return false
   }
 
   switch (resolved) {
     case 'name': {
-      const name = (node.data?.name as string | undefined) ?? '';
-      return compareString(name, op, value);
+      const name = (node.data?.name as string | undefined) ?? ''
+      return compareString(name, op, value)
     }
     case 'type': {
-      const wanted = TYPE_SYNONYMS[normalize(value)] ?? normalize(value);
-      return normalize(node.type) === wanted;
+      const wanted = TYPE_SYNONYMS[normalize(value)] ?? normalize(value)
+      return normalize(node.type) === wanted
     }
     case 'archi': {
-      const archimateType = (node.data?.archimateType as string | undefined) ?? '';
-      return compareString(archimateType, op, value);
+      const archimateType = (node.data?.archimateType as string | undefined) ?? ''
+      return compareString(archimateType, op, value)
     }
     case 'layer': {
-      const layer = layerOfNode(node);
-      if (!layer) return false;
-      const wanted = LAYER_SYNONYMS[normalize(value)] ?? normalize(value);
-      return normalize(layer) === wanted;
+      const layer = layerOfNode(node)
+      if (!layer) return false
+      const wanted = LAYER_SYNONYMS[normalize(value)] ?? normalize(value)
+      return normalize(layer) === wanted
     }
     case 'tag': {
-      const tags = node.data?.tags as unknown;
-      if (!Array.isArray(tags)) return false;
-      return tags.some(tag => {
+      const tags = node.data?.tags as unknown
+      if (!Array.isArray(tags)) return false
+      return tags.some((tag) => {
         // Les tags peuvent être des chaînes ou des objets { name }
-        const tagName = typeof tag === 'string' ? tag : (tag?.name as string | undefined) ?? '';
-        return compareString(tagName, op, value);
-      });
+        const tagName = typeof tag === 'string' ? tag : ((tag?.name as string | undefined) ?? '')
+        return compareString(tagName, op, value)
+      })
     }
     case 'comment': {
-      const comment = (node.data?.comment as string | undefined) ?? '';
-      return compareString(comment, op, value);
+      const comment = (node.data?.comment as string | undefined) ?? ''
+      return compareString(comment, op, value)
     }
     case 'prop': {
-      const [key, expected] = value.split('=');
-      if (!key) return false;
-      const actual = node.data?.[key];
-      if (expected === undefined) return actual !== undefined && actual !== null && actual !== '';
-      return compareString(String(actual ?? ''), op === '~' ? '~' : ':', expected);
+      const [key, expected] = value.split('=')
+      if (!key) return false
+      const actual = node.data?.[key]
+      if (expected === undefined) return actual !== undefined && actual !== null && actual !== ''
+      return compareString(String(actual ?? ''), op === '~' ? '~' : ':', expected)
     }
   }
-  return false;
+  return false
 }
 
 /** Liste des champs valides, pour le message d'erreur. */
-const VALID_FIELDS = Object.keys(FIELD_ALIASES).join(', ');
+const VALID_FIELDS = Object.keys(FIELD_ALIASES).join(', ')
 
 function collectUnknownField(ast: Ast): string | null {
   switch (ast.kind) {
     case 'term':
-      if (ast.field && !FIELD_ALIASES[normalize(ast.field)]) return ast.field;
-      return null;
+      if (ast.field && !FIELD_ALIASES[normalize(ast.field)]) return ast.field
+      return null
     case 'not':
-      return collectUnknownField(ast.child);
+      return collectUnknownField(ast.child)
     case 'and':
     case 'or':
-      return collectUnknownField(ast.left) ?? collectUnknownField(ast.right);
+      return collectUnknownField(ast.left) ?? collectUnknownField(ast.right)
   }
 }
 
 function evaluate(ast: Ast, node: Node): boolean {
   switch (ast.kind) {
     case 'and':
-      return evaluate(ast.left, node) && evaluate(ast.right, node);
+      return evaluate(ast.left, node) && evaluate(ast.right, node)
     case 'or':
-      return evaluate(ast.left, node) || evaluate(ast.right, node);
+      return evaluate(ast.left, node) || evaluate(ast.right, node)
     case 'not':
-      return !evaluate(ast.child, node);
+      return !evaluate(ast.child, node)
     case 'term':
-      return evaluateTerm(node, ast.field, ast.op, ast.value);
+      return evaluateTerm(node, ast.field, ast.op, ast.value)
   }
 }
 
@@ -425,24 +442,24 @@ function evaluate(ast: Ast, node: Node): boolean {
  * ou une erreur lisible destinée à l'utilisateur.
  */
 export function parseFilterQuery(query: string): ParseResult {
-  const trimmed = query.trim();
+  const trimmed = query.trim()
   if (!trimmed) {
-    return { ok: true, matches: () => true };
+    return { ok: true, matches: () => true }
   }
 
-  const tokens = tokenize(trimmed);
-  if ('error' in tokens) return { ok: false, error: tokens.error };
+  const tokens = tokenize(trimmed)
+  if ('error' in tokens) return { ok: false, error: tokens.error }
 
-  const ast = parseTokens(tokens);
-  if ('error' in ast) return { ok: false, error: ast.error };
+  const ast = parseTokens(tokens)
+  if ('error' in ast) return { ok: false, error: ast.error }
 
-  const unknownField = collectUnknownField(ast);
+  const unknownField = collectUnknownField(ast)
   if (unknownField) {
     return {
       ok: false,
       error: `Champ inconnu « ${unknownField} ». Champs valides : ${VALID_FIELDS}`,
-    };
+    }
   }
 
-  return { ok: true, matches: (node: Node) => evaluate(ast, node) };
+  return { ok: true, matches: (node: Node) => evaluate(ast, node) }
 }

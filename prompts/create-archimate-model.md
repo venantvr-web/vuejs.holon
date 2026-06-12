@@ -66,7 +66,11 @@ Produis un unique fichier `archimate-holon.json` conforme à ce schéma (validat
       "type": "container",
       "geometry": { "x": 24, "y": 48, "w": 220, "h": 120 },
       "styling": { "fill": "#ffffff", "stroke": "#333333", "strokeWidth": 1, "opacity": 1 },
-      "data": { "name": "Payment API", "archimateType": "application-component", "comment": "Spring Boot, REST" }
+      "data": {
+        "name": "Payment API",
+        "archimateType": "application-component",
+        "comment": "Spring Boot, REST"
+      }
     }
   ],
   "edges": [

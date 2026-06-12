@@ -2,16 +2,28 @@
 export default {
   // Dark mode piloté par la classe `dark` sur <html>, gérée par useThemeable.
   darkMode: 'class',
-  content: [
-    "./index.html",
-    "./src/**/*.{vue,js,ts,jsx,tsx}",
-  ],
+  content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
     extend: {
       // Piles de polices alignées sur les variables CSS de src/style.css.
       fontFamily: {
-        sans: ["'Inter Variable'", 'Inter', 'system-ui', '-apple-system', "'Segoe UI'", 'sans-serif'],
-        mono: ['ui-monospace', "'SF Mono'", 'SFMono-Regular', 'Menlo', 'Consolas', "'Liberation Mono'", 'monospace'],
+        sans: [
+          "'Inter Variable'",
+          'Inter',
+          'system-ui',
+          '-apple-system',
+          "'Segoe UI'",
+          'sans-serif',
+        ],
+        mono: [
+          'ui-monospace',
+          "'SF Mono'",
+          'SFMono-Regular',
+          'Menlo',
+          'Consolas',
+          "'Liberation Mono'",
+          'monospace',
+        ],
       },
       // Rayons et ombres mappés sur les design tokens (thème jour/nuit).
       borderRadius: {

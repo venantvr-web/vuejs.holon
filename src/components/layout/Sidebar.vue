@@ -1,30 +1,29 @@
-
 <!-- src/components/layout/Sidebar.vue -->
 <script setup lang="ts">
-import { ref } from 'vue';
-import { ChevronDown, ChevronRight, X } from 'lucide-vue-next';
-import { useLibraryStore } from '../../stores/library';
-import type { LibraryItem } from '../../types';
-import OutlinePanel from './OutlinePanel.vue';
-import { useI18n } from '../../composables/useI18n';
+import { ref } from 'vue'
+import { ChevronDown, ChevronRight, X } from 'lucide-vue-next'
+import { useLibraryStore } from '../../stores/library'
+import type { LibraryItem } from '../../types'
+import OutlinePanel from './OutlinePanel.vue'
+import { useI18n } from '../../composables/useI18n'
 
-const libraryStore = useLibraryStore();
-const { t } = useI18n();
+const libraryStore = useLibraryStore()
+const { t } = useI18n()
 
-const libraryOpen = ref(true);
-const outlineOpen = ref(true);
+const libraryOpen = ref(true)
+const outlineOpen = ref(true)
 
 function handleDragStart(event: DragEvent, item: LibraryItem) {
   if (event.dataTransfer) {
-    event.dataTransfer.setData('application/json', JSON.stringify(item.template));
-    event.dataTransfer.effectAllowed = 'copy';
+    event.dataTransfer.setData('application/json', JSON.stringify(item.template))
+    event.dataTransfer.effectAllowed = 'copy'
   }
 }
 
 function handleRemove(event: MouseEvent, item: LibraryItem) {
-  event.stopPropagation();
+  event.stopPropagation()
   if (confirm(`Supprimer « ${item.name} » de la bibliothèque ?`)) {
-    libraryStore.removeItem(item.id);
+    libraryStore.removeItem(item.id)
   }
 }
 </script>
@@ -37,7 +36,9 @@ function handleRemove(event: MouseEvent, item: LibraryItem) {
         class="w-full flex items-center justify-between px-3 py-2 app-hover app-fg transition-colors duration-150"
         @click="libraryOpen = !libraryOpen"
       >
-        <span class="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide app-muted">
+        <span
+          class="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide app-muted"
+        >
           <component :is="libraryOpen ? ChevronDown : ChevronRight" :size="14" />
           {{ t('sidebar.library') }}
         </span>
@@ -76,7 +77,9 @@ function handleRemove(event: MouseEvent, item: LibraryItem) {
         class="flex-shrink-0 w-full flex items-center justify-between px-3 py-2 app-hover app-fg transition-colors duration-150"
         @click="outlineOpen = !outlineOpen"
       >
-        <span class="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide app-muted">
+        <span
+          class="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide app-muted"
+        >
           <component :is="outlineOpen ? ChevronDown : ChevronRight" :size="14" />
           {{ t('sidebar.outline') }}
         </span>

@@ -1,8 +1,8 @@
 <!-- src/components/canvas/FilterPanel.vue -->
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { Filter, X } from 'lucide-vue-next';
-import { useFilterable, PRESET_QUERIES } from '../../composables/traits';
+import { ref, computed } from 'vue'
+import { Filter, X } from 'lucide-vue-next'
+import { useFilterable, PRESET_QUERIES } from '../../composables/traits'
 
 /**
  * Panneau de filtrage par requête DSL.
@@ -25,27 +25,27 @@ const {
   saveFilter,
   loadFilter,
   deleteFilter,
-} = useFilterable();
+} = useFilterable()
 
-const open = ref(false);
-const helpOpen = ref(false);
+const open = ref(false)
+const helpOpen = ref(false)
 
 const buttonLabel = computed(() =>
   isFilterActive.value ? `Filtre (${excludedCount.value})` : 'Filtre'
-);
+)
 
 function applyPreset(preset: { query: string; invert?: boolean }) {
-  invertQuery.value = preset.invert ?? false;
-  setQuery(preset.query);
+  invertQuery.value = preset.invert ?? false
+  setQuery(preset.query)
 }
 
 function handleSave() {
-  const name = window.prompt('Nom du filtre :', query.value);
-  if (name) saveFilter(name);
+  const name = window.prompt('Nom du filtre :', query.value)
+  if (name) saveFilter(name)
 }
 
 function handleClear() {
-  clearFilter();
+  clearFilter()
 }
 </script>
 
@@ -59,7 +59,9 @@ function handleClear() {
       aria-haspopup="dialog"
       :aria-expanded="open"
     >
-      <span class="inline-flex items-center gap-1.5"><Filter class="w-4 h-4" /> {{ buttonLabel }}</span>
+      <span class="inline-flex items-center gap-1.5"
+        ><Filter class="w-4 h-4" /> {{ buttonLabel }}</span
+      >
     </button>
 
     <div
@@ -177,10 +179,7 @@ function handleClear() {
       </div>
 
       <!-- Aide syntaxe -->
-      <button
-        class="mt-3 text-xs app-subtle hover:underline"
-        @click="helpOpen = !helpOpen"
-      >
+      <button class="mt-3 text-xs app-subtle hover:underline" @click="helpOpen = !helpOpen">
         {{ helpOpen ? 'Masquer la syntaxe' : 'Aide sur la syntaxe…' }}
       </button>
       <div v-if="helpOpen" class="mt-1 text-xs app-subtle space-y-0.5 border-l-2 app-border pl-2">
@@ -189,7 +188,10 @@ function handleClear() {
         <p><code>archi:business-actor</code> — type Archimate</p>
         <p><code>type:container</code> / <code>type:forme</code></p>
         <p><code>tag:critique</code>, <code>prop:owner=DSI</code>, <code>commentaire:2027</code></p>
-        <p><code>et / ou / non</code>, parenthèses, <code>nom:pay*</code> (joker), <code>nom="CRM"</code> (exact), <code>nom~regex</code></p>
+        <p>
+          <code>et / ou / non</code>, parenthèses, <code>nom:pay*</code> (joker),
+          <code>nom="CRM"</code> (exact), <code>nom~regex</code>
+        </p>
       </div>
 
       <!-- Pied : statut + actions -->
