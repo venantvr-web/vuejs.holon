@@ -642,7 +642,7 @@ async function addToLibrary() {
     >
       <div
         class="app-surface border border-[var(--accent)] rounded-lg shadow-lg p-2 pb-3"
-        @mousedown.stop
+        @pointerdown.stop
         @click.stop
       >
         <div class="text-xs font-medium app-muted mb-1">{{ t('canvas.commentLabel') }}</div>
@@ -687,7 +687,7 @@ async function addToLibrary() {
       :r="6 * fontMul"
       fill="var(--accent-selected)"
       class="cursor-crosshair hover:r-8 transition-all"
-      @mousedown.stop.prevent="$emit('start-connection', nodeId)"
+      @pointerdown.stop.prevent="$emit('start-connection', nodeId)"
     />
 
     <!-- Sélecteur de type Archimate (top-right, aligné sur la rangée
@@ -722,7 +722,7 @@ async function addToLibrary() {
     <!-- Poignée de redimensionnement -->
     <g
       v-if="showResizeHandle || isResizing"
-      @mousedown="handleResizeStartIfNotLocked"
+      @pointerdown.stop="handleResizeStartIfNotLocked"
       class="cursor-nwse-resize"
     >
       <rect
@@ -745,7 +745,7 @@ async function addToLibrary() {
     <foreignObject v-if="isStylePanelOpen" :x="node.geometry.w + 8" y="0" width="280" height="500">
       <div
         class="app-surface border app-border rounded-lg shadow-lg p-3 text-sm max-h-96 overflow-y-auto"
-        @mousedown.stop
+        @pointerdown.stop
         @click.stop
       >
         <!-- Couleurs -->

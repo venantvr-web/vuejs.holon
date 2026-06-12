@@ -454,4 +454,62 @@ describe('useResizable - Autosize', () => {
       expect(updatedParent.geometry.h).toBe(80 + paddingTop + padding)
     })
   })
+
+  // Non-régression : lorsqu'on clique sur la poignée de redimensionnement,
+  // l'évènement ne doit ni propager au parent (qui démarrerait un drag) ni
+  // déclencher un comportement par défaut. Le drag du noeud écoute
+  // `pointerdown` ; le resize doit lui aussi être branché sur Pointer Events
+  // (souris + tactile + stylet) plutôt que sur les anciens `mouse*`.
+  describe('handleResizeStart (non-régression : Pointer Events + stopPropagation)', () => {
+    it('stoppe la propagation et empêche le défaut', async () => {
+      const node = await graphStore.createNode(
+        {
+          type: 'container',
+          geometry: { x: 0, y: 0, w: 100, h: 80 },
+          styling: { fill: '#fff', stroke: '#000', strokeWidth: 1, opacity: 1 },
+          data: { name: 'parent' },
+        },
+        null
+      )
+
+      const nodeId = ref(node.id)
+      const { handleResizeStart } = useResizable({ nodeId })
+
+      const event = new MouseEvent('pointerdown', { clientX: 100, clientY: 80, button: 0 })
+      const stopSpy = vi.spyOn(event, 'stopPropagation')
+      const preventSpy = vi.spyOn(event, 'preventDefault')
+
+      handleResizeStart(event)
+
+      expect(stopSpy).toHaveBeenCalled()
+      expect(preventSpy).toHaveBeenCalled()
+    })
+
+    it('écoute pointermove/pointerup (et non mousemove/mouseup)', async () => {
+      const node = await graphStore.createNode(
+        {
+          type: 'container',
+          geometry: { x: 0, y: 0, w: 100, h: 80 },
+          styling: { fill: '#fff', stroke: '#000', strokeWidth: 1, opacity: 1 },
+          data: { name: 'parent' },
+        },
+        null
+      )
+
+      const addSpy = vi.spyOn(window, 'addEventListener')
+      const nodeId = ref(node.id)
+      const { handleResizeStart } = useResizable({ nodeId })
+
+      const event = new MouseEvent('pointerdown', { clientX: 100, clientY: 80, button: 0 })
+      handleResizeStart(event)
+
+      const registered = addSpy.mock.calls.map((call) => call[0])
+      expect(registered).toContain('pointermove')
+      expect(registered).toContain('pointerup')
+      expect(registered).not.toContain('mousemove')
+      expect(registered).not.toContain('mouseup')
+
+      addSpy.mockRestore()
+    })
+  })
 })

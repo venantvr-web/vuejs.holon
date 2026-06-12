@@ -242,8 +242,12 @@ export function useResizable(options: ResizableOptions): ResizableState & Resiza
 
     options.onResizeStart?.()
 
-    window.addEventListener('mousemove', handleResizeMove)
-    window.addEventListener('mouseup', handleResizeEnd)
+    // Pointer Events (souris + tactile + stylet) ; conformes aux mêmes
+    // PointerEvent reçus par handleResizeMove/End (qui n'utilisent que les
+    // propriétés héritées de MouseEvent : clientX/Y, button).
+    window.addEventListener('pointermove', handleResizeMove)
+    window.addEventListener('pointerup', handleResizeEnd)
+    window.addEventListener('pointercancel', handleResizeEnd)
   }
 
   function handleResizeMove(event: MouseEvent) {
@@ -325,8 +329,9 @@ export function useResizable(options: ResizableOptions): ResizableState & Resiza
 
     options.onResizeEnd?.()
 
-    window.removeEventListener('mousemove', handleResizeMove)
-    window.removeEventListener('mouseup', handleResizeEnd)
+    window.removeEventListener('pointermove', handleResizeMove)
+    window.removeEventListener('pointerup', handleResizeEnd)
+    window.removeEventListener('pointercancel', handleResizeEnd)
   }
 
   // === AUTOSIZE ===
