@@ -7,6 +7,7 @@ import Toolbar from './components/layout/Toolbar.vue'
 import Sidebar from './components/layout/Sidebar.vue'
 import PropertyInspector from './components/layout/PropertyInspector.vue'
 import GraphCanvas from './components/canvas/GraphCanvas.vue'
+import TooltipHost from './components/ui/TooltipHost.vue'
 
 const graphStore = useGraphStore()
 const libraryStore = useLibraryStore()
@@ -50,5 +51,7 @@ onMounted(async () => {
         <PropertyInspector />
       </aside>
     </div>
+    <!-- Hôte unique du système de tooltips UI (directive v-tooltip). -->
+    <TooltipHost />
   </div>
 </template>

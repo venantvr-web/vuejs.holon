@@ -10,7 +10,7 @@ const { isDarkMode, toggleDarkMode } = useThemeable()
   <button
     @click="toggleDarkMode"
     class="px-2 py-1.5 text-sm app-btn rounded transition-colors duration-150 inline-flex items-center"
-    :title="isDarkMode ? 'Passer en mode Jour' : 'Passer en mode Nuit'"
+    v-tooltip="isDarkMode ? 'Passer en mode Jour' : 'Passer en mode Nuit'"
     :aria-label="isDarkMode ? 'Passer en mode Jour' : 'Passer en mode Nuit'"
   >
     <!-- Convention standard : l'icône montre le mode CIBLE (où cliquer mène).

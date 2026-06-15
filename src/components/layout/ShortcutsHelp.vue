@@ -46,7 +46,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey))
     <button
       @click="isOpen = true"
       class="px-2 py-1.5 text-sm app-btn rounded transition-colors duration-150 inline-flex items-center"
-      title="Aide — raccourcis clavier (F1)"
+      v-tooltip="'Aide — raccourcis clavier (F1)'"
       aria-label="Aide — raccourcis clavier (F1)"
     >
       <HelpCircle :size="16" />

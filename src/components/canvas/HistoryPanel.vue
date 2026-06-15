@@ -90,7 +90,7 @@ function relativeAge(ts: number): string {
       <button
         @click="clearHistory"
         class="ml-auto app-danger-link text-xs inline-flex items-center gap-1"
-        title="Effacer tout l'historique (irréversible)"
+        v-tooltip="'Effacer tout l’historique (irréversible)'"
       >
         <Trash2 :size="14" aria-hidden="true" /> Vider
       </button>

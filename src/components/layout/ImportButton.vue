@@ -84,7 +84,7 @@ function cancelDialog() {
       @click="openPicker"
       :disabled="isBusy"
       class="px-3 py-1.5 text-sm app-btn rounded transition-colors duration-150 inline-flex items-center gap-1.5"
-      title="Importer un fichier JSON versionné"
+      v-tooltip="'Importer un fichier JSON versionné'"
       aria-label="Importer un fichier JSON versionné"
     >
       <Upload :size="16" />

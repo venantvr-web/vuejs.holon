@@ -72,7 +72,7 @@ function exportJson() {
       @click="isOpen = !isOpen"
       :disabled="isBusy"
       class="app-btn-primary px-3 py-1.5 text-sm rounded transition-colors duration-150 inline-flex items-center gap-1.5"
-      title="Exporter le diagramme"
+      v-tooltip="'Exporter le diagramme'"
       aria-label="Exporter le diagramme"
     >
       <Loader2 v-if="isBusy" :size="16" class="animate-spin" />

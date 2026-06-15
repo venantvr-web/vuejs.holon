@@ -18,7 +18,7 @@ function choose(v: Locale) {
     <button
       @click="isOpen = !isOpen"
       class="px-2 py-1.5 text-sm app-btn rounded transition-colors duration-150 inline-flex items-center gap-1.5"
-      :title="`Langue : ${locale}`"
+      v-tooltip="`Langue : ${locale}`"
       aria-label="Choisir la langue"
     >
       <Globe :size="16" />

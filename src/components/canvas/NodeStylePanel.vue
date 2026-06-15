@@ -109,7 +109,7 @@ function typesOf(layerConfig: {
                 :class="{
                   'bg-blue-100 border-blue-500': shapeable.shape.value === shapeItem.shape,
                 }"
-                :title="shapeItem.label"
+                v-tooltip="shapeItem.label"
               >
                 {{ shapeItem.label.slice(0, 6) }}
               </button>
@@ -185,7 +185,7 @@ function typesOf(layerConfig: {
           <button
             @click="emit('add-to-library')"
             class="px-2 py-1 text-xs border rounded app-hover"
-            title="Sauvegarder ce bloc comme modèle réutilisable"
+            v-tooltip="'Sauvegarder ce bloc comme modèle réutilisable'"
           >
             📚 Bibliothèque
           </button>

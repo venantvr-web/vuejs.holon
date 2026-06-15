@@ -83,14 +83,14 @@ const totalTyped = computed(() =>
       <button
         @click="showAll"
         class="app-btn px-2 py-1 rounded inline-flex items-center gap-1"
-        title="Afficher toutes les couches"
+        v-tooltip="'Afficher toutes les couches'"
       >
         <Eye :size="12" aria-hidden="true" /> Tout afficher
       </button>
       <button
         @click="hideAll"
         class="app-btn px-2 py-1 rounded inline-flex items-center gap-1"
-        title="Masquer toutes les couches"
+        v-tooltip="'Masquer toutes les couches'"
       >
         <EyeOff :size="12" aria-hidden="true" /> Tout masquer
       </button>
@@ -104,7 +104,7 @@ const totalTyped = computed(() =>
           class="w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs border app-border app-hover transition-colors"
           :class="{ 'opacity-50': isHidden(layer.key) }"
           :aria-pressed="isHidden(layer.key) ? 'false' : 'true'"
-          :title="
+          v-tooltip="
             isHidden(layer.key)
               ? `Afficher la couche ${layer.label}`
               : `Masquer la couche ${layer.label}`

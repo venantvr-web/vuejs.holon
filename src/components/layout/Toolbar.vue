@@ -155,7 +155,7 @@ function handleUngroup() {
     <button
       type="button"
       class="text-lg font-semibold app-fg mr-6 hover:text-[var(--accent)] transition-colors cursor-pointer"
-      title="Guide utilisateur (onboarding)"
+      v-tooltip="'Guide utilisateur (onboarding)'"
       @click="manualOpen = true"
     >
       Holon
@@ -167,7 +167,7 @@ function handleUngroup() {
         <button
           @click="zoomBy(1 / 1.2)"
           class="px-2 py-2 text-sm app-hover rounded-l"
-          title="Zoom arrière"
+          v-tooltip="'Zoom arrière'"
           aria-label="Zoom arrière"
         >
           <Minus class="w-4 h-4" />
@@ -178,7 +178,7 @@ function handleUngroup() {
         <button
           @click="zoomBy(1.2)"
           class="px-2 py-2 text-sm app-hover"
-          title="Zoom avant"
+          v-tooltip="'Zoom avant'"
           aria-label="Zoom avant"
         >
           <Plus class="w-4 h-4" />
@@ -186,7 +186,7 @@ function handleUngroup() {
         <button
           @click="handleFit"
           class="px-2 py-2 text-sm app-hover border-l app-border"
-          title="Ajuster à la sélection (ou tout)"
+          v-tooltip="'Ajuster à la sélection (ou tout)'"
           aria-label="Ajuster la vue"
         >
           <Maximize class="w-4 h-4" />
@@ -194,7 +194,7 @@ function handleUngroup() {
         <button
           @click="resetView"
           class="px-2 py-1.5 text-sm app-hover border-l app-border rounded-r"
-          title="Réinitialiser la vue (100 %)"
+          v-tooltip="'Réinitialiser la vue (100 %)'"
         >
           1:1
         </button>
@@ -207,7 +207,7 @@ function handleUngroup() {
         @click="undo"
         :disabled="!canUndo"
         class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        :title="`${t('toolbar.undo')} (Ctrl+Z)`"
+        v-tooltip="`${t('toolbar.undo')} (Ctrl+Z)`"
       >
         <span class="inline-flex items-center gap-1.5"
           ><Undo2 class="w-4 h-4" /> {{ t('toolbar.undo') }}</span
@@ -217,7 +217,7 @@ function handleUngroup() {
         @click="redo"
         :disabled="!canRedo"
         class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        :title="`${t('toolbar.redo')} (Ctrl+Maj+Z)`"
+        v-tooltip="`${t('toolbar.redo')} (Ctrl+Maj+Z)`"
       >
         <span class="inline-flex items-center gap-1.5"
           ><Redo2 class="w-4 h-4" /> {{ t('toolbar.redo') }}</span
@@ -230,7 +230,7 @@ function handleUngroup() {
           @click="showHistoryPanel = !showHistoryPanel"
           class="px-2 py-1.5 text-sm app-btn rounded transition-colors"
           :class="{ 'app-toggle-active': showHistoryPanel }"
-          title="Afficher / masquer la timeline d'historique"
+          v-tooltip="'Afficher / masquer la timeline d’historique'"
           :aria-expanded="showHistoryPanel"
           aria-controls="history-panel-popover"
         >
@@ -253,7 +253,7 @@ function handleUngroup() {
           @click="showLayersPanel = !showLayersPanel"
           class="px-2 py-1.5 text-sm app-btn rounded transition-colors"
           :class="{ 'app-toggle-active': showLayersPanel }"
-          title="Afficher / masquer les couches Archimate"
+          v-tooltip="'Afficher / masquer les couches Archimate'"
           :aria-expanded="showLayersPanel"
           aria-controls="layers-panel-popover"
         >
@@ -277,7 +277,7 @@ function handleUngroup() {
         @click="toggleGrid"
         class="px-2 py-1.5 text-sm rounded transition-colors"
         :class="snapConfig.snapToGrid ? 'app-toggle-active' : 'app-btn'"
-        title="Afficher la grille et y aimanter (activé/désactivé)"
+        v-tooltip="'Afficher la grille et y aimanter (activé/désactivé)'"
       >
         <span class="inline-flex items-center gap-1.5"><LayoutGrid class="w-4 h-4" /> Grille</span>
       </button>
@@ -285,7 +285,7 @@ function handleUngroup() {
         @click="toggleNodeSnap"
         class="px-2 py-1.5 text-sm rounded transition-colors"
         :class="snapConfig.snapToNodes ? 'app-toggle-active' : 'app-btn'"
-        title="Aimanter sur les autres noeuds (Alt pendant le drag désactive temporairement)"
+        v-tooltip="'Aimanter sur les autres noeuds (Alt pendant le drag désactive temporairement)'"
       >
         <span class="inline-flex items-center gap-1.5"><Magnet class="w-4 h-4" /> Aimant</span>
       </button>
@@ -298,7 +298,7 @@ function handleUngroup() {
           @click="layoutMenuOpen = !layoutMenuOpen"
           :disabled="isLayouting"
           class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40"
-          title="Appliquer un algorithme de mise en page automatique"
+          v-tooltip="'Appliquer un algorithme de mise en page automatique'"
         >
           <span v-if="isLayouting" class="inline-flex items-center gap-1.5"
             ><Loader2 class="w-4 h-4 animate-spin" /> Mise en page…</span
@@ -318,7 +318,7 @@ function handleUngroup() {
             :key="l.value"
             class="w-full text-left px-3 py-1.5 app-hover"
             :class="{ 'app-selected font-medium': currentAlgorithm === l.value }"
-            :title="l.hint"
+            v-tooltip="l.hint"
             @click="runLayout(l.value)"
           >
             <div>{{ l.label }}</div>
@@ -333,7 +333,7 @@ function handleUngroup() {
           @click="alignMenuOpen = !alignMenuOpen"
           :disabled="!canAlign"
           class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          title="Aligner et distribuer (2+ éléments requis)"
+          v-tooltip="'Aligner et distribuer (2+ éléments requis)'"
         >
           <span class="inline-flex items-center gap-1.5"
             >Aligner <ChevronDown class="w-3.5 h-3.5"
@@ -426,7 +426,7 @@ function handleUngroup() {
         @click="handleGroup"
         :disabled="!canGroup"
         class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        title="Grouper la sélection (Ctrl+G)"
+        v-tooltip="'Grouper la sélection (Ctrl+G)'"
       >
         Grouper
       </button>
@@ -434,7 +434,7 @@ function handleUngroup() {
         @click="handleUngroup"
         :disabled="!canUngroup"
         class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        title="Dégrouper la sélection (Ctrl+Shift+G)"
+        v-tooltip="'Dégrouper la sélection (Ctrl+Shift+G)'"
       >
         Dégrouper
       </button>
@@ -473,7 +473,7 @@ function handleUngroup() {
       <button
         @click="toggleMute"
         class="px-2 py-1.5 text-sm app-btn rounded transition-colors"
-        :title="isMuted ? 'Activer les sons d\'interface' : 'Couper les sons d\'interface'"
+        v-tooltip="isMuted ? 'Activer les sons d’interface' : 'Couper les sons d’interface'"
         :aria-pressed="!isMuted"
         :aria-label="isMuted ? 'Sons coupés' : 'Sons activés'"
       >
@@ -484,7 +484,7 @@ function handleUngroup() {
       <button
         @click="handleClear"
         class="px-3 py-1.5 text-sm app-btn-danger rounded transition-colors"
-        :title="t('toolbar.clear')"
+        v-tooltip="t('toolbar.clear')"
       >
         <span class="inline-flex items-center gap-1.5"
           ><Trash2 class="w-4 h-4" /> {{ t('toolbar.clear') }}</span
