@@ -132,6 +132,27 @@ const messages: Messages = {
     'node.ariaTypePicker': 'Type Archimate : {label} (cliquer pour changer)',
     'node.typeNone': 'aucun',
 
+    // === Landmarks ARIA App ===
+    'app.skipToCanvas': 'Aller au canevas',
+    'app.navAria': 'Bibliothèque et plan du modèle',
+    'app.inspectorAria': 'Inspecteur de propriétés',
+
+    // === Toolbar — labels ARIA résiduels et confirmations ===
+    'toolbar.aria.zoomOut': 'Zoom arrière',
+    'toolbar.aria.zoomIn': 'Zoom avant',
+    'toolbar.aria.zoomFit': 'Ajuster la vue',
+    'toolbar.aria.muteOn': 'Sons coupés',
+    'toolbar.aria.muteOff': 'Sons activés',
+    'toolbar.confirmClear': 'Voulez-vous vraiment supprimer tous les éléments ?',
+
+    // === Outline panel ===
+    'outline.filterPlaceholder': 'Filtrer…',
+    'outline.ariaExpand': 'Déplier',
+    'outline.ariaCollapse': 'Replier',
+
+    // === Edge label editor ===
+    'edge.namePlaceholder': 'Nom de la relation…',
+
     // === Empty state ===
     'emptyState.title': 'Commençons un nouveau modèle',
     'emptyState.intro': 'Le canevas est vide. Plusieurs façons de démarrer :',
@@ -580,6 +601,23 @@ const messages: Messages = {
     'node.ariaStartConnection': 'Start a connection from this node',
     'node.ariaTypePicker': 'Archimate type: {label} (click to change)',
     'node.typeNone': 'none',
+
+    'app.skipToCanvas': 'Skip to canvas',
+    'app.navAria': 'Library and model outline',
+    'app.inspectorAria': 'Property inspector',
+
+    'toolbar.aria.zoomOut': 'Zoom out',
+    'toolbar.aria.zoomIn': 'Zoom in',
+    'toolbar.aria.zoomFit': 'Fit view',
+    'toolbar.aria.muteOn': 'Sounds muted',
+    'toolbar.aria.muteOff': 'Sounds on',
+    'toolbar.confirmClear': 'Really delete every element?',
+
+    'outline.filterPlaceholder': 'Filter…',
+    'outline.ariaExpand': 'Expand',
+    'outline.ariaCollapse': 'Collapse',
+
+    'edge.namePlaceholder': 'Relation name…',
 
     'emptyState.title': 'Let’s start a new model',
     'emptyState.intro': 'The canvas is empty. Several ways to get started:',

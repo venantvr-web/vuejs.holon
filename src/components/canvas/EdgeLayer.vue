@@ -545,7 +545,7 @@ function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean
           @blur="commitEditingLabel"
           class="w-full h-full px-1 text-xs border border-blue-500 rounded outline-none text-center"
           autofocus
-          placeholder="Nom de la relation…"
+          :placeholder="t('edge.namePlaceholder')"
         />
       </foreignObject>
     </g>

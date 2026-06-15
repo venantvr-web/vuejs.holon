@@ -3,6 +3,9 @@ import { onMounted } from 'vue'
 import { useGraphStore } from './stores/graph'
 import { useLibraryStore } from './stores/library'
 import { useKeyboardable, useAutoSnapshot, useUndoable } from './composables/traits'
+import { useI18n } from './composables/useI18n'
+
+const { t } = useI18n()
 import Toolbar from './components/layout/Toolbar.vue'
 import Sidebar from './components/layout/Sidebar.vue'
 import PropertyInspector from './components/layout/PropertyInspector.vue'
@@ -34,20 +37,20 @@ onMounted(async () => {
       href="#main-canvas"
       class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-blue-600 focus:text-white focus:px-3 focus:py-2 focus:rounded"
     >
-      Aller au canevas
+      {{ t('app.skipToCanvas') }}
     </a>
 
     <header role="banner">
       <Toolbar />
     </header>
     <div class="flex flex-1 overflow-hidden">
-      <nav role="navigation" aria-label="Bibliothèque et plan du modèle">
+      <nav role="navigation" :aria-label="t('app.navAria')">
         <Sidebar />
       </nav>
       <main id="main-canvas" role="main" class="flex-1 flex">
         <GraphCanvas />
       </main>
-      <aside role="complementary" aria-label="Inspecteur de propriétés">
+      <aside role="complementary" :aria-label="t('app.inspectorAria')">
         <PropertyInspector />
       </aside>
     </div>

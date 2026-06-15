@@ -135,7 +135,7 @@ const selectedGroupIds = computed(() => {
 const canUngroup = computed(() => selectedGroupIds.value.size > 0)
 
 function handleClear() {
-  if (confirm('Voulez-vous vraiment supprimer tous les éléments ?')) {
+  if (confirm(t('toolbar.confirmClear'))) {
     graphStore.clearAll()
   }
 }
@@ -155,7 +155,7 @@ function handleUngroup() {
     <button
       type="button"
       class="text-lg font-semibold app-fg mr-6 hover:text-[var(--accent)] transition-colors cursor-pointer"
-      v-tooltip="'Guide utilisateur (onboarding)'"
+      v-tooltip="t('toolbar.tooltip.brand')"
       @click="manualOpen = true"
     >
       Holon
@@ -167,8 +167,8 @@ function handleUngroup() {
         <button
           @click="zoomBy(1 / 1.2)"
           class="px-2 py-2 text-sm app-hover rounded-l"
-          v-tooltip="'Zoom arrière'"
-          aria-label="Zoom arrière"
+          v-tooltip="t('toolbar.aria.zoomOut')"
+          :aria-label="t('toolbar.aria.zoomOut')"
         >
           <Minus class="w-4 h-4" />
         </button>
@@ -178,23 +178,24 @@ function handleUngroup() {
         <button
           @click="zoomBy(1.2)"
           class="px-2 py-2 text-sm app-hover"
-          v-tooltip="'Zoom avant'"
-          aria-label="Zoom avant"
+          v-tooltip="t('toolbar.aria.zoomIn')"
+          :aria-label="t('toolbar.aria.zoomIn')"
         >
           <Plus class="w-4 h-4" />
         </button>
         <button
           @click="handleFit"
           class="px-2 py-2 text-sm app-hover border-l app-border"
-          v-tooltip="'Ajuster à la sélection (ou tout)'"
-          aria-label="Ajuster la vue"
+          v-tooltip="t('toolbar.tooltip.zoomFit')"
+          :aria-label="t('toolbar.aria.zoomFit')"
         >
           <Maximize class="w-4 h-4" />
         </button>
         <button
           @click="resetView"
           class="px-2 py-1.5 text-sm app-hover border-l app-border rounded-r"
-          v-tooltip="'Réinitialiser la vue (100 %)'"
+          v-tooltip="t('toolbar.tooltip.zoomReset')"
+          :aria-label="t('toolbar.tooltip.zoomReset')"
         >
           1:1
         </button>
@@ -230,7 +231,7 @@ function handleUngroup() {
           @click="showHistoryPanel = !showHistoryPanel"
           class="px-2 py-1.5 text-sm app-btn rounded transition-colors"
           :class="{ 'app-toggle-active': showHistoryPanel }"
-          v-tooltip="'Afficher / masquer la timeline d’historique'"
+          v-tooltip="t('toolbar.tooltip.history')"
           :aria-expanded="showHistoryPanel"
           aria-controls="history-panel-popover"
         >
@@ -253,7 +254,7 @@ function handleUngroup() {
           @click="showLayersPanel = !showLayersPanel"
           class="px-2 py-1.5 text-sm app-btn rounded transition-colors"
           :class="{ 'app-toggle-active': showLayersPanel }"
-          v-tooltip="'Afficher / masquer les couches Archimate'"
+          v-tooltip="t('toolbar.tooltip.layers')"
           :aria-expanded="showLayersPanel"
           aria-controls="layers-panel-popover"
         >
@@ -277,7 +278,7 @@ function handleUngroup() {
         @click="toggleGrid"
         class="px-2 py-1.5 text-sm rounded transition-colors"
         :class="snapConfig.snapToGrid ? 'app-toggle-active' : 'app-btn'"
-        v-tooltip="'Afficher la grille et y aimanter (activé/désactivé)'"
+        v-tooltip="t('toolbar.tooltip.grid')"
       >
         <span class="inline-flex items-center gap-1.5"><LayoutGrid class="w-4 h-4" /> Grille</span>
       </button>
@@ -285,7 +286,7 @@ function handleUngroup() {
         @click="toggleNodeSnap"
         class="px-2 py-1.5 text-sm rounded transition-colors"
         :class="snapConfig.snapToNodes ? 'app-toggle-active' : 'app-btn'"
-        v-tooltip="'Aimanter sur les autres noeuds (Alt pendant le drag désactive temporairement)'"
+        v-tooltip="t('toolbar.tooltip.snap')"
       >
         <span class="inline-flex items-center gap-1.5"><Magnet class="w-4 h-4" /> Aimant</span>
       </button>
@@ -298,7 +299,7 @@ function handleUngroup() {
           @click="layoutMenuOpen = !layoutMenuOpen"
           :disabled="isLayouting"
           class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40"
-          v-tooltip="'Appliquer un algorithme de mise en page automatique'"
+          v-tooltip="t('toolbar.tooltip.layout')"
         >
           <span v-if="isLayouting" class="inline-flex items-center gap-1.5"
             ><Loader2 class="w-4 h-4 animate-spin" /> Mise en page…</span
@@ -333,7 +334,7 @@ function handleUngroup() {
           @click="alignMenuOpen = !alignMenuOpen"
           :disabled="!canAlign"
           class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          v-tooltip="'Aligner et distribuer (2+ éléments requis)'"
+          v-tooltip="t('toolbar.tooltip.align')"
         >
           <span class="inline-flex items-center gap-1.5"
             >Aligner <ChevronDown class="w-3.5 h-3.5"
@@ -426,7 +427,7 @@ function handleUngroup() {
         @click="handleGroup"
         :disabled="!canGroup"
         class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        v-tooltip="'Grouper la sélection (Ctrl+G)'"
+        v-tooltip="t('toolbar.tooltip.group')"
       >
         Grouper
       </button>
@@ -434,7 +435,7 @@ function handleUngroup() {
         @click="handleUngroup"
         :disabled="!canUngroup"
         class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        v-tooltip="'Dégrouper la sélection (Ctrl+Shift+G)'"
+        v-tooltip="t('toolbar.tooltip.ungroup')"
       >
         Dégrouper
       </button>
@@ -473,9 +474,9 @@ function handleUngroup() {
       <button
         @click="toggleMute"
         class="px-2 py-1.5 text-sm app-btn rounded transition-colors"
-        v-tooltip="isMuted ? 'Activer les sons d’interface' : 'Couper les sons d’interface'"
+        v-tooltip="isMuted ? t('toolbar.tooltip.muteOn') : t('toolbar.tooltip.muteOff')"
         :aria-pressed="!isMuted"
-        :aria-label="isMuted ? 'Sons coupés' : 'Sons activés'"
+        :aria-label="isMuted ? t('toolbar.aria.muteOn') : t('toolbar.aria.muteOff')"
       >
         <component :is="isMuted ? VolumeX : Volume2" class="w-4 h-4" aria-hidden="true" />
       </button>

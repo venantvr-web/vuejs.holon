@@ -6,8 +6,10 @@ import { useGraphStore } from '../../stores/graph'
 import { useSelectionState } from '../../composables/traits'
 import { useViewport } from '../../composables/useViewport'
 import { getNodeAbsolutePosition } from '../../composables/traits/utils/trait-helpers'
+import { useI18n } from '../../composables/useI18n'
 import type { Node } from '../../types'
 
+const { t } = useI18n()
 const graphStore = useGraphStore()
 const { selectedNodeIds, focusedNodeId } = useSelectionState()
 const { fitWorldBox } = useViewport()
@@ -87,7 +89,7 @@ function handleDoubleClick(node: Node) {
       <input
         v-model="filter"
         type="text"
-        placeholder="Filtrer…"
+        :placeholder="t('outline.filterPlaceholder')"
         class="app-input flex-1 px-2 py-1 text-xs"
       />
       <span class="text-xs app-subtle font-mono">{{ Object.keys(graphStore.nodes).length }}</span>
@@ -108,7 +110,9 @@ function handleDoubleClick(node: Node) {
         <button
           v-if="item.hasChildren"
           class="app-subtle hover:app-muted w-3 flex-shrink-0 transition-colors duration-150"
-          :aria-label="collapsed.has(item.node.id) ? 'Déplier' : 'Replier'"
+          :aria-label="
+            collapsed.has(item.node.id) ? t('outline.ariaExpand') : t('outline.ariaCollapse')
+          "
           @click="toggleCollapse(item.node.id, $event)"
         >
           <component :is="collapsed.has(item.node.id) ? ChevronRight : ChevronDown" :size="12" />
