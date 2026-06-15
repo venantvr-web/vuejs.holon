@@ -18,6 +18,7 @@ import NodeRenderer from './NodeRenderer.vue'
 import EdgeLayer from './EdgeLayer.vue'
 import Minimap from './Minimap.vue'
 import Breadcrumb from './Breadcrumb.vue'
+import CanvasEmptyState from './CanvasEmptyState.vue'
 import SearchPanel from './SearchPanel.vue'
 import NodeArchimateTypePicker from './NodeArchimateTypePicker.vue'
 import { useTypeable, type ArchimateType } from '../../composables/traits/useTypeable'
@@ -127,6 +128,12 @@ const rootNodes = computed(() => {
   return graphStore.rootNodes.filter((n) => isNodeVisible(n, allNodes, visible))
 })
 
+// L'overlay d'onboarding ne s'affiche QUE quand le graphe est strictement
+// vide (zéro noeud, peu importe la sélection ou le viewport). On ne se base
+// pas sur rootNodes filtrés pour éviter un faux empty-state si l'utilisateur
+// panne loin de son contenu.
+const isGraphEmpty = computed(() => Object.keys(graphStore.nodes).length === 0)
+
 // --- Drop depuis la sidebar ---
 function handleDrop(event: DragEvent) {
   event.preventDefault()
@@ -209,7 +216,10 @@ function handleMouseMoveRaw(event: MouseEvent) {
     marquee.value.endY = worldY
   }
 
-  // Mise à jour de l'aperçu de connexion
+  // Mise à jour de l'aperçu de connexion : on lit la ligne fantôme tant que
+  // le mode connexion est actif, sinon on s'assure de nettoyer (cas typique :
+  // toggle off du mode pendant qu'un pointermove est en vol → sans cette
+  // remise à null, l'aperçu restait dessiné).
   if (connectionMode.value && connectionSource.value && svgRoot.value) {
     connectionPreview.value = screenToLocalCoordinates(
       event.clientX,
@@ -217,6 +227,8 @@ function handleMouseMoveRaw(event: MouseEvent) {
       svgRoot.value,
       null
     )
+  } else if (connectionPreview.value) {
+    connectionPreview.value = null
   }
 }
 
@@ -639,6 +651,11 @@ defineExpose({ svgRoot, pan, zoomLevel })
     <div aria-live="polite" aria-atomic="true" class="sr-only">
       {{ liveAnnouncement }}
     </div>
+
+    <!-- Onboarding : carte centrée sur le canevas tant qu'aucun noeud n'existe.
+         Couvre les trois chemins de démarrage (drag, import, F1) et liste les
+         raccourcis non évidents (Shift+drag, Shift+clic, Alt). -->
+    <CanvasEmptyState :visible="isGraphEmpty" />
 
     <svg
       ref="svgRoot"
