@@ -12,6 +12,9 @@ import {
   useStyleable,
   getShapesByCategory,
 } from '../../composables/traits'
+import { useI18n } from '../../composables/useI18n'
+
+const { t } = useI18n()
 
 /**
  * Panneau contextuel d'édition du style d'un noeud (couleurs, forme, type,
@@ -62,7 +65,7 @@ function typesOf(layerConfig: {
       @click.stop
     >
       <!-- Couleurs -->
-      <div class="font-medium mb-2">Couleur de fond</div>
+      <div class="font-medium mb-2">{{ t('stylePanel.backgroundColor') }}</div>
       <div class="grid grid-cols-6 gap-1 mb-3">
         <button
           v-for="color in PRESET_COLORS.slice(0, 24)"
@@ -74,7 +77,7 @@ function typesOf(layerConfig: {
         />
       </div>
 
-      <div class="font-medium mb-2">Couleur de bordure</div>
+      <div class="font-medium mb-2">{{ t('stylePanel.borderColor') }}</div>
       <div class="grid grid-cols-6 gap-1 mb-3">
         <button
           v-for="color in PRESET_COLORS.slice(0, 24)"
@@ -89,12 +92,12 @@ function typesOf(layerConfig: {
       <!-- Formes -->
       <div class="border-t pt-3 mt-3">
         <div class="font-medium mb-2 flex justify-between items-center">
-          <span>Forme: {{ shapeable.shapeLabel.value }}</span>
+          <span>{{ t('stylePanel.shapeLabel', { name: shapeable.shapeLabel.value }) }}</span>
           <button
             @click="showShapePanel = !showShapePanel"
             class="text-xs text-blue-500 hover:text-blue-700"
           >
-            {{ showShapePanel ? 'Masquer' : 'Changer' }}
+            {{ showShapePanel ? t('stylePanel.hideShape') : t('stylePanel.changeShape') }}
           </button>
         </div>
         <div v-if="showShapePanel" class="space-y-2">
@@ -121,12 +124,16 @@ function typesOf(layerConfig: {
       <!-- Types Archimate -->
       <div class="border-t pt-3 mt-3">
         <div class="font-medium mb-2 flex justify-between items-center">
-          <span>Type: {{ typeable.typeLabel.value || 'Aucun' }}</span>
+          <span>{{
+            t('stylePanel.typeLabel', {
+              name: typeable.typeLabel.value || t('stylePanel.typeNone'),
+            })
+          }}</span>
           <button
             @click="showTypePanel = !showTypePanel"
             class="text-xs text-blue-500 hover:text-blue-700"
           >
-            {{ showTypePanel ? 'Masquer' : 'Changer' }}
+            {{ showTypePanel ? t('stylePanel.hideShape') : t('stylePanel.changeShape') }}
           </button>
         </div>
         <div v-if="showTypePanel" class="space-y-2 max-h-40 overflow-y-auto">
@@ -135,7 +142,7 @@ function typesOf(layerConfig: {
             class="w-full text-left p-1 text-xs app-hover rounded"
             :class="{ 'app-surface-3': !typeable.archimateType.value }"
           >
-            Aucun type
+            {{ t('stylePanel.noType') }}
           </button>
           <div v-for="(layerConfig, layerKey) in ARCHIMATE_TYPES" :key="layerKey">
             <div
@@ -161,33 +168,35 @@ function typesOf(layerConfig: {
 
       <!-- Actions -->
       <div class="border-t pt-3 mt-3 space-y-2">
-        <div class="font-medium mb-2">Actions</div>
+        <div class="font-medium mb-2">{{ t('stylePanel.actionsTitle') }}</div>
         <div class="flex flex-wrap gap-2">
           <button
             @click="lockable.toggleLock()"
             class="px-2 py-1 text-xs border rounded app-hover"
             :class="{ 'bg-yellow-100': lockable.isLocked.value }"
           >
-            {{ lockable.isLocked.value ? '🔓 Déverrouiller' : '🔒 Verrouiller' }}
+            {{
+              lockable.isLocked.value ? t('stylePanel.toggleLockOn') : t('stylePanel.toggleLockOff')
+            }}
           </button>
           <button
             @click="zIndexable.bringToFront()"
             class="px-2 py-1 text-xs border rounded app-hover"
           >
-            ↑ Devant
+            {{ t('stylePanel.bringToFront') }}
           </button>
           <button
             @click="zIndexable.sendToBack()"
             class="px-2 py-1 text-xs border rounded app-hover"
           >
-            ↓ Derrière
+            {{ t('stylePanel.sendToBack') }}
           </button>
           <button
             @click="emit('add-to-library')"
             class="px-2 py-1 text-xs border rounded app-hover"
-            v-tooltip="'Sauvegarder ce bloc comme modèle réutilisable'"
+            v-tooltip="t('stylePanel.tooltipAddToLibrary')"
           >
-            📚 Bibliothèque
+            {{ t('stylePanel.addToLibrary') }}
           </button>
         </div>
       </div>

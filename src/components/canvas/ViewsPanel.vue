@@ -4,14 +4,17 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Bookmark, X } from 'lucide-vue-next'
 import { useViewable } from '../../composables/traits'
 import { useViewport } from '../../composables/useViewport'
+import { useI18n } from '../../composables/useI18n'
 
+const { t } = useI18n()
 const { savedViews, saveView, deleteView, activeView } = useViewable()
 const { pan, zoomLevel } = useViewport()
 
 const isOpen = ref(false)
 
 function handleSave() {
-  const name = window.prompt('Nom de la vue :', `Vue ${savedViews.value.length + 1}`)
+  const defaultName = t('views.defaultName', { n: savedViews.value.length + 1 })
+  const name = window.prompt(t('views.savePrompt'), defaultName)
   if (!name) return
   saveView(name, { zoom: zoomLevel.value, pan: { ...pan.value } })
 }
@@ -28,7 +31,7 @@ function handleDelete(event: MouseEvent, viewId: string) {
   event.stopPropagation()
   const view = savedViews.value.find((v) => v.id === viewId)
   if (!view) return
-  if (confirm(`Supprimer la vue « ${view.name} » ?`)) {
+  if (confirm(t('views.deleteConfirm', { name: view.name }))) {
     deleteView(viewId)
   }
 }
@@ -52,10 +55,10 @@ onBeforeUnmount(() => {
       @click="isOpen = !isOpen"
       class="px-3 py-1.5 text-sm rounded transition-colors duration-150 flex items-center gap-1.5"
       :class="isOpen ? 'app-toggle-active' : 'app-btn'"
-      title="Gérer les vues sauvegardées"
+      v-tooltip="t('views.tooltip')"
     >
       <Bookmark :size="16" />
-      <span>Vues ({{ savedViews.length }})</span>
+      <span>{{ t('views.count', { n: savedViews.length }) }}</span>
     </button>
 
     <div
@@ -64,9 +67,9 @@ onBeforeUnmount(() => {
       @mousedown.stop
     >
       <div class="p-2 border-b app-border flex items-center justify-between">
-        <span class="text-sm font-semibold app-fg">Vues sauvegardées</span>
-        <button @click="handleSave" class="text-xs app-link" title="Sauvegarder la vue courante">
-          + Sauver
+        <span class="text-sm font-semibold app-fg">{{ t('views.heading') }}</span>
+        <button @click="handleSave" class="text-xs app-link" v-tooltip="t('views.saveTooltip')">
+          {{ t('views.save') }}
         </button>
       </div>
 
@@ -84,7 +87,7 @@ onBeforeUnmount(() => {
           </div>
           <button
             class="opacity-0 group-hover:opacity-100 app-danger-link ml-2 px-1"
-            title="Supprimer"
+            v-tooltip="t('common.delete')"
             @click="handleDelete($event, view.id)"
           >
             <X :size="14" />
@@ -92,8 +95,8 @@ onBeforeUnmount(() => {
         </li>
       </ul>
       <div v-else class="p-3 text-xs app-subtle text-center">
-        Aucune vue sauvegardée.<br />
-        Cliquez sur « + Sauver » pour capturer la vue courante.
+        {{ t('views.empty') }}<br />
+        {{ t('views.emptyHint') }}
       </div>
     </div>
   </div>

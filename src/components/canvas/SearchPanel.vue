@@ -8,6 +8,8 @@ import { useViewport } from '../../composables/useViewport'
 import { useI18n } from '../../composables/useI18n'
 import { getNodeAbsolutePosition } from '../../composables/traits/utils/trait-helpers'
 
+// (le binding `t` est défini plus bas avec le reste des composables)
+
 interface Props {
   canvasWidth: number
   canvasHeight: number
@@ -17,7 +19,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<{ (e: 'close'): void }>()
 
 const graphStore = useGraphStore()
-const { t } = useI18n()
+const { t, tn } = useI18n()
 const { selectedNodeIds, focusedNodeId } = useSelectionState()
 const { search, searchResults } = useSearchable()
 const { fitWorldBox } = useViewport()
@@ -135,7 +137,8 @@ onBeforeUnmount(() => {
       />
       <button
         class="app-subtle hover:text-[var(--fg)] transition-colors duration-150 px-1"
-        title="Fermer (Échap)"
+        v-tooltip="t('search.closeAria')"
+        :aria-label="t('search.closeAria')"
         @click="emit('close')"
       >
         <X :size="16" />
@@ -167,7 +170,7 @@ onBeforeUnmount(() => {
                 : 'bg-[var(--success-bg)] text-[var(--success)]'
             "
           >
-            {{ item.type === 'node' ? 'N' : 'E' }}
+            {{ item.type === 'node' ? t('search.kindNode') : t('search.kindEdge') }}
           </span>
           <span class="truncate">{{ item.name }}</span>
         </div>
@@ -178,10 +181,11 @@ onBeforeUnmount(() => {
     </ul>
 
     <div class="px-3 py-1.5 border-t text-xs app-subtle flex justify-between">
-      <span
-        ><kbd class="app-kbd">↑↓</kbd> naviguer · <kbd class="app-kbd">Entrée</kbd> centrer</span
-      >
-      <span>{{ items.length }} résultat{{ items.length > 1 ? 's' : '' }}</span>
+      <span>
+        <kbd class="app-kbd">↑↓</kbd> {{ t('search.hintNavigate') }} ·
+        <kbd class="app-kbd">Entrée</kbd> {{ t('search.hintEnter') }}
+      </span>
+      <span>{{ tn('search.results', items.length) }}</span>
     </div>
   </div>
 </template>

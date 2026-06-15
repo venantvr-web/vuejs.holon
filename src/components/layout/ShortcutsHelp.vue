@@ -3,7 +3,9 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { HelpCircle, X } from 'lucide-vue-next'
 import { useKeyboardable, formatShortcut } from '../../composables/traits'
+import { useI18n } from '../../composables/useI18n'
 
+const { t } = useI18n()
 const { getShortcutsByCategory } = useKeyboardable()
 const isOpen = ref(false)
 
@@ -46,8 +48,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey))
     <button
       @click="isOpen = true"
       class="px-2 py-1.5 text-sm app-btn rounded transition-colors duration-150 inline-flex items-center"
-      v-tooltip="'Aide — raccourcis clavier (F1)'"
-      aria-label="Aide — raccourcis clavier (F1)"
+      v-tooltip="t('shortcuts.tooltip')"
+      :aria-label="t('shortcuts.tooltip')"
     >
       <HelpCircle :size="16" />
     </button>
@@ -61,11 +63,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey))
         class="app-surface border app-border rounded-lg shadow-xl w-[640px] max-h-[80vh] flex flex-col"
       >
         <div class="flex items-center justify-between px-4 py-3 border-b app-border">
-          <h2 class="text-base font-semibold">Raccourcis clavier</h2>
+          <h2 class="text-base font-semibold">{{ t('shortcuts.title') }}</h2>
           <button
             @click="isOpen = false"
             class="app-subtle hover:app-muted transition-colors duration-150"
-            aria-label="Fermer l'aide"
+            :aria-label="t('shortcuts.closeAria')"
           >
             <X :size="16" />
           </button>
@@ -110,7 +112,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey))
         <div
           class="px-4 py-2 border-t app-border app-surface-2 text-xs app-subtle flex justify-between"
         >
-          <span>Appuyez sur F1 pour ouvrir/fermer · Échap pour fermer</span>
+          <span>{{ t('shortcuts.f1Hint') }}</span>
         </div>
       </div>
     </div>

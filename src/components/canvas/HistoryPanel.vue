@@ -3,6 +3,7 @@
 import { computed } from 'vue'
 import { History, Undo2, Redo2, Trash2 } from 'lucide-vue-next'
 import { useUndoable, useUndoState } from '../../composables/traits/useUndoable'
+import { useI18n } from '../../composables/useI18n'
 
 /**
  * Panneau d'historique : visualise la pile d'undo/redo sous forme de timeline
@@ -15,6 +16,7 @@ import { useUndoable, useUndoState } from '../../composables/traits/useUndoable'
 const props = defineProps<{ visible: boolean }>()
 const emit = defineEmits<{ (e: 'close'): void }>()
 
+const { t, tn, formatTime } = useI18n()
 const { history, currentIndex } = useUndoState()
 const { canUndo, canRedo, undo, redo, jumpTo, clearHistory } = useUndoable()
 
@@ -34,20 +36,12 @@ const entries = computed(() =>
     .reverse()
 )
 
-function formatTime(ts: number): string {
-  const d = new Date(ts)
-  const hh = String(d.getHours()).padStart(2, '0')
-  const mm = String(d.getMinutes()).padStart(2, '0')
-  const ss = String(d.getSeconds()).padStart(2, '0')
-  return `${hh}:${mm}:${ss}`
-}
-
 function relativeAge(ts: number): string {
   const seconds = Math.max(0, Math.floor((Date.now() - ts) / 1000))
-  if (seconds < 5) return "à l'instant"
-  if (seconds < 60) return `il y a ${seconds} s`
-  if (seconds < 3600) return `il y a ${Math.floor(seconds / 60)} min`
-  return `il y a ${Math.floor(seconds / 3600)} h`
+  if (seconds < 5) return t('history.justNow')
+  if (seconds < 60) return t('history.secondsAgo', { n: seconds })
+  if (seconds < 3600) return t('history.minutesAgo', { n: Math.floor(seconds / 60) })
+  return t('history.hoursAgo', { n: Math.floor(seconds / 3600) })
 }
 </script>
 
@@ -56,17 +50,17 @@ function relativeAge(ts: number): string {
     v-if="props.visible"
     class="app-surface border app-border rounded-lg shadow-lg p-3 text-sm w-72 max-h-[28rem] flex flex-col"
     role="dialog"
-    aria-label="Historique des modifications"
+    :aria-label="t('history.dialogAria')"
   >
     <div class="flex items-center justify-between mb-2">
       <h2 class="font-medium flex items-center gap-2">
         <History :size="16" aria-hidden="true" />
-        Historique
+        {{ t('history.title') }}
       </h2>
       <button
         @click="emit('close')"
         class="app-muted hover:app-fg text-lg leading-none px-1"
-        aria-label="Fermer le panneau historique"
+        :aria-label="t('history.closeAria')"
       >
         ×
       </button>
@@ -78,26 +72,26 @@ function relativeAge(ts: number): string {
         :disabled="!canUndo"
         class="app-btn-primary px-2 py-1 text-xs rounded inline-flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        <Undo2 :size="14" aria-hidden="true" /> Annuler
+        <Undo2 :size="14" aria-hidden="true" /> {{ t('toolbar.undo') }}
       </button>
       <button
         @click="redo"
         :disabled="!canRedo"
         class="app-btn-primary px-2 py-1 text-xs rounded inline-flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        <Redo2 :size="14" aria-hidden="true" /> Rétablir
+        <Redo2 :size="14" aria-hidden="true" /> {{ t('toolbar.redo') }}
       </button>
       <button
         @click="clearHistory"
         class="ml-auto app-danger-link text-xs inline-flex items-center gap-1"
-        v-tooltip="'Effacer tout l’historique (irréversible)'"
+        v-tooltip="t('history.tooltipClearAll')"
       >
-        <Trash2 :size="14" aria-hidden="true" /> Vider
+        <Trash2 :size="14" aria-hidden="true" /> {{ t('history.clearAll') }}
       </button>
     </div>
 
     <div v-if="entries.length === 0" class="text-xs app-subtle text-center py-4">
-      Aucun état dans l'historique.
+      {{ t('history.empty') }}
     </div>
 
     <ol v-else class="overflow-y-auto flex-1 space-y-1" role="list">
@@ -112,13 +106,17 @@ function relativeAge(ts: number): string {
           }"
         >
           <div class="flex items-center justify-between">
-            <span>État #{{ entry.idx + 1 }}</span>
+            <span>{{ t('history.entryLabel', { n: entry.idx + 1 }) }}</span>
             <span class="app-subtle text-[10px]">{{ formatTime(entry.timestamp) }}</span>
           </div>
           <div class="app-muted text-[10px] mt-0.5">
-            {{ entry.nodeCount }} noeud{{ entry.nodeCount > 1 ? 's' : '' }} ·
-            {{ entry.edgeCount }} arête{{ entry.edgeCount > 1 ? 's' : '' }} ·
-            {{ relativeAge(entry.timestamp) }}
+            {{
+              t('history.summary', {
+                nodes: tn('export.nodesCount', entry.nodeCount),
+                edges: tn('export.edgesCount', entry.edgeCount),
+                age: relativeAge(entry.timestamp),
+              })
+            }}
           </div>
         </button>
       </li>

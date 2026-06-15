@@ -4,7 +4,7 @@ import { ref } from 'vue'
 import { Globe } from 'lucide-vue-next'
 import { useI18n, AVAILABLE_LOCALES, type Locale } from '../../composables/useI18n'
 
-const { locale, setLocale } = useI18n()
+const { t, locale, setLocale } = useI18n()
 const isOpen = ref(false)
 
 function choose(v: Locale) {
@@ -18,8 +18,8 @@ function choose(v: Locale) {
     <button
       @click="isOpen = !isOpen"
       class="px-2 py-1.5 text-sm app-btn rounded transition-colors duration-150 inline-flex items-center gap-1.5"
-      v-tooltip="`Langue : ${locale}`"
-      aria-label="Choisir la langue"
+      v-tooltip="t('toolbar.tooltip.language', { locale: locale })"
+      :aria-label="t('toolbar.tooltip.languageAria')"
     >
       <Globe :size="16" />
       <span class="uppercase text-xs font-medium">{{ locale }}</span>

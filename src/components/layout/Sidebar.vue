@@ -22,7 +22,7 @@ function handleDragStart(event: DragEvent, item: LibraryItem) {
 
 function handleRemove(event: MouseEvent, item: LibraryItem) {
   event.stopPropagation()
-  if (confirm(`Supprimer « ${item.name} » de la bibliothèque ?`)) {
+  if (confirm(t('library.removeConfirm', { name: item.name }))) {
     libraryStore.removeItem(item.id)
   }
 }
@@ -61,8 +61,8 @@ function handleRemove(event: MouseEvent, item: LibraryItem) {
               v-if="!item.isBuiltIn"
               @click="handleRemove($event, item)"
               class="opacity-0 group-hover:opacity-100 app-danger-link ml-2 px-1 transition-opacity duration-150"
-              title="Supprimer de la bibliothèque"
-              aria-label="Supprimer de la bibliothèque"
+              v-tooltip="t('library.removeTooltip')"
+              :aria-label="t('library.removeTooltip')"
             >
               <X :size="14" />
             </button>

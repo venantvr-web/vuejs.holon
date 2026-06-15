@@ -8,7 +8,10 @@ import {
   type ArchimateLayer,
 } from '../../composables/traits/useLayerVisibility'
 import { ARCHIMATE_TYPES } from '../../composables/traits/useTypeable'
+import { useI18n } from '../../composables/useI18n'
 import type { Node } from '../../types'
+
+const { t, tn } = useI18n()
 
 /**
  * Panneau de gestion de la visibilité par couche Archimate.
@@ -45,9 +48,9 @@ const counts = computed(() => {
   }
 
   for (const node of Object.values(graphStore.nodes) as Node[]) {
-    const t = node.data?.archimateType as string | undefined
-    if (!t) continue
-    const l = typeToLayer.get(t)
+    const archimateType = node.data?.archimateType as string | undefined
+    if (!archimateType) continue
+    const l = typeToLayer.get(archimateType)
     if (l) result[l]++
   }
   return result
@@ -63,17 +66,17 @@ const totalTyped = computed(() =>
     v-if="props.visible"
     class="app-surface border app-border rounded-lg shadow-lg p-3 text-sm w-72 max-h-[28rem] flex flex-col"
     role="dialog"
-    aria-label="Visibilité par couche Archimate"
+    :aria-label="t('layers.dialogAria')"
   >
     <div class="flex items-center justify-between mb-2">
       <h2 class="font-medium flex items-center gap-2">
         <LayersIcon :size="16" aria-hidden="true" />
-        Couches
+        {{ t('layers.title') }}
       </h2>
       <button
         @click="emit('close')"
         class="app-muted hover:app-fg text-lg leading-none px-1"
-        aria-label="Fermer le panneau couches"
+        :aria-label="t('layers.closeAria')"
       >
         ×
       </button>
@@ -83,18 +86,18 @@ const totalTyped = computed(() =>
       <button
         @click="showAll"
         class="app-btn px-2 py-1 rounded inline-flex items-center gap-1"
-        v-tooltip="'Afficher toutes les couches'"
+        v-tooltip="t('layers.tooltipShowAll')"
       >
-        <Eye :size="12" aria-hidden="true" /> Tout afficher
+        <Eye :size="12" aria-hidden="true" /> {{ t('layers.showAll') }}
       </button>
       <button
         @click="hideAll"
         class="app-btn px-2 py-1 rounded inline-flex items-center gap-1"
-        v-tooltip="'Masquer toutes les couches'"
+        v-tooltip="t('layers.tooltipHideAll')"
       >
-        <EyeOff :size="12" aria-hidden="true" /> Tout masquer
+        <EyeOff :size="12" aria-hidden="true" /> {{ t('layers.hideAll') }}
       </button>
-      <span class="ml-auto app-subtle">{{ totalTyped }} typés</span>
+      <span class="ml-auto app-subtle">{{ tn('layers.typed', totalTyped) }}</span>
     </div>
 
     <ul class="overflow-y-auto flex-1 space-y-1" role="list">
@@ -106,8 +109,8 @@ const totalTyped = computed(() =>
           :aria-pressed="isHidden(layer.key) ? 'false' : 'true'"
           v-tooltip="
             isHidden(layer.key)
-              ? `Afficher la couche ${layer.label}`
-              : `Masquer la couche ${layer.label}`
+              ? t('layers.tooltipShowLayer', { name: layer.label })
+              : t('layers.tooltipHideLayer', { name: layer.label })
           "
         >
           <span

@@ -4,6 +4,9 @@ import { toRef, computed } from 'vue'
 import { useStyleable, PRESET_COLORS } from '../../../composables/traits/useStyleable'
 import { useTypeable } from '../../../composables/traits/useTypeable'
 import { useGraphStore } from '../../../stores/graph'
+import { useI18n } from '../../../composables/useI18n'
+
+const { t } = useI18n()
 
 interface Props {
   nodeId: string
@@ -54,7 +57,7 @@ function applyCustomStroke(value: string) {
 
 <template>
   <section class="p-3 border-b app-border">
-    <h3 class="app-section-title mb-2">Apparence</h3>
+    <h3 class="app-section-title mb-2">{{ t('section.style.title') }}</h3>
 
     <!-- Indicateur Archimate + retour à la couleur de layer -->
     <div
@@ -62,18 +65,20 @@ function applyCustomStroke(value: string) {
       class="mb-3 p-2 rounded border app-border flex items-center justify-between gap-2"
       :style="{ backgroundColor: typeTintFill }"
     >
-      <span class="text-xs app-fg truncate"> Type {{ typeLabel }} — couleur surchargée </span>
+      <span class="text-xs app-fg truncate">
+        {{ t('section.style.typeOverride', { label: typeLabel }) }}
+      </span>
       <button
         class="text-xs app-link flex-shrink-0"
-        title="Revenir à la couleur de la layer Archimate"
+        v-tooltip="t('section.style.revertTooltip')"
         @click="clearCustomFill"
       >
-        Revenir au type
+        {{ t('section.style.revertType') }}
       </button>
     </div>
 
     <!-- Couleur de fond -->
-    <label class="block text-xs app-muted mb-1">Couleur de fond</label>
+    <label class="block text-xs app-muted mb-1">{{ t('section.style.fill') }}</label>
     <div class="grid grid-cols-10 gap-0.5 mb-2">
       <button
         v-for="color in PALETTE"
@@ -83,7 +88,7 @@ function applyCustomStroke(value: string) {
         :class="{
           'ring-2 app-ring-accent z-10 relative': currentStyle.fill === color && hasCustomFill,
         }"
-        :title="color"
+        v-tooltip="color"
         @click="pickFill(color)"
       />
     </div>
@@ -92,14 +97,14 @@ function applyCustomStroke(value: string) {
         type="color"
         :value="currentStyle.fill"
         class="w-7 h-7 border app-border rounded cursor-pointer"
-        title="Couleur personnalisée"
+        v-tooltip="t('section.style.customColor')"
         @input="applyCustomFill(($event.target as HTMLInputElement).value)"
       />
       <code class="text-xs app-subtle font-mono">{{ currentStyle.fill }}</code>
     </div>
 
     <!-- Couleur de bordure -->
-    <label class="block text-xs app-muted mb-1">Couleur de bordure</label>
+    <label class="block text-xs app-muted mb-1">{{ t('section.style.stroke') }}</label>
     <div class="grid grid-cols-10 gap-0.5 mb-2">
       <button
         v-for="color in PALETTE"
@@ -107,7 +112,7 @@ function applyCustomStroke(value: string) {
         :style="{ backgroundColor: color }"
         class="w-5 h-5 rounded-sm border app-border hover:scale-125 transition-transform"
         :class="{ 'ring-2 app-ring-accent z-10 relative': currentStyle.stroke === color }"
-        :title="color"
+        v-tooltip="color"
         @click="updateStroke(color)"
       />
     </div>
@@ -116,7 +121,7 @@ function applyCustomStroke(value: string) {
         type="color"
         :value="currentStyle.stroke"
         class="w-7 h-7 border app-border rounded cursor-pointer"
-        title="Couleur personnalisée"
+        v-tooltip="t('section.style.customColor')"
         @input="applyCustomStroke(($event.target as HTMLInputElement).value)"
       />
       <code class="text-xs app-subtle font-mono">{{ currentStyle.stroke }}</code>
@@ -124,7 +129,7 @@ function applyCustomStroke(value: string) {
 
     <!-- Épaisseur de bordure -->
     <label class="flex items-center justify-between text-xs app-muted mb-1">
-      <span>Épaisseur de bordure</span>
+      <span>{{ t('section.style.strokeWidth') }}</span>
       <span class="font-mono">{{ currentStyle.strokeWidth }} px</span>
     </label>
     <input
@@ -139,7 +144,7 @@ function applyCustomStroke(value: string) {
 
     <!-- Opacité -->
     <label class="flex items-center justify-between text-xs app-muted mb-1">
-      <span>Opacité</span>
+      <span>{{ t('section.style.opacity') }}</span>
       <span class="font-mono">{{ Math.round(currentStyle.opacity * 100) }} %</span>
     </label>
     <input

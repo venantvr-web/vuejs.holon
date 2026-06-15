@@ -1,5 +1,6 @@
 // src/composables/traits/useExportable.ts
 import { useGraphStore } from '../../stores/graph'
+import { useI18n } from '../useI18n'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 import { ARCHIMATE_TYPES, type ArchimateLayer } from './useTypeable'
@@ -126,6 +127,7 @@ export interface ExportableHandlers {
  */
 export function useExportable(): ExportableHandlers {
   const graphStore = useGraphStore()
+  const { t, tn, formatDate } = useI18n()
 
   /**
    * Trouve l'élément SVG du canvas.
@@ -246,7 +248,7 @@ export function useExportable(): ExportableHandlers {
     const {
       quality = 0.95,
       scale = 2,
-      title = 'Holon Architecture Model',
+      title = t('export.modelTitle'),
       author,
       includeTOC = true,
       includeOverview = true,
@@ -296,22 +298,14 @@ export function useExportable(): ExportableHandlers {
     pdf.setFont('helvetica', 'normal')
     pdf.setFontSize(12)
     pdf.setTextColor(90)
-    const dateText = new Date().toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-    pdf.text(`Exporté le ${dateText}`, pageW / 2, 100, { align: 'center' })
-    if (author) pdf.text(`Par ${author}`, pageW / 2, 108, { align: 'center' })
+    const dateText = formatDate(new Date())
+    pdf.text(t('export.exportedOn', { date: dateText }), pageW / 2, 100, { align: 'center' })
+    if (author) pdf.text(t('export.byAuthor', { author }), pageW / 2, 108, { align: 'center' })
 
     pdf.setFontSize(11)
     pdf.setTextColor(120)
-    pdf.text(`${nodes.length} noeud${nodes.length > 1 ? 's' : ''}`, pageW / 2, 124, {
-      align: 'center',
-    })
-    pdf.text(`${edges.length} relation${edges.length > 1 ? 's' : ''}`, pageW / 2, 132, {
-      align: 'center',
-    })
+    pdf.text(tn('export.nodesCount', nodes.length), pageW / 2, 124, { align: 'center' })
+    pdf.text(tn('export.edgesCount', edges.length), pageW / 2, 132, { align: 'center' })
     pdf.setTextColor(0)
 
     // --- Table des matières (placeholder ; remplie après) ---
@@ -328,7 +322,7 @@ export function useExportable(): ExportableHandlers {
       overviewPageNumber = pdf.getNumberOfPages()
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(18)
-      pdf.text("Vue d'ensemble", margin, margin + 8)
+      pdf.text(t('export.overview'), margin, margin + 8)
       pdf.setDrawColor(200)
       pdf.line(margin, margin + 12, pageW - margin, margin + 12)
 
@@ -359,18 +353,14 @@ export function useExportable(): ExportableHandlers {
         pdf.rect(margin, margin + 2, 6, 6, 'F')
         pdf.setFont('helvetica', 'bold')
         pdf.setFontSize(18)
-        pdf.text(`Couche ${layer.label}`, margin + 10, margin + 8)
+        pdf.text(t('export.layerSection', { name: layer.label }), margin + 10, margin + 8)
         pdf.setDrawColor(200)
         pdf.line(margin, margin + 12, pageW - margin, margin + 12)
 
         pdf.setFont('helvetica', 'normal')
         pdf.setFontSize(10)
         pdf.setTextColor(120)
-        pdf.text(
-          `${layerNodes.length} élément${layerNodes.length > 1 ? 's' : ''}`,
-          margin,
-          margin + 18
-        )
+        pdf.text(tn('export.elementsCount', layerNodes.length), margin, margin + 18)
         pdf.setTextColor(0)
 
         // Liste des éléments, paginée si nécessaire.
@@ -405,7 +395,7 @@ export function useExportable(): ExportableHandlers {
       pdf.setPage(tocPageNumber)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(18)
-      pdf.text('Table des matières', margin, margin + 8)
+      pdf.text(t('export.tableOfContents'), margin, margin + 8)
       pdf.setDrawColor(200)
       pdf.line(margin, margin + 12, pageW - margin, margin + 12)
 
@@ -414,7 +404,7 @@ export function useExportable(): ExportableHandlers {
       let y = margin + 24
       const entries: Array<{ label: string; page: number }> = []
       if (overviewPageNumber > 0) {
-        entries.push({ label: "Vue d'ensemble", page: overviewPageNumber })
+        entries.push({ label: t('export.overview'), page: overviewPageNumber })
       }
       entries.push(...layerSections)
       for (const entry of entries) {

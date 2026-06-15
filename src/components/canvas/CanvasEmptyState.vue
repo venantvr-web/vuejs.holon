@@ -1,20 +1,18 @@
 <!-- src/components/canvas/CanvasEmptyState.vue -->
 <script setup lang="ts">
 import { Sparkles, MoveRight, Keyboard, Upload } from 'lucide-vue-next'
+import { useI18n } from '../../composables/useI18n'
 
 /**
  * Overlay affiché par-dessus le canevas quand le graphe est vide.
  *
- * Apporte un onboarding minimal : explique d'où viennent les noeuds (la
- * bibliothèque), rappelle l'import JSON, et liste les trois raccourcis
- * non évidents (Shift+drag pour la marquee, Shift+clic pour amorcer une
- * connexion, Alt pendant le drag pour neutraliser le magnétisme).
- *
- * Visuel : surface translucide centrée, n'intercepte que les clics sur ses
- * propres éléments interactifs ; le canevas reste atteignable au pointeur
- * en-dehors de la carte.
+ * Onboarding minimal : explique d'où viennent les noeuds (la bibliothèque),
+ * rappelle l'import JSON, et liste les trois raccourcis non évidents
+ * (Shift+drag pour la marquee, Shift+clic pour amorcer une connexion, Alt
+ * pendant le drag pour neutraliser le magnétisme).
  */
 defineProps<{ visible: boolean }>()
+const { t } = useI18n()
 </script>
 
 <template>
@@ -26,54 +24,50 @@ defineProps<{ visible: boolean }>()
     <div
       class="pointer-events-auto app-surface border app-border rounded-xl shadow-lg max-w-lg mx-4 p-6 text-sm"
       role="status"
-      aria-label="Bienvenue sur Holon — guide rapide"
+      :aria-label="t('emptyState.welcomeLabel')"
     >
       <h2 class="text-base font-semibold flex items-center gap-2 mb-2">
         <Sparkles :size="18" class="text-[var(--accent)]" aria-hidden="true" />
-        Commençons un nouveau modèle
+        {{ t('emptyState.title') }}
       </h2>
-      <p class="app-muted mb-4">Le canevas est vide. Plusieurs façons de démarrer&nbsp;:</p>
+      <p class="app-muted mb-4">{{ t('emptyState.intro') }}</p>
 
       <ul class="space-y-2 mb-5">
         <li class="flex items-start gap-2">
           <MoveRight :size="16" class="mt-0.5 app-subtle" aria-hidden="true" />
           <span>
-            Glissez un bloc depuis la
-            <span class="font-medium">Bibliothèque</span>
-            (panneau de gauche) vers le canevas.
+            {{ t('emptyState.dragFromLibrary', { library: t('sidebar.library') }) }}
           </span>
         </li>
         <li class="flex items-start gap-2">
           <Upload :size="16" class="mt-0.5 app-subtle" aria-hidden="true" />
           <span>
-            Importez un modèle existant (JSON Holon ou Archimate XML) avec le bouton
-            <span class="font-medium">Importer</span> de la barre d'outils.
+            {{ t('emptyState.importExisting', { import: t('toolbar.import') }) }}
           </span>
         </li>
         <li class="flex items-start gap-2">
           <Keyboard :size="16" class="mt-0.5 app-subtle" aria-hidden="true" />
           <span>
-            Appuyez sur
-            <kbd class="app-kbd">F1</kbd>
-            pour voir tous les raccourcis clavier.
+            {{ t('emptyState.pressF1', { f1: 'F1' }) }}
           </span>
         </li>
       </ul>
 
       <div class="border-t app-border pt-3">
-        <p class="text-xs app-muted mb-2 font-medium">Raccourcis utiles</p>
+        <p class="text-xs app-muted mb-2 font-medium">{{ t('emptyState.shortcutsTitle') }}</p>
         <ul class="text-xs space-y-1">
           <li class="flex justify-between gap-4">
-            <span class="app-subtle">Sélection rectangle</span>
-            <kbd class="app-kbd">Shift + glisser</kbd>
+            <span class="app-subtle">{{ t('emptyState.shortcutMarquee') }}</span>
+            <kbd class="app-kbd">Shift + {{ t('common.drag') }}</kbd>
           </li>
           <li class="flex justify-between gap-4">
-            <span class="app-subtle">Relier deux noeuds</span>
+            <span class="app-subtle">{{ t('emptyState.shortcutConnect') }}</span>
             <kbd class="app-kbd">Shift + clic</kbd>
           </li>
           <li class="flex justify-between gap-4">
-            <span class="app-subtle">Désactiver le magnétisme</span>
-            <kbd class="app-kbd">Alt</kbd> (pendant le drag)
+            <span class="app-subtle">{{ t('emptyState.shortcutNoSnap') }}</span>
+            <kbd class="app-kbd">Alt</kbd>
+            <span class="text-xs app-subtle">{{ t('emptyState.duringDrag') }}</span>
           </li>
         </ul>
       </div>

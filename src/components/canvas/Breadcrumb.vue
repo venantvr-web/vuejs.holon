@@ -6,6 +6,9 @@ import { useGraphStore } from '../../stores/graph'
 import { useSelectionState } from '../../composables/traits'
 import { useViewport } from '../../composables/useViewport'
 import { getNodeAbsolutePosition } from '../../composables/traits/utils/trait-helpers'
+import { useI18n } from '../../composables/useI18n'
+
+const { t } = useI18n()
 
 interface Props {
   canvasWidth: number
@@ -31,7 +34,7 @@ interface Crumb {
 }
 
 const crumbs = computed((): Crumb[] => {
-  const result: Crumb[] = [{ id: null, label: 'Racine' }]
+  const result: Crumb[] = [{ id: null, label: t('breadcrumb.root') }]
   let currentId = activeNodeId.value
   const chain: Crumb[] = []
   while (currentId) {
@@ -77,7 +80,7 @@ function focusCrumb(crumb: Crumb) {
           'font-semibold app-fg': i === crumbs.length - 1,
           'app-muted': i !== crumbs.length - 1,
         }"
-        :title="crumb.label"
+        v-tooltip="crumb.label"
         @click="focusCrumb(crumb)"
       >
         {{ crumb.label }}

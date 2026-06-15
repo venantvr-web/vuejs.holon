@@ -2,12 +2,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGraphStore } from '../../../stores/graph'
+import { useI18n } from '../../../composables/useI18n'
 
 interface LabelSectionProps {
   edgeId: string
 }
 
 const props = defineProps<LabelSectionProps>()
+const { t } = useI18n()
 const graphStore = useGraphStore()
 
 const edge = computed(() => graphStore.edges[props.edgeId])
@@ -37,23 +39,27 @@ const comment = computed({
 
 <template>
   <div class="label-section p-3 border-b app-border">
-    <h3 class="app-section-title mb-3">Libellé</h3>
+    <h3 class="app-section-title mb-3">{{ t('section.label.title') }}</h3>
 
-    <label class="block text-xs app-muted mb-1" for="edge-name">Nom</label>
+    <label class="block text-xs app-muted mb-1" for="edge-name">{{
+      t('section.label.label')
+    }}</label>
     <input
       id="edge-name"
       v-model="name"
       type="text"
-      placeholder="ex. implémente, utilise, flux de données…"
+      :placeholder="t('section.label.placeholder')"
       class="app-input w-full px-2 py-1 text-sm mb-3"
     />
 
-    <label class="block text-xs app-muted mb-1" for="edge-comment">Commentaire</label>
+    <label class="block text-xs app-muted mb-1" for="edge-comment">{{
+      t('section.label.comment')
+    }}</label>
     <textarea
       id="edge-comment"
       v-model="comment"
       rows="3"
-      placeholder="Description libre, notes, justification…"
+      :placeholder="t('section.label.commentPlaceholder')"
       class="app-input w-full px-2 py-1 text-sm resize-y"
     />
   </div>

@@ -3,6 +3,7 @@
 import { ref, toRef } from 'vue'
 import { Check, X } from 'lucide-vue-next'
 import { useTaggable } from '../../../composables/traits/useTaggable'
+import { useI18n } from '../../../composables/useI18n'
 
 interface Props {
   nodeId: string
@@ -10,6 +11,7 @@ interface Props {
 const props = defineProps<Props>()
 const nodeIdRef = toRef(props, 'nodeId')
 
+const { t } = useI18n()
 const { tags, availableTags, toggleTag, createTag } = useTaggable({ nodeId: nodeIdRef })
 
 const picker = ref(false)
@@ -33,9 +35,9 @@ function isApplied(tagId: string): boolean {
 <template>
   <section class="p-3 border-b app-border">
     <div class="flex items-center justify-between mb-2">
-      <h3 class="app-section-title">Tags</h3>
+      <h3 class="app-section-title">{{ t('section.tags.title') }}</h3>
       <button class="text-xs app-link" @click="picker = !picker">
-        {{ picker ? 'Fermer' : '+ Ajouter' }}
+        {{ picker ? t('common.close') : t('section.tags.add') }}
       </button>
     </div>
 
@@ -46,24 +48,24 @@ function isApplied(tagId: string): boolean {
         :key="tag.id"
         class="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full text-white"
         :style="{ backgroundColor: tag.color }"
-        :title="tag.description"
+        v-tooltip="tag.description"
       >
         {{ tag.label }}
         <button
           class="hover:opacity-75 transition-opacity duration-150"
           @click="toggleTag(tag.id)"
-          :title="`Retirer ${tag.label}`"
-          :aria-label="`Retirer ${tag.label}`"
+          v-tooltip="t('section.tags.removeTag', { label: tag.label })"
+          :aria-label="t('section.tags.removeTag', { label: tag.label })"
         >
           <X :size="12" />
         </button>
       </span>
     </div>
-    <div v-else class="text-xs app-subtle italic mb-2">Aucun tag appliqué.</div>
+    <div v-else class="text-xs app-subtle italic mb-2">{{ t('section.tags.empty') }}</div>
 
     <!-- Picker -->
     <div v-if="picker" class="border app-border rounded app-surface-2 p-2 space-y-2">
-      <div class="text-xs font-medium app-muted">Tags disponibles</div>
+      <div class="text-xs font-medium app-muted">{{ t('section.tags.available') }}</div>
       <div class="flex flex-wrap gap-1">
         <button
           v-for="tag in availableTags"
@@ -74,7 +76,7 @@ function isApplied(tagId: string): boolean {
             color: 'white',
             opacity: isApplied(tag.id) ? 1 : 0.5,
           }"
-          :title="tag.description"
+          v-tooltip="tag.description"
           @click="toggleTag(tag.id)"
         >
           <Check v-if="isApplied(tag.id)" :size="12" />
@@ -83,12 +85,12 @@ function isApplied(tagId: string): boolean {
       </div>
 
       <div class="border-t pt-2 space-y-1">
-        <div class="text-xs font-medium app-muted">Créer un tag</div>
+        <div class="text-xs font-medium app-muted">{{ t('section.tags.create') }}</div>
         <div class="flex items-center gap-2">
           <input
             v-model="newLabel"
             type="text"
-            placeholder="Nom du tag…"
+            :placeholder="t('section.tags.newName')"
             class="app-input flex-1 px-2 py-1 text-xs"
             @keydown.enter="handleCreate"
           />
@@ -102,7 +104,7 @@ function isApplied(tagId: string): boolean {
             :disabled="!newLabel.trim()"
             @click="handleCreate"
           >
-            OK
+            {{ t('common.ok') }}
           </button>
         </div>
       </div>

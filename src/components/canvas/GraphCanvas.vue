@@ -662,7 +662,7 @@ defineExpose({ svgRoot, pan, zoomLevel })
       width="100%"
       height="100%"
       role="application"
-      aria-label="Canevas d'édition de graphe"
+      :aria-label="t('canvas.ariaLabel')"
       @wheel="handleWheel"
       @pointerdown="handleMouseDown"
       @pointermove="handleMouseMove"

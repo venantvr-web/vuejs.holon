@@ -4,8 +4,11 @@ import { computed } from 'vue'
 import { MousePointerClick } from 'lucide-vue-next'
 import { useEdgeSelectionState } from '../../composables/useEdgeSelection'
 import { useSelectionState } from '../../composables/traits/useSelectable'
+import { useI18n } from '../../composables/useI18n'
 import EdgeInspector from '../inspectors/EdgeInspector.vue'
 import NodeInspector from '../inspectors/NodeInspector.vue'
+
+const { t, tn } = useI18n()
 
 const { selectedEdgeId } = useEdgeSelectionState()
 const { selectedNodeIds } = useSelectionState()
@@ -33,13 +36,13 @@ const selectedId = computed(() => {
       <EdgeInspector v-if="selectionType === 'edge' && selectedId" :edge-id="selectedId" />
       <NodeInspector v-else-if="selectionType === 'node' && selectedId" :node-id="selectedId" />
       <div v-else-if="selectionType === 'multi'" class="p-4 text-sm app-muted">
-        <p>Multi-sélection</p>
-        <p class="mt-2 text-xs">{{ selectedNodeIds.size }} éléments sélectionnés</p>
+        <p>{{ t('inspector.multiSelection') }}</p>
+        <p class="mt-2 text-xs">{{ tn('inspector.selectedCount', selectedNodeIds.size) }}</p>
       </div>
       <div v-else class="p-4 text-sm app-subtle text-center mt-8">
         <MousePointerClick :size="40" class="mx-auto mb-2 opacity-50" aria-hidden="true" />
-        <p>Aucune sélection</p>
-        <p class="text-xs mt-2">Cliquez sur un élément pour voir ses propriétés</p>
+        <p>{{ t('inspector.noSelection') }}</p>
+        <p class="text-xs mt-2">{{ t('inspector.clickToInspect') }}</p>
       </div>
     </div>
   </aside>
