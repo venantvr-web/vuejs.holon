@@ -14,8 +14,10 @@ import {
   ArrowType,
   ARROW_MARKERS,
 } from '../../composables/traits'
+import { useI18n } from '../../composables/useI18n'
 import type { Edge } from '../../types'
 
+const { t } = useI18n()
 const { zoomLevel } = useViewport()
 const { isDarkMode } = useThemeable()
 // Facteur inverse du zoom pour conserver la taille d'écran des libellés.
@@ -426,7 +428,9 @@ function getMarkerUrl(edge: Edge, position: 'start' | 'end', isSelected: boolean
       :opacity="edge.dimmed ? 0.25 : undefined"
       role="button"
       tabindex="0"
-      :aria-label="edge.label ? `Relation : ${edge.label}` : `Relation entre noeuds`"
+      :aria-label="
+        edge.label ? t('edge.ariaWithLabel', { label: edge.label }) : t('edge.ariaWithoutLabel')
+      "
       :aria-selected="selectedEdgeId === edge.id"
       @click="selectEdge(edge.id, $event)"
       @contextmenu="handleEdgeContextMenu(edge.id, $event)"

@@ -3,6 +3,9 @@
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { ChevronLeft, ChevronRight, X } from 'lucide-vue-next'
 import manualSource from '../../docs/user-manual.md?raw'
+import { useI18n } from '../../composables/useI18n'
+
+const { t } = useI18n()
 
 const emit = defineEmits<{ (e: 'close'): void }>()
 
@@ -162,15 +165,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey))
       <header class="px-4 py-3 border-b app-border flex items-center justify-between">
         <div>
           <div class="text-xs font-semibold uppercase tracking-wide app-subtle">
-            Guide utilisateur · onboarding
+            {{ t('manual.header') }}
           </div>
           <h2 class="text-lg font-semibold app-fg">{{ current?.title }}</h2>
         </div>
         <button
           @click="emit('close')"
           class="app-subtle hover:app-muted transition-colors duration-150"
-          aria-label="Fermer"
-          title="Fermer (Échap)"
+          :aria-label="t('manual.closeAria')"
+          v-tooltip="t('manual.closeTooltip')"
         >
           <X :size="18" />
         </button>
@@ -203,7 +206,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey))
           class="app-btn px-3 py-1.5 rounded text-sm flex items-center gap-1 transition-colors duration-150"
         >
           <ChevronLeft :size="16" />
-          Précédent
+          {{ t('manual.previous') }}
         </button>
         <span class="text-xs app-subtle font-mono"> {{ index + 1 }} / {{ total }} </span>
         <button
@@ -211,7 +214,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKey))
           :disabled="!canNext"
           class="app-btn px-3 py-1.5 rounded text-sm flex items-center gap-1 transition-colors duration-150"
         >
-          Suivant
+          {{ t('manual.next') }}
           <ChevronRight :size="16" />
         </button>
       </footer>

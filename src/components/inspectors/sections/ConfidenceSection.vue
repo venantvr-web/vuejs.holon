@@ -8,6 +8,9 @@ import {
   MATURITY_DESCRIPTIONS,
   MATURITY_VISUAL_STYLES,
 } from '../../../composables/traits/useModelingConfidence'
+import { useI18n } from '../../../composables/useI18n'
+
+const { t } = useI18n()
 
 interface Props {
   nodeId: string
@@ -24,14 +27,14 @@ const MATURITIES = Object.values(ModelingMaturity)
 
 <template>
   <section class="p-3 border-b app-border">
-    <h3 class="app-section-title mb-2">Maturité du modèle</h3>
+    <h3 class="app-section-title mb-2">{{ t('section.confidence.title') }}</h3>
 
     <!-- État courant -->
     <div class="flex items-center gap-2 mb-3">
       <span
         class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
         :style="{ backgroundColor: visualStyle.badgeColor }"
-        :title="MATURITY_DESCRIPTIONS[maturity]"
+        v-tooltip="MATURITY_DESCRIPTIONS[maturity]"
       >
         {{ visualStyle.badge }}
       </span>
@@ -40,7 +43,7 @@ const MATURITIES = Object.values(ModelingMaturity)
 
     <!-- Échelle -->
     <div class="mb-3">
-      <label class="block text-xs app-muted mb-1">Niveau</label>
+      <label class="block text-xs app-muted mb-1">{{ t('section.confidence.level') }}</label>
       <div class="grid grid-cols-7 gap-0.5">
         <button
           v-for="level in MATURITIES"
@@ -53,7 +56,12 @@ const MATURITIES = Object.values(ModelingMaturity)
             borderColor:
               maturity === level ? MATURITY_VISUAL_STYLES[level].badgeColor : 'transparent',
           }"
-          :title="`${MATURITY_LABELS[level]} — ${MATURITY_DESCRIPTIONS[level]}`"
+          v-tooltip="
+            t('section.confidence.levelTooltip', {
+              label: MATURITY_LABELS[level],
+              description: MATURITY_DESCRIPTIONS[level],
+            })
+          "
           @click="setMaturity(level)"
         >
           {{ MATURITY_VISUAL_STYLES[level].badge }}
@@ -64,7 +72,7 @@ const MATURITIES = Object.values(ModelingMaturity)
     <!-- Confiance (0–100%) -->
     <div>
       <label class="flex items-center justify-between text-xs app-muted mb-1">
-        <span>Confiance</span>
+        <span>{{ t('section.confidence.confidence') }}</span>
         <span class="font-mono">{{ Math.round(confidence * 100) }} %</span>
       </label>
       <input

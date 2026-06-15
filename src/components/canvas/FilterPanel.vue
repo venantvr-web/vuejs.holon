@@ -3,6 +3,7 @@
 import { ref, computed } from 'vue'
 import { Filter, X } from 'lucide-vue-next'
 import { useFilterable, PRESET_QUERIES } from '../../composables/traits'
+import { useI18n } from '../../composables/useI18n'
 
 /**
  * Panneau de filtrage par requête DSL.
@@ -12,6 +13,7 @@ import { useFilterable, PRESET_QUERIES } from '../../composables/traits'
  * La grammaire du DSL est documentée dans utils/filter-dsl.ts.
  */
 
+const { t, tn } = useI18n()
 const {
   query,
   queryError,
@@ -31,7 +33,7 @@ const open = ref(false)
 const helpOpen = ref(false)
 
 const buttonLabel = computed(() =>
-  isFilterActive.value ? `Filtre (${excludedCount.value})` : 'Filtre'
+  isFilterActive.value ? t('filter.labelCount', { n: excludedCount.value }) : t('filter.label')
 )
 
 function applyPreset(preset: { query: string; invert?: boolean }) {
@@ -40,7 +42,7 @@ function applyPreset(preset: { query: string; invert?: boolean }) {
 }
 
 function handleSave() {
-  const name = window.prompt('Nom du filtre :', query.value)
+  const name = window.prompt(t('filter.savePrompt'), query.value)
   if (name) saveFilter(name)
 }
 
@@ -55,7 +57,7 @@ function handleClear() {
       @click="open = !open"
       class="px-3 py-1.5 text-sm rounded transition-colors"
       :class="isFilterActive ? 'app-toggle-active' : 'app-btn'"
-      title="Filtrer le diagramme par requête (masquer ou estomper des éléments)"
+      v-tooltip="t('filter.tooltipMain')"
       aria-haspopup="dialog"
       :aria-expanded="open"
     >
@@ -68,18 +70,18 @@ function handleClear() {
       v-if="open"
       class="absolute top-full right-0 mt-1 app-surface border app-border rounded shadow-lg p-3 w-96 z-40 text-sm"
       role="dialog"
-      aria-label="Filtre du diagramme"
+      :aria-label="t('filter.dialogAria')"
     >
       <!-- Requête DSL -->
       <label class="block text-xs font-semibold app-subtle uppercase mb-1" for="filter-query">
-        Requête
+        {{ t('filter.queryLabel') }}
       </label>
       <input
         id="filter-query"
         :value="query"
         @input="setQuery(($event.target as HTMLInputElement).value)"
         type="text"
-        placeholder="ex. couche:business et non tag:obsolète"
+        :placeholder="t('filter.placeholder')"
         spellcheck="false"
         autocomplete="off"
         class="app-input w-full px-2 py-1.5 font-mono text-xs"
@@ -91,45 +93,45 @@ function handleClear() {
       <!-- Sens du filtre + mode d'affichage -->
       <div class="flex items-center flex-wrap gap-x-4 gap-y-2 mt-3">
         <div class="flex items-center gap-2">
-          <span class="text-xs app-subtle">Correspondants</span>
+          <span class="text-xs app-subtle">{{ t('filter.matching') }}</span>
           <div class="flex rounded overflow-hidden border app-border">
             <button
               class="px-2 py-1 text-xs transition-colors"
               :class="!invertQuery ? 'app-toggle-active' : 'app-hover'"
               @click="invertQuery = false"
-              title="Seuls les éléments correspondants (et leurs parents) restent visibles"
+              v-tooltip="t('filter.tooltipKept')"
             >
-              conservés
+              {{ t('filter.kept') }}
             </button>
             <button
               class="px-2 py-1 text-xs transition-colors border-l app-border"
               :class="invertQuery ? 'app-toggle-active' : 'app-hover'"
               @click="invertQuery = true"
-              title="Les éléments correspondants (et leurs enfants) sont écartés"
+              v-tooltip="t('filter.tooltipDiscarded')"
             >
-              écartés
+              {{ t('filter.discarded') }}
             </button>
           </div>
         </div>
 
         <div class="flex items-center gap-2">
-          <span class="text-xs app-subtle">Effet</span>
+          <span class="text-xs app-subtle">{{ t('filter.effect') }}</span>
           <div class="flex rounded overflow-hidden border app-border">
             <button
               class="px-2 py-1 text-xs transition-colors"
               :class="displayMode === 'dim' ? 'app-toggle-active' : 'app-hover'"
               @click="displayMode = 'dim'"
-              title="Les éléments écartés sont estompés"
+              v-tooltip="t('filter.tooltipDim')"
             >
-              Estomper
+              {{ t('filter.styleDim') }}
             </button>
             <button
               class="px-2 py-1 text-xs transition-colors border-l app-border"
               :class="displayMode === 'hide' ? 'app-toggle-active' : 'app-hover'"
               @click="displayMode = 'hide'"
-              title="Les éléments écartés sont retirés du rendu"
+              v-tooltip="t('filter.tooltipMask')"
             >
-              Masquer
+              {{ t('filter.styleMask') }}
             </button>
           </div>
         </div>
@@ -137,13 +139,15 @@ function handleClear() {
 
       <!-- Raccourcis prédéfinis -->
       <div class="mt-3">
-        <div class="text-xs font-semibold app-subtle uppercase mb-1">Raccourcis</div>
+        <div class="text-xs font-semibold app-subtle uppercase mb-1">
+          {{ t('filter.shortcuts') }}
+        </div>
         <div class="flex flex-wrap gap-1">
           <button
             v-for="preset in PRESET_QUERIES"
             :key="preset.label"
             class="px-2 py-0.5 text-xs app-btn rounded-full transition-colors"
-            :title="preset.query"
+            v-tooltip="preset.query"
             @click="applyPreset(preset)"
           >
             {{ preset.label }}
@@ -153,7 +157,7 @@ function handleClear() {
 
       <!-- Filtres sauvegardés -->
       <div v-if="savedFilters.length" class="mt-3">
-        <div class="text-xs font-semibold app-subtle uppercase mb-1">Filtres sauvegardés</div>
+        <div class="text-xs font-semibold app-subtle uppercase mb-1">{{ t('filter.saved') }}</div>
         <ul class="max-h-32 overflow-y-auto">
           <li
             v-for="filter in savedFilters"
@@ -162,14 +166,14 @@ function handleClear() {
           >
             <button
               class="flex-1 text-left text-xs truncate"
-              :title="filter.query"
+              v-tooltip="filter.query"
               @click="loadFilter(filter.id)"
             >
               {{ filter.name }}
             </button>
             <button
               class="app-danger-link"
-              :aria-label="`Supprimer le filtre ${filter.name}`"
+              :aria-label="t('filter.deleteOne', { name: filter.name })"
               @click="deleteFilter(filter.id)"
             >
               <X class="w-3.5 h-3.5" />
@@ -180,24 +184,21 @@ function handleClear() {
 
       <!-- Aide syntaxe -->
       <button class="mt-3 text-xs app-subtle hover:underline" @click="helpOpen = !helpOpen">
-        {{ helpOpen ? 'Masquer la syntaxe' : 'Aide sur la syntaxe…' }}
+        {{ helpOpen ? t('filter.syntaxHide') : t('filter.syntaxShow') }}
       </button>
       <div v-if="helpOpen" class="mt-1 text-xs app-subtle space-y-0.5 border-l-2 app-border pl-2">
-        <p><code>mot</code> — le nom contient « mot » (accents ignorés)</p>
-        <p><code>couche:business</code> — métier, application, technology/infra…</p>
-        <p><code>archi:business-actor</code> — type Archimate</p>
-        <p><code>type:container</code> / <code>type:forme</code></p>
-        <p><code>tag:critique</code>, <code>prop:owner=DSI</code>, <code>commentaire:2027</code></p>
-        <p>
-          <code>et / ou / non</code>, parenthèses, <code>nom:pay*</code> (joker),
-          <code>nom="CRM"</code> (exact), <code>nom~regex</code>
-        </p>
+        <p v-html="t('filter.help.name')" />
+        <p v-html="t('filter.help.layer')" />
+        <p v-html="t('filter.help.archi')" />
+        <p v-html="t('filter.help.type')" />
+        <p v-html="t('filter.help.meta')" />
+        <p v-html="t('filter.help.combinators')" />
       </div>
 
       <!-- Pied : statut + actions -->
       <div class="flex items-center justify-between mt-3 pt-2 border-t app-border">
         <span class="text-xs app-subtle">
-          {{ isFilterActive ? `${excludedCount} élément(s) écarté(s)` : 'Aucun filtre actif' }}
+          {{ isFilterActive ? tn('filter.activeCount', excludedCount) : t('filter.empty') }}
         </span>
         <div class="flex gap-2">
           <button
@@ -205,14 +206,14 @@ function handleClear() {
             :disabled="!isFilterActive"
             @click="handleSave"
           >
-            Sauvegarder
+            {{ t('filter.save') }}
           </button>
           <button
             class="px-2 py-1 text-xs app-btn rounded transition-colors disabled:opacity-40"
             :disabled="!query"
             @click="handleClear"
           >
-            Réinitialiser
+            {{ t('filter.reset') }}
           </button>
         </div>
       </div>

@@ -1,12 +1,15 @@
 <!-- src/components/inspectors/sections/PropertiesSection.vue -->
 <script setup lang="ts">
-import { ref, toRef } from 'vue'
+import { ref, toRef, computed } from 'vue'
 import { X } from 'lucide-vue-next'
 import {
   usePropertyable,
   type CustomProperty,
   type PropertyType,
 } from '../../../composables/traits/usePropertyable'
+import { useI18n } from '../../../composables/useI18n'
+
+const { t } = useI18n()
 
 interface Props {
   nodeId: string
@@ -22,14 +25,14 @@ const newKey = ref('')
 const newLabel = ref('')
 const newType = ref<PropertyType>('string')
 
-const TYPES: { value: PropertyType; label: string }[] = [
-  { value: 'string', label: 'Texte' },
-  { value: 'number', label: 'Nombre' },
-  { value: 'boolean', label: 'Booléen' },
-  { value: 'date', label: 'Date' },
-  { value: 'url', label: 'URL' },
-  { value: 'email', label: 'Email' },
-]
+const TYPES = computed<{ value: PropertyType; label: string }[]>(() => [
+  { value: 'string', label: t('section.properties.type.string') },
+  { value: 'number', label: t('section.properties.type.number') },
+  { value: 'boolean', label: t('section.properties.type.boolean') },
+  { value: 'date', label: t('section.properties.type.date') },
+  { value: 'url', label: t('section.properties.type.url') },
+  { value: 'email', label: t('section.properties.type.email') },
+])
 
 function handleAdd() {
   const key = newKey.value.trim()
@@ -75,9 +78,9 @@ function inputTypeFor(type: PropertyType): string {
 <template>
   <section class="p-3 border-b app-border">
     <div class="flex items-center justify-between mb-2">
-      <h3 class="app-section-title">Propriétés personnalisées</h3>
+      <h3 class="app-section-title">{{ t('section.properties.title') }}</h3>
       <button class="text-xs app-link" @click="adderOpen = !adderOpen">
-        {{ adderOpen ? 'Fermer' : '+ Ajouter' }}
+        {{ adderOpen ? t('section.properties.close') : t('section.properties.add') }}
       </button>
     </div>
 
@@ -121,24 +124,24 @@ function inputTypeFor(type: PropertyType): string {
         </div>
         <button
           class="opacity-0 group-hover:opacity-100 app-danger-link mt-4 transition-opacity duration-150"
-          title="Supprimer la propriété"
-          aria-label="Supprimer la propriété"
+          v-tooltip="t('section.properties.removeTooltip')"
+          :aria-label="t('section.properties.removeTooltip')"
           @click="removeProperty(prop.key)"
         >
           <X :size="14" />
         </button>
       </div>
     </div>
-    <div v-else class="text-xs app-subtle italic mb-2">Aucune propriété.</div>
+    <div v-else class="text-xs app-subtle italic mb-2">{{ t('section.properties.empty') }}</div>
 
     <!-- Templates -->
     <div v-if="templates.length > 0" class="text-xs app-subtle mb-2">
-      Modèles :
+      {{ t('section.properties.templates') }}
       <button
         v-for="tpl in templates"
         :key="tpl.name"
         class="ml-1 app-link"
-        :title="tpl.description"
+        v-tooltip="tpl.description"
         @click="applyTemplate(tpl.name)"
       >
         {{ tpl.name }}
@@ -150,13 +153,13 @@ function inputTypeFor(type: PropertyType): string {
       <input
         v-model="newKey"
         type="text"
-        placeholder="Clé (ex. owner)"
+        :placeholder="t('section.properties.addKey')"
         class="app-input w-full px-2 py-1 text-xs"
       />
       <input
         v-model="newLabel"
         type="text"
-        placeholder="Libellé (optionnel)"
+        :placeholder="t('section.properties.addLabel')"
         class="app-input w-full px-2 py-1 text-xs"
       />
       <div class="flex items-center gap-2">
@@ -168,7 +171,7 @@ function inputTypeFor(type: PropertyType): string {
           :disabled="!newKey.trim()"
           @click="handleAdd"
         >
-          Ajouter
+          {{ t('section.properties.submit') }}
         </button>
       </div>
     </div>

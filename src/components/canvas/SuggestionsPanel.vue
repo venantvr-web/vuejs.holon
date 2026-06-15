@@ -15,7 +15,9 @@ import {
 } from 'lucide-vue-next'
 import { useSuggestable, useSelectionState } from '../../composables/traits'
 import type { Suggestion, SuggestionPriority } from '../../composables/traits'
+import { useI18n } from '../../composables/useI18n'
 
+const { t, tn } = useI18n()
 const {
   activeSuggestions,
   generateSuggestions,
@@ -43,11 +45,11 @@ const PRIORITY_CLS: Record<SuggestionPriority, string> = {
   low: 'app-badge app-badge-info',
 }
 
-const PRIORITY_LABEL: Record<SuggestionPriority, string> = {
-  high: 'Prioritaire',
-  medium: 'Moyenne',
-  low: 'Basse',
-}
+const PRIORITY_LABEL = computed<Record<SuggestionPriority, string>>(() => ({
+  high: t('suggestions.priority.high'),
+  medium: t('suggestions.priority.medium'),
+  low: t('suggestions.priority.low'),
+}))
 
 // Icônes lucide par type de suggestion (fallback : Diamond).
 const TYPE_ICON: Record<string, Component> = {
@@ -76,10 +78,10 @@ const count = computed(() => activeSuggestions.value.length)
       :disabled="isGenerating"
       class="px-3 py-1.5 text-sm rounded transition-colors duration-150 flex items-center gap-1.5 disabled:opacity-40"
       :class="isOpen && count > 0 ? 'app-toggle-active' : 'app-btn'"
-      title="Générer des suggestions contextuelles"
+      v-tooltip="t('suggestions.tooltipMain')"
     >
       <Lightbulb :size="16" />
-      <span>Suggérer</span>
+      <span>{{ t('toolbar.suggest') }}</span>
       <span
         v-if="count > 0"
         class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-semibold"
@@ -97,20 +99,20 @@ const count = computed(() => activeSuggestions.value.length)
         <div class="flex items-center gap-2">
           <h3 class="text-sm font-semibold app-fg flex items-center gap-1.5">
             <Lightbulb :size="14" class="text-[var(--warning)]" />
-            <span>Suggestions</span>
+            <span>{{ t('suggestions.title') }}</span>
           </h3>
-          <span class="text-xs app-subtle">{{ count }} proposition{{ count > 1 ? 's' : '' }}</span>
+          <span class="text-xs app-subtle">{{ tn('suggestions.count', count) }}</span>
         </div>
         <div class="flex items-center gap-2">
           <button
             class="text-xs app-subtle hover:text-[var(--fg)] hover:underline transition-colors duration-150"
             @click="clearSuggestions"
           >
-            Tout effacer
+            {{ t('suggestions.clearAll') }}
           </button>
           <button
             class="app-subtle hover:text-[var(--fg)] transition-colors duration-150 px-1"
-            title="Fermer"
+            v-tooltip="t('common.close')"
             @click="isOpen = false"
           >
             <X :size="16" />
@@ -142,21 +144,21 @@ const count = computed(() => activeSuggestions.value.length)
               <button
                 v-if="s.nodeIds && s.nodeIds.length > 0"
                 class="text-xs app-link px-1"
-                title="Centrer sur les éléments concernés"
+                v-tooltip="t('suggestions.focusTooltip')"
                 @click="focusSuggestion(s)"
               >
-                Voir
+                {{ t('suggestions.focus') }}
               </button>
               <button
                 v-if="s.apply"
                 class="text-xs px-2 py-0.5 app-btn-primary rounded"
                 @click="applySuggestion(s.id)"
               >
-                Appliquer
+                {{ t('suggestions.apply') }}
               </button>
               <button
                 class="app-subtle hover:text-[var(--fg)] transition-colors duration-150 px-1"
-                title="Ignorer"
+                v-tooltip="t('suggestions.dismiss')"
                 @click="dismissSuggestion(s.id)"
               >
                 <X :size="14" />

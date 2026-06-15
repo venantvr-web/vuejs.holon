@@ -8,6 +8,9 @@ import {
   RELATION_CONFIGS,
   RELATION_TYPE_LABELS,
 } from '../../../composables/traits/useRelationTypeable'
+import { useI18n } from '../../../composables/useI18n'
+
+const { t } = useI18n()
 
 interface Props {
   edgeId: string
@@ -43,33 +46,34 @@ const grouped = computed(() => {
   return groups
 })
 
-const CATEGORY_LABELS: Record<RelationCategory, string> = {
-  [RelationCategory.Structural]: 'Structurelles',
-  [RelationCategory.Dependency]: 'Dépendances',
-  [RelationCategory.Dynamic]: 'Dynamiques',
-  [RelationCategory.Other]: 'Autres',
-}
+const CATEGORY_LABELS = computed<Record<RelationCategory, string>>(() => ({
+  [RelationCategory.Structural]: t('section.relationType.category.structural'),
+  [RelationCategory.Dependency]: t('section.relationType.category.dependency'),
+  [RelationCategory.Dynamic]: t('section.relationType.category.dynamic'),
+  [RelationCategory.Other]: t('section.relationType.category.other'),
+}))
 
 const INFLUENCE_VALUES = ['++', '+', '0', '?', '-', '--']
-const ACCESS_VALUES: Array<{ value: 'read' | 'write' | 'readwrite'; label: string }> = [
-  { value: 'read', label: 'Lecture' },
-  { value: 'write', label: 'Écriture' },
-  { value: 'readwrite', label: 'Lecture/Écriture' },
-]
-const FLOW_VALUES: Array<{
-  value: 'information' | 'material' | 'money' | 'energy'
-  label: string
-}> = [
-  { value: 'information', label: 'Information' },
-  { value: 'material', label: 'Matériel' },
-  { value: 'money', label: 'Monétaire' },
-  { value: 'energy', label: 'Énergie' },
-]
+const ACCESS_VALUES = computed<Array<{ value: 'read' | 'write' | 'readwrite'; label: string }>>(
+  () => [
+    { value: 'read', label: t('section.relationType.access.read') },
+    { value: 'write', label: t('section.relationType.access.write') },
+    { value: 'readwrite', label: t('section.relationType.access.readwrite') },
+  ]
+)
+const FLOW_VALUES = computed<
+  Array<{ value: 'information' | 'material' | 'money' | 'energy'; label: string }>
+>(() => [
+  { value: 'information', label: t('section.relationType.flow.information') },
+  { value: 'material', label: t('section.relationType.flow.material') },
+  { value: 'money', label: t('section.relationType.flow.money') },
+  { value: 'energy', label: t('section.relationType.flow.energy') },
+])
 </script>
 
 <template>
   <section class="p-3 border-b app-border">
-    <h3 class="app-section-title mb-2">Type de relation</h3>
+    <h3 class="app-section-title mb-2">{{ t('section.relationType.title') }}</h3>
 
     <!-- Résumé -->
     <div class="text-xs app-muted mb-2">
@@ -89,7 +93,7 @@ const FLOW_VALUES: Array<{
             :key="item.type"
             class="app-toggle px-2 py-1 text-xs text-left"
             :class="{ 'app-toggle-active': relationType === item.type }"
-            :title="RELATION_CONFIGS[item.type].description"
+            v-tooltip="RELATION_CONFIGS[item.type].description"
             @click="setRelationType(item.type)"
           >
             {{ item.label }}
@@ -100,7 +104,7 @@ const FLOW_VALUES: Array<{
 
     <!-- Sous-propriétés selon le type -->
     <div v-if="accessType" class="mb-2">
-      <label class="block text-xs app-muted mb-1">Type d'accès</label>
+      <label class="block text-xs app-muted mb-1">{{ t('section.relationType.accessType') }}</label>
       <div class="flex gap-1">
         <button
           v-for="v in ACCESS_VALUES"
@@ -115,7 +119,7 @@ const FLOW_VALUES: Array<{
     </div>
 
     <div v-if="influenceStrength" class="mb-2">
-      <label class="block text-xs app-muted mb-1">Force d'influence</label>
+      <label class="block text-xs app-muted mb-1">{{ t('section.relationType.influence') }}</label>
       <div class="grid grid-cols-6 gap-0.5">
         <button
           v-for="v in INFLUENCE_VALUES"
@@ -130,7 +134,7 @@ const FLOW_VALUES: Array<{
     </div>
 
     <div v-if="flowType" class="mb-2">
-      <label class="block text-xs app-muted mb-1">Type de flux</label>
+      <label class="block text-xs app-muted mb-1">{{ t('section.relationType.flowType') }}</label>
       <div class="grid grid-cols-2 gap-1">
         <button
           v-for="v in FLOW_VALUES"

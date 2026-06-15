@@ -541,9 +541,7 @@ async function addToLibrary() {
       class="cursor-pointer"
       @click.stop="collapsible.toggle"
       role="button"
-      :aria-label="
-        collapsible.isCollapsed.value ? 'Développer le conteneur' : 'Replier le conteneur'
-      "
+      :aria-label="collapsible.isCollapsed.value ? t('node.ariaExpand') : t('node.ariaCollapse')"
     >
       <!-- Hit area invisible 44 px (WCAG 2.5.5) — gobe les clics sur tout le
            halo, le visuel reste compact. -->
@@ -579,7 +577,7 @@ async function addToLibrary() {
       @mouseenter="tooltip.showTooltip"
       @mouseleave="tooltip.hideTooltip"
       role="button"
-      :aria-label="tooltip.hasComment.value ? 'Modifier le commentaire' : 'Ajouter un commentaire'"
+      :aria-label="tooltip.hasComment.value ? t('node.ariaEditComment') : t('node.ariaAddComment')"
     >
       <!-- Hit area invisible 44 px (WCAG 2.5.5) -->
       <circle
@@ -685,7 +683,7 @@ async function addToLibrary() {
       class="cursor-crosshair"
       @pointerdown.stop.prevent="$emit('start-connection', nodeId)"
       role="button"
-      aria-label="Démarrer une connexion depuis ce noeud"
+      :aria-label="t('node.ariaStartConnection')"
     >
       <circle
         :cx="node.geometry.w"
@@ -711,7 +709,11 @@ async function addToLibrary() {
       class="cursor-pointer"
       @click="handleOpenTypePicker"
       role="button"
-      :aria-label="`Type Archimate : ${typeable.typeLabel.value || 'aucun'} (cliquer pour changer)`"
+      :aria-label="
+        t('node.ariaTypePicker', {
+          label: typeable.typeLabel.value || t('node.typeNone'),
+        })
+      "
     >
       <!-- Hit area invisible 44 px (WCAG 2.5.5) -->
       <circle

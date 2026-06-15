@@ -8,6 +8,9 @@
 import { computed, ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { Tag, X } from 'lucide-vue-next'
 import { ARCHIMATE_TYPES, type ArchimateLayer } from '../../composables/traits/useTypeable'
+import { useI18n } from '../../composables/useI18n'
+
+const { t, tn } = useI18n()
 
 interface Props {
   currentType: string | null
@@ -121,12 +124,13 @@ onBeforeUnmount(() => {
         ref="inputRef"
         v-model="query"
         type="text"
-        placeholder="Type Archimate…"
+        :placeholder="t('typePicker.placeholder')"
         class="app-input flex-1 px-2 py-1 text-sm"
       />
       <button
         class="app-subtle hover:text-[var(--fg)] transition-colors duration-150 px-1"
-        title="Fermer (Échap)"
+        v-tooltip="t('typePicker.closeAria')"
+        :aria-label="t('typePicker.closeAria')"
         @click="emit('close')"
       >
         <X :size="16" />
@@ -140,7 +144,7 @@ onBeforeUnmount(() => {
       @click="handleSelect(null)"
     >
       <X :size="12" class="flex-shrink-0" />
-      <span>Aucun type</span>
+      <span>{{ t('typePicker.clear') }}</span>
     </button>
 
     <!-- Liste groupée par layer -->
@@ -161,7 +165,7 @@ onBeforeUnmount(() => {
           :key="item.type"
           class="w-full px-3 py-1.5 text-left flex items-center gap-2 text-sm app-hover"
           :class="{ 'app-selected': currentType === item.type }"
-          :title="item.label"
+          v-tooltip="item.label"
           @click="handleSelect(item.type)"
         >
           <span class="text-base">{{ item.icon }}</span>
@@ -170,12 +174,12 @@ onBeforeUnmount(() => {
       </div>
 
       <div v-if="filtered.length === 0" class="p-3 text-xs app-subtle text-center">
-        Aucun type ne correspond.
+        {{ t('typePicker.noMatch') }}
       </div>
     </div>
 
     <div class="px-3 py-1.5 border-t app-border text-xs app-subtle text-center">
-      {{ filtered.length }} type{{ filtered.length > 1 ? 's' : '' }} Archimate 3.2
+      {{ tn('typePicker.footer', filtered.length) }}
     </div>
   </div>
 </template>

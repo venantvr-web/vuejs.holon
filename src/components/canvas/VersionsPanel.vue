@@ -3,24 +3,26 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { History, X } from 'lucide-vue-next'
 import { useVersionable } from '../../composables/traits'
+import { useI18n } from '../../composables/useI18n'
 
+const { t, tn, formatDate } = useI18n()
 const { snapshots, createSnapshot, restoreSnapshot, deleteSnapshot, currentSnapshot } =
   useVersionable()
 
 const isOpen = ref(false)
 
 function handleSave() {
-  const name = window.prompt('Nom de cette version :', `Version ${snapshots.value.length + 1}`)
+  const defaultName = t('versions.defaultName', { n: snapshots.value.length + 1 })
+  const name = window.prompt(t('versions.namePrompt'), defaultName)
   if (!name) return
-  const description = window.prompt('Description (optionnel) :', '')
+  const description = window.prompt(t('versions.descriptionPrompt'), '')
   createSnapshot(name, description || undefined)
 }
 
 async function handleRestore(id: string) {
   const snap = snapshots.value.find((s) => s.id === id)
   if (!snap) return
-  if (!confirm(`Restaurer « ${snap.name} » ? L'état courant sera remplacé (annulable via Ctrl+Z).`))
-    return
+  if (!confirm(t('versions.restoreConfirm', { name: snap.name }))) return
   await restoreSnapshot(id)
 }
 
@@ -28,7 +30,7 @@ function handleDelete(event: MouseEvent, id: string) {
   event.stopPropagation()
   const snap = snapshots.value.find((s) => s.id === id)
   if (!snap) return
-  if (confirm(`Supprimer la version « ${snap.name} » ?`)) {
+  if (confirm(t('versions.deleteConfirm', { name: snap.name }))) {
     deleteSnapshot(id)
   }
 }
@@ -45,8 +47,9 @@ onBeforeUnmount(() => {
   window.removeEventListener('mousedown', handleOutsideClick, true)
 })
 
-function formatDate(ts: number): string {
-  return new Date(ts).toLocaleString('fr-FR', {
+function formatVersionDate(ts: number): string {
+  // Date courte + heure, format propre à la locale courante.
+  return formatDate(ts, {
     day: '2-digit',
     month: '2-digit',
     year: '2-digit',
@@ -62,10 +65,10 @@ function formatDate(ts: number): string {
       @click="isOpen = !isOpen"
       class="px-3 py-1.5 text-sm rounded transition-colors duration-150 flex items-center gap-1.5"
       :class="isOpen ? 'app-toggle-active' : 'app-btn'"
-      title="Versions du modèle"
+      v-tooltip="t('versions.tooltipMain')"
     >
       <History :size="16" />
-      <span>Versions ({{ snapshots.length }})</span>
+      <span>{{ t('versions.count', { n: snapshots.length }) }}</span>
     </button>
 
     <div
@@ -74,9 +77,9 @@ function formatDate(ts: number): string {
       @mousedown.stop
     >
       <div class="p-2 border-b flex items-center justify-between">
-        <span class="text-sm font-semibold">Historique des versions</span>
-        <button @click="handleSave" class="text-xs app-link" title="Capturer l'état courant">
-          + Sauver
+        <span class="text-sm font-semibold">{{ t('versions.heading') }}</span>
+        <button @click="handleSave" class="text-xs app-link" v-tooltip="t('versions.tooltipSave')">
+          {{ t('versions.save') }}
         </button>
       </div>
 
@@ -103,14 +106,18 @@ function formatDate(ts: number): string {
                 {{ snap.description }}
               </div>
               <div class="text-xs app-subtle font-mono mt-0.5">
-                {{ formatDate(snap.metadata.createdAt) }} ·
-                {{ Object.keys(snap.state.nodes).length }} noeuds ·
-                {{ Object.keys(snap.state.edges).length }} arêtes
+                {{
+                  t('versions.summary', {
+                    date: formatVersionDate(snap.metadata.createdAt),
+                    nodes: tn('export.nodesCount', Object.keys(snap.state.nodes).length),
+                    edges: tn('export.edgesCount', Object.keys(snap.state.edges).length),
+                  })
+                }}
               </div>
             </div>
             <button
               class="opacity-0 group-hover:opacity-100 app-danger-link ml-2 px-1"
-              title="Supprimer cette version"
+              v-tooltip="t('versions.deleteTooltip')"
               @click="handleDelete($event, snap.id)"
             >
               <X :size="14" />
@@ -118,7 +125,7 @@ function formatDate(ts: number): string {
           </div>
         </li>
       </ul>
-      <div v-else class="p-3 text-xs app-subtle text-center">Aucune version sauvegardée.</div>
+      <div v-else class="p-3 text-xs app-subtle text-center">{{ t('versions.empty') }}</div>
     </div>
   </div>
 </template>
