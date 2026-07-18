@@ -130,6 +130,72 @@ describe('useImportable', () => {
     })
   })
 
+  describe('normalisation par les valeurs par défaut du schéma', () => {
+    it("applique routing='straight' à une arête importée sans routing", async () => {
+      const store = useGraphStore()
+      const { importFromJSON } = useImportable()
+
+      const json = JSON.stringify({
+        version: '1.0',
+        nodes: [
+          {
+            id: 'n1',
+            parentId: null,
+            type: 'shape',
+            geometry: { x: 0, y: 0, w: 50, h: 50 },
+            styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 },
+            data: {},
+          },
+          {
+            id: 'n2',
+            parentId: null,
+            type: 'shape',
+            geometry: { x: 100, y: 0, w: 50, h: 50 },
+            styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 },
+            data: {},
+          },
+        ],
+        // routing volontairement absent
+        edges: [{ id: 'e1', sourceId: 'n1', targetId: 'n2' }],
+      })
+
+      const result = await importFromJSON(json)
+
+      expect(result.success).toBe(true)
+      expect(store.edges['e1'].routing).toBe('straight')
+    })
+
+    it('conserve les marqueurs de flèche valides et rejette les invalides', async () => {
+      const { validateImport } = useImportable()
+
+      const base = {
+        version: '1.0',
+        nodes: [],
+      }
+      const ok = validateImport({
+        ...base,
+        edges: [
+          {
+            id: 'e1',
+            sourceId: 'a',
+            targetId: 'b',
+            startArrow: 'dot',
+            endArrow: 'filled-arrow',
+            arrowSize: 12,
+          },
+        ],
+      })
+      expect(ok.valid).toBe(true)
+      expect(ok.data?.edges[0].endArrow).toBe('filled-arrow')
+
+      const ko = validateImport({
+        ...base,
+        edges: [{ id: 'e1', sourceId: 'a', targetId: 'b', endArrow: 'licorne' }],
+      })
+      expect(ko.valid).toBe(false)
+    })
+  })
+
   describe("erreurs d'entrée", () => {
     it("rejette un JSON malformé avec un message d'erreur", async () => {
       const { importFromJSON } = useImportable()

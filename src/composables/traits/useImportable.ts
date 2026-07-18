@@ -92,9 +92,14 @@ export interface ImportableHandlers {
   /**
    * Valide des données JSON avant import.
    * @param data - Données à valider
-   * @returns Résultat de validation
+   * @returns Résultat de validation ; `data` contient les données normalisées
+   *   (valeurs par défaut appliquées) lorsque la validation réussit
    */
-  validateImport: (data: unknown) => { valid: boolean; errors: string[] }
+  validateImport: (data: unknown) => {
+    valid: boolean
+    errors: string[]
+    data?: ValidatedImportData
+  }
 }
 
 // Schémas Zod pour validation
@@ -132,6 +137,34 @@ const NodeSchema = z.object({
 })
 
 /**
+ * Types de flèches admis (miroir de `ArrowType` dans `types/index.ts`).
+ * L'import reste tolérant : le champ est optionnel, mais s'il est présent il
+ * doit désigner un marqueur connu.
+ */
+const ArrowTypeSchema = z.enum([
+  'none',
+  'dot',
+  'small-dot',
+  'arrow',
+  'filled-arrow',
+  'diamond',
+  'filled-diamond',
+  'circle',
+  'filled-circle',
+  'square',
+  'filled-square',
+  'archi-composition',
+  'archi-aggregation',
+  'archi-assignment',
+  'archi-realization',
+  'archi-serving',
+  'archi-access',
+  'archi-influence',
+  'archi-trigger',
+  'archi-flow',
+])
+
+/**
  * Schéma de validation pour une arête.
  */
 const EdgeSchema = z.object({
@@ -139,6 +172,9 @@ const EdgeSchema = z.object({
   sourceId: z.string().min(1),
   targetId: z.string().min(1),
   routing: z.enum(['straight', 'orthogonal', 'curved', 'bezier']).default('straight'),
+  startArrow: ArrowTypeSchema.optional(),
+  endArrow: ArrowTypeSchema.optional(),
+  arrowSize: z.number().positive().optional(),
   data: z.record(z.string(), z.unknown()).optional(),
 })
 
@@ -152,6 +188,11 @@ const ImportDataSchema = z.object({
   edges: z.array(EdgeSchema),
   metadata: z.record(z.string(), z.unknown()).optional(),
 })
+
+/**
+ * Données d'import validées et normalisées (valeurs par défaut appliquées).
+ */
+export type ValidatedImportData = z.infer<typeof ImportDataSchema>
 
 /**
  * Trait permettant d'importer des graphes depuis différents formats.
@@ -177,20 +218,21 @@ export function useImportable(): ImportableHandlers {
   /**
    * Valide des données JSON avec Zod.
    */
-  function validateImport(data: unknown): { valid: boolean; errors: string[] } {
-    try {
-      ImportDataSchema.parse(data)
-      return { valid: true, errors: [] }
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        // Zod 4 : l'API expose `issues`, pas `errors`. Ce bug masquait
-        // silencieusement les validations en lançant une TypeError.
-        return {
-          valid: false,
-          errors: error.issues.map((e) => `${e.path.join('.')}: ${e.message}`),
-        }
-      }
-      return { valid: false, errors: ['Erreur de validation inconnue'] }
+  function validateImport(data: unknown): {
+    valid: boolean
+    errors: string[]
+    data?: ValidatedImportData
+  } {
+    // safeParse renvoie les données normalisées (valeurs par défaut appliquées)
+    // sans lever d'exception ; on les propage pour que l'import s'appuie sur
+    // elles plutôt que sur l'entrée brute.
+    const parsed = ImportDataSchema.safeParse(data)
+    if (parsed.success) {
+      return { valid: true, errors: [], data: parsed.data }
+    }
+    return {
+      valid: false,
+      errors: parsed.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`),
     }
   }
 
@@ -345,17 +387,20 @@ export function useImportable(): ImportableHandlers {
       // Parser le JSON
       const data = JSON.parse(json)
 
-      // Validation
+      // Validation : quand elle est active, on repart des données normalisées
+      // (routing par défaut, data à {}) plutôt que de l'entrée brute.
+      let normalized: { nodes: Node[]; edges: Edge[] } | null = null
       if (validateBeforeImport) {
         const validation = validateImport(data)
         if (!validation.valid) {
           result.errors = validation.errors
           return result
         }
+        normalized = validation.data as unknown as { nodes: Node[]; edges: Edge[] }
       }
 
-      // Extraire nodes et edges
-      let { nodes, edges } = data as { nodes: Node[]; edges: Edge[] }
+      // Extraire nodes et edges (données validées si disponibles, sinon brutes)
+      let { nodes, edges } = (normalized ?? data) as { nodes: Node[]; edges: Edge[] }
 
       // Stratégie 'merge' : les éléments dont l'ID existe déjà sont fusionnés
       // champ à champ avec l'existant (l'entrant prime, les `data` sont
