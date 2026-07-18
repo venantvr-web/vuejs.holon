@@ -6,6 +6,7 @@ import { useLibraryStore } from '../../stores/library'
 import type { LibraryItem } from '../../types'
 import OutlinePanel from './OutlinePanel.vue'
 import { useI18n } from '../../composables/useI18n'
+import { useConfirm } from '../../composables/useConfirm'
 import {
   useEventStormable,
   getAllEventStormingTypes,
@@ -14,6 +15,7 @@ import {
 
 const libraryStore = useLibraryStore()
 const { t } = useI18n()
+const { confirm } = useConfirm()
 const { isEventStormingMode, createStickerTemplate } = useEventStormable()
 
 const libraryOpen = ref(true)
@@ -38,9 +40,9 @@ function handleStickerDragStart(event: DragEvent, type: EventStormingType) {
   }
 }
 
-function handleRemove(event: MouseEvent, item: LibraryItem) {
+async function handleRemove(event: MouseEvent, item: LibraryItem) {
   event.stopPropagation()
-  if (confirm(t('library.removeConfirm', { name: item.name }))) {
+  if (await confirm({ message: t('library.removeConfirm', { name: item.name }), tone: 'danger' })) {
     libraryStore.removeItem(item.id)
   }
 }

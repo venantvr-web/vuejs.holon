@@ -11,6 +11,7 @@ import Sidebar from './components/layout/Sidebar.vue'
 import PropertyInspector from './components/layout/PropertyInspector.vue'
 import GraphCanvas from './components/canvas/GraphCanvas.vue'
 import TooltipHost from './components/ui/TooltipHost.vue'
+import ConfirmHost from './components/ui/ConfirmHost.vue'
 
 const graphStore = useGraphStore()
 const libraryStore = useLibraryStore()
@@ -56,5 +57,7 @@ onMounted(async () => {
     </div>
     <!-- Hôte unique du système de tooltips UI (directive v-tooltip). -->
     <TooltipHost />
+    <!-- Hôte unique du système de confirmation modale (useConfirm). -->
+    <ConfirmHost />
   </div>
 </template>

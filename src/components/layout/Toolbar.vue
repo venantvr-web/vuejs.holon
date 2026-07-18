@@ -29,6 +29,7 @@ import LanguagePicker from './LanguagePicker.vue'
 import ShortcutsHelp from './ShortcutsHelp.vue'
 import UserManualModal from './UserManualModal.vue'
 import { useI18n } from '../../composables/useI18n'
+import { useConfirm } from '../../composables/useConfirm'
 import {
   Undo2,
   Redo2,
@@ -48,6 +49,7 @@ import {
 import { useSound } from '../../composables/useSound'
 
 const { t } = useI18n()
+const { confirm } = useConfirm()
 
 const manualOpen = ref(false)
 const showHistoryPanel = ref(false)
@@ -144,8 +146,8 @@ const selectedGroupIds = computed(() => {
 
 const canUngroup = computed(() => selectedGroupIds.value.size > 0)
 
-function handleClear() {
-  if (confirm(t('toolbar.confirmClear'))) {
+async function handleClear() {
+  if (await confirm({ message: t('toolbar.confirmClear'), tone: 'danger' })) {
     graphStore.clearAll()
   }
 }

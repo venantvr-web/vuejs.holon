@@ -4,8 +4,10 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { History, X } from 'lucide-vue-next'
 import { useVersionable } from '../../composables/traits'
 import { useI18n } from '../../composables/useI18n'
+import { useConfirm } from '../../composables/useConfirm'
 
 const { t, tn, formatDate } = useI18n()
+const { confirm } = useConfirm()
 const { snapshots, createSnapshot, restoreSnapshot, deleteSnapshot, currentSnapshot } =
   useVersionable()
 
@@ -22,15 +24,17 @@ function handleSave() {
 async function handleRestore(id: string) {
   const snap = snapshots.value.find((s) => s.id === id)
   if (!snap) return
-  if (!confirm(t('versions.restoreConfirm', { name: snap.name }))) return
+  if (!(await confirm({ message: t('versions.restoreConfirm', { name: snap.name }) }))) return
   await restoreSnapshot(id)
 }
 
-function handleDelete(event: MouseEvent, id: string) {
+async function handleDelete(event: MouseEvent, id: string) {
   event.stopPropagation()
   const snap = snapshots.value.find((s) => s.id === id)
   if (!snap) return
-  if (confirm(t('versions.deleteConfirm', { name: snap.name }))) {
+  if (
+    await confirm({ message: t('versions.deleteConfirm', { name: snap.name }), tone: 'danger' })
+  ) {
     deleteSnapshot(id)
   }
 }

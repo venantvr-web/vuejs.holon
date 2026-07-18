@@ -5,8 +5,10 @@ import { Bookmark, X } from 'lucide-vue-next'
 import { useViewable } from '../../composables/traits'
 import { useViewport } from '../../composables/useViewport'
 import { useI18n } from '../../composables/useI18n'
+import { useConfirm } from '../../composables/useConfirm'
 
 const { t } = useI18n()
+const { confirm } = useConfirm()
 const { savedViews, saveView, deleteView, activeView } = useViewable()
 const { pan, zoomLevel } = useViewport()
 
@@ -27,11 +29,11 @@ function handleRestore(viewId: string) {
   activeView.value = view
 }
 
-function handleDelete(event: MouseEvent, viewId: string) {
+async function handleDelete(event: MouseEvent, viewId: string) {
   event.stopPropagation()
   const view = savedViews.value.find((v) => v.id === viewId)
   if (!view) return
-  if (confirm(t('views.deleteConfirm', { name: view.name }))) {
+  if (await confirm({ message: t('views.deleteConfirm', { name: view.name }), tone: 'danger' })) {
     deleteView(viewId)
   }
 }
