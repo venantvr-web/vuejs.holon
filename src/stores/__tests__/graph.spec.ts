@@ -11,6 +11,7 @@ vi.mock('../../db', () => {
     delete: vi.fn().mockResolvedValue(undefined),
     clear: vi.fn().mockResolvedValue(undefined),
     bulkPut: vi.fn().mockResolvedValue(undefined),
+    bulkDelete: vi.fn().mockResolvedValue(undefined),
     toArray: vi.fn().mockResolvedValue([]),
     update: vi.fn().mockResolvedValue(undefined),
   })

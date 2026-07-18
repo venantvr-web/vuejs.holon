@@ -23,6 +23,7 @@ vi.mock('../../../db', () => {
         return undefined
       }),
       bulkPut: vi.fn().mockResolvedValue(undefined),
+    bulkDelete: vi.fn().mockResolvedValue(undefined),
       toArray: vi.fn().mockResolvedValue([]),
       update: vi.fn().mockResolvedValue(undefined),
       orderBy: vi.fn(() => ({

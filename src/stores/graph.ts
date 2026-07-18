@@ -242,29 +242,34 @@ export const useGraphStore = defineStore('graph', () => {
     // Indexer les noeuds à supprimer pour un test d'appartenance en O(1).
     const toDeleteSet = new Set(toDelete)
 
-    // Supprimer les arêtes connectées
+    // Identifier les arêtes connectées à supprimer.
     const edgesToDelete = Object.values(edges.value)
       .filter((e) => toDeleteSet.has(e.sourceId) || toDeleteSet.has(e.targetId))
       .map((e) => e.id)
 
+    // Mutations en mémoire (synchrones) : arêtes puis noeuds + index.
     for (const edgeId of edgesToDelete) {
       delete edges.value[edgeId]
-      await db.edges.delete(edgeId)
     }
-
-    // Supprimer les noeuds et tenir l'index à jour.
     for (const nodeId of toDelete) {
       const node = nodes.value[nodeId]
       if (node) indexRemove(nodeId, node.parentId)
       delete childrenIndex.value[nodeId]
       delete nodes.value[nodeId]
-      await db.nodes.delete(nodeId)
     }
     invalidatePositionCache()
     if (toDelete.length > 0 || edgesToDelete.length > 0) {
       bump()
       playSound('delete')
     }
+
+    // Persistance atomique : une seule transaction rw sur les deux tables,
+    // avec bulkDelete, au lieu de N suppressions séquentielles non atomiques
+    // (un crash en cours ne laisse plus le graphe à moitié supprimé en base).
+    await db.transaction('rw', db.nodes, db.edges, async () => {
+      if (edgesToDelete.length > 0) await db.edges.bulkDelete(edgesToDelete)
+      if (toDelete.length > 0) await db.nodes.bulkDelete(toDelete)
+    })
   }
 
   /**
