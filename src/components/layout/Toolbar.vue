@@ -9,6 +9,8 @@ import {
   useAlignable,
   useSnapState,
   useLayoutable,
+  useEventStormable,
+  type NotationMode,
 } from '../../composables/traits'
 import type { LayoutAlgorithm } from '../../composables/traits'
 import { useViewport } from '../../composables/useViewport'
@@ -60,6 +62,12 @@ const { zoomPercent, zoomBy, resetView, fitWorldBox } = useViewport()
 const { alignNodes, distributeNodes, matchWidth, matchHeight, matchSize } = useAlignable()
 const { config: snapConfig } = useSnapState()
 const { applyLayout, isLayouting, currentAlgorithm } = useLayoutable()
+const { notationMode, setNotationMode } = useEventStormable()
+
+const NOTATION_MODES: Array<{ value: NotationMode; labelKey: string }> = [
+  { value: 'archimate', labelKey: 'notation.archimate' },
+  { value: 'event-storming', labelKey: 'notation.eventStorming' },
+]
 
 const layoutMenuOpen = ref(false)
 const LAYOUTS: Array<{ value: LayoutAlgorithm; label: string; hint: string }> = [
@@ -162,6 +170,31 @@ function handleUngroup() {
     </button>
 
     <div class="flex items-center gap-2">
+      <!-- Bascule de notation (Archimate / Event Storming) -->
+      <div
+        class="flex items-center app-surface-2 rounded"
+        role="radiogroup"
+        :aria-label="t('notation.tooltip')"
+        v-tooltip="t('notation.tooltip')"
+      >
+        <button
+          v-for="(mode, index) in NOTATION_MODES"
+          :key="mode.value"
+          class="px-2.5 py-1.5 text-xs font-medium transition-colors"
+          :class="[
+            notationMode === mode.value ? 'app-toggle-active' : 'app-hover',
+            index === 0 ? 'rounded-l' : 'rounded-r border-l app-border',
+          ]"
+          role="radio"
+          :aria-checked="notationMode === mode.value"
+          @click="setNotationMode(mode.value)"
+        >
+          {{ t(mode.labelKey) }}
+        </button>
+      </div>
+
+      <span class="w-px h-5 bg-[var(--border)] mx-1"></span>
+
       <!-- Zoom -->
       <div class="flex items-center app-surface-2 rounded">
         <button

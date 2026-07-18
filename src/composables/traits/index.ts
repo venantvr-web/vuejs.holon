@@ -317,6 +317,20 @@ export {
   type ModelingConfidenceHandlers,
 } from './useModelingConfidence'
 
+// Mode Event Storming (notation alternative du canevas)
+export {
+  useEventStormable,
+  getAllEventStormingTypes,
+  EVENT_STORMING_TYPES,
+  EVENT_STORMING_GRAMMAR,
+  type NotationMode,
+  type EventStormingType,
+  type EventStormingStickerDef,
+  type GrammarIssue,
+  type EventStormableState,
+  type EventStormableHandlers,
+} from './useEventStormable'
+
 // Export/Import
 export {
   useExportable,
