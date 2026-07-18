@@ -5,6 +5,11 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "vuejs-holon",
   "compatibility_date": "2026-06-12",
+  // Logs et métriques d'exécution visibles dans le dashboard Cloudflare
+  // (repris de la branche cloudflare/workers-autoconfig).
+  "observability": {
+    "enabled": true,
+  },
   "assets": {
     "directory": "./dist",
     // SPA : toute requête qui ne matche pas un fichier statique est rejouée
