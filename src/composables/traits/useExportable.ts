@@ -3,6 +3,7 @@ import { useGraphStore } from '../../stores/graph'
 import { useI18n } from '../useI18n'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
+import { nanoid } from 'nanoid'
 import {
   ARCHIMATE_TYPES,
   toArchimateXmiType,
@@ -545,14 +546,17 @@ export function useExportable(): ExportableHandlers {
 }
 
 /**
- * Génère un UUID simple pour Archimate.
+ * Génère un identifiant unique pour l'en-tête Archimate.
+ *
+ * Utilise `crypto.randomUUID()` (disponible dans tous les navigateurs cibles)
+ * pour un UUID v4 cryptographiquement solide ; repli sur `nanoid` dans les
+ * environnements dépourvus de l'API Web Crypto.
  */
 function generateUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0
-    const v = c === 'x' ? r : (r & 0x3) | 0x8
-    return v.toString(16)
-  })
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return nanoid()
 }
 
 /**
