@@ -11,6 +11,8 @@ export {
   withErrorHandling,
 } from './errors'
 
+export { safeGetItem, safeSetItem, safeGetJSON, safeSetJSON } from './safe-storage'
+
 export {
   createTraitComputedProperty,
   createTraitObjectProperty,

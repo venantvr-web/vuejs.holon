@@ -1,6 +1,7 @@
 // src/composables/traits/usePropertyable.ts
 import { computed, type Ref } from 'vue'
 import { useGraphStore } from '../../stores/graph'
+import { safeGetJSON, safeSetJSON } from './utils/safe-storage'
 
 /**
  * Type de propriété personnalisée.
@@ -358,8 +359,9 @@ export function usePropertyable(
       return rest
     })
 
-    // Stocker dans le localStorage pour persistance
-    const savedTemplates = JSON.parse(localStorage.getItem('holon-property-templates') || '[]')
+    // Persistance tolérante aux pannes (mode privé, quota) : un échec de
+    // stockage ne doit jamais interrompre la création du template en mémoire.
+    const savedTemplates = safeGetJSON<unknown[]>('holon-property-templates', [])
 
     savedTemplates.push({
       name,
@@ -367,7 +369,7 @@ export function usePropertyable(
       properties: currentProps,
     })
 
-    localStorage.setItem('holon-property-templates', JSON.stringify(savedTemplates))
+    safeSetJSON('holon-property-templates', savedTemplates)
   }
 
   return {
