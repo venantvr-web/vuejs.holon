@@ -266,47 +266,18 @@ export function useTypeable(options: TypeableOptions): TypeableState & TypeableH
     return node?.data?.archimateType ?? null
   })
 
-  const archimateLayer = computed((): ArchimateLayer | null => {
-    const type = archimateType.value
-    if (!type) return null
+  // Toutes les métadonnées (couche, libellé, icône, couleur) proviennent de
+  // l'index inverse pré-calculé au chargement du module : plus aucune
+  // recherche linéaire sur ARCHIMATE_TYPES à chaque évaluation réactive.
+  const typeInfo = computed(() => getArchimateTypeInfo(archimateType.value))
 
-    for (const [layer, config] of Object.entries(ARCHIMATE_TYPES)) {
-      if (type in config.types) {
-        return layer as ArchimateLayer
-      }
-    }
-    return null
-  })
+  const archimateLayer = computed((): ArchimateLayer | null => typeInfo.value?.layer ?? null)
 
-  const typeLabel = computed(() => {
-    const type = archimateType.value
-    if (!type) return ''
+  const typeLabel = computed(() => typeInfo.value?.label ?? '')
 
-    for (const config of Object.values(ARCHIMATE_TYPES)) {
-      if (type in config.types) {
-        return (config.types as Record<string, { label: string }>)[type]?.label ?? ''
-      }
-    }
-    return ''
-  })
+  const typeIcon = computed(() => typeInfo.value?.icon ?? '')
 
-  const typeIcon = computed(() => {
-    const type = archimateType.value
-    if (!type) return ''
-
-    for (const config of Object.values(ARCHIMATE_TYPES)) {
-      if (type in config.types) {
-        return (config.types as Record<string, { icon: string }>)[type]?.icon ?? ''
-      }
-    }
-    return ''
-  })
-
-  const typeColor = computed(() => {
-    const layer = archimateLayer.value
-    if (!layer) return '#ffffff'
-    return ARCHIMATE_TYPES[layer]?.color ?? '#ffffff'
-  })
+  const typeColor = computed(() => typeInfo.value?.color ?? '#ffffff')
 
   /**
    * Convertit un hex (#RGB ou #RRGGBB) en rgba avec l'alpha donné.

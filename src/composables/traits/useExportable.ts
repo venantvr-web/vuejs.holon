@@ -3,7 +3,12 @@ import { useGraphStore } from '../../stores/graph'
 import { useI18n } from '../useI18n'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
-import { ARCHIMATE_TYPES, toArchimateXmiType, type ArchimateLayer } from './useTypeable'
+import {
+  ARCHIMATE_TYPES,
+  toArchimateXmiType,
+  getArchimateTypeInfo,
+  type ArchimateLayer,
+} from './useTypeable'
 import type { Node } from '../../types'
 
 /**
@@ -201,20 +206,6 @@ export function useExportable(): ExportableHandlers {
   }
 
   /**
-   * Construit l'index inverse type Archimate → couche. Mémoïsé par appel
-   * (peu coûteux).
-   */
-  function buildTypeToLayerMap(): Map<string, ArchimateLayer> {
-    const map = new Map<string, ArchimateLayer>()
-    for (const [layerKey, layer] of Object.entries(ARCHIMATE_TYPES)) {
-      for (const typeKey of Object.keys(layer.types)) {
-        map.set(typeKey, layerKey as ArchimateLayer)
-      }
-    }
-    return map
-  }
-
-  /**
    * Charge un PNG en `<img>` HTML pour pouvoir l'injecter dans jsPDF
    * (qui prend un HTMLImageElement déjà chargé).
    */
@@ -263,14 +254,13 @@ export function useExportable(): ExportableHandlers {
 
     const nodes = Object.values(graphStore.nodes) as Node[]
     const edges = Object.values(graphStore.edges)
-    const typeToLayer = buildTypeToLayerMap()
 
     // Pré-grouper les noeuds par couche Archimate pour les sections.
     const nodesByLayer = new Map<ArchimateLayer, Node[]>()
     for (const node of nodes) {
       const t = node.data?.archimateType as string | undefined
       if (!t) continue
-      const layer = typeToLayer.get(t)
+      const layer = getArchimateTypeInfo(t)?.layer
       if (!layer) continue
       const bucket = nodesByLayer.get(layer) ?? []
       bucket.push(node)
