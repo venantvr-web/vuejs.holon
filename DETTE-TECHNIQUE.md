@@ -2,6 +2,21 @@
 
 Ce document recense la dette technique identifiée lors de l'audit du code (juillet 2026). Conformément aux principes de maintenance du projet, chaque élément est décrit, priorisé et associé à une piste de remédiation. Aucun raccourci ne doit rester non documenté : ce fichier fait office de registre.
 
+> **État au 18 juillet 2026 : les dix points (D1 à D10) sont corrigés.** Chaque correction a fait l'objet d'un commit dédié, avec tests et vérification du typage. Le détail de chaque remédiation est conservé ci-dessous à titre d'historique.
+
+| ID | Sujet | Sévérité | Statut |
+|----|-------|----------|--------|
+| D1 | Export/import Archimate XML non conforme au standard | **Critique** | ✅ Corrigé |
+| D2 | Stratégie de fusion `merge` documentée mais non implémentée | **Élevée** | ✅ Corrigé |
+| D3 | Résultat de la validation Zod jeté | **Élevée** | ✅ Corrigé |
+| D4 | Double source de vérité pour les types Archimate | **Élevée** | ✅ Corrigé |
+| D5 | Chaînes françaises en dur dans la Toolbar | Moyenne | ✅ Corrigé |
+| D6 | Dialogues `confirm()` natifs | Moyenne | ✅ Corrigé |
+| D7 | UUID générés via `Math.random()` | Faible | ✅ Corrigé |
+| D8 | Suppressions IndexedDB séquentielles hors transaction | Moyenne | ✅ Corrigé |
+| D9 | Accès `localStorage` sans garde d'erreur | Faible | ✅ Corrigé |
+| D10 | Format JSON versionné sans mécanisme de migration | Moyenne | ✅ Corrigé |
+
 ## Synthèse
 
 ```mermaid
