@@ -3,6 +3,7 @@ import { useGraphStore } from '../../stores/graph'
 import { z } from 'zod'
 import type { Node, Edge } from '../../types'
 import { nanoid } from 'nanoid'
+import { fromArchimateXmiType } from './useTypeable'
 
 /**
  * Stratégies de gestion des conflits d'IDs lors de l'import.
@@ -373,7 +374,11 @@ export function useImportable(): ImportableHandlers {
         const id = elem.getAttribute('id') || nanoid()
         const name = elem.getAttribute('name') || `Element ${index + 1}`
         const typeAttr = elem.getAttribute('xsi:type') || 'archimate:BusinessActor'
-        const archimateType = typeAttr.replace('archimate:', '')
+        const xmiType = typeAttr.replace('archimate:', '')
+        // Le nom standard Open Group (PascalCase) est reconverti en type interne
+        // (kebab-case) afin que la couche, la couleur et l'icône soient
+        // reconnues. Un type inconnu est conservé brut plutôt que perdu.
+        const archimateType = fromArchimateXmiType(xmiType) ?? xmiType
 
         // Créer un noeud avec position par défaut
         nodes.push({

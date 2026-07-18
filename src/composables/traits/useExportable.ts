@@ -3,7 +3,7 @@ import { useGraphStore } from '../../stores/graph'
 import { useI18n } from '../useI18n'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
-import { ARCHIMATE_TYPES, type ArchimateLayer } from './useTypeable'
+import { ARCHIMATE_TYPES, toArchimateXmiType, type ArchimateLayer } from './useTypeable'
 import type { Node } from '../../types'
 
 /**
@@ -470,6 +470,9 @@ export function useExportable(): ExportableHandlers {
     xml += '<archimate:model\n'
     xml += '  xmlns:archimate="http://www.opengroup.org/xsd/archimate/3.0/"\n'
     xml += '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n'
+    // Dublin Core : requis car les métadonnées ci-dessous utilisent le préfixe
+    // dc: ; sans cette déclaration le XML est rejeté par un parseur strict.
+    xml += '  xmlns:dc="http://purl.org/dc/elements/1.1/"\n'
     xml +=
       '  xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd"\n'
     xml += `  identifier="${generateUUID()}"\n`
@@ -488,8 +491,12 @@ export function useExportable(): ExportableHandlers {
     // Elements (nodes)
     xml += '  <elements>\n'
     for (const node of nodes) {
-      const archimateType = node.data?.archimateType || 'BusinessActor'
-      xml += `    <element xsi:type="archimate:${archimateType}" id="${node.id}" name="${escapeXML(node.data?.name || node.id)}">\n`
+      // Le type interne (kebab-case, ex. « business-actor ») est converti en
+      // nom standard Open Group (PascalCase, ex. « BusinessActor ») attendu par
+      // les outils conformes (Archi, BiZZdesign).
+      const internalType = (node.data?.archimateType as string) || 'business-actor'
+      const xmiType = toArchimateXmiType(internalType)
+      xml += `    <element xsi:type="archimate:${xmiType}" id="${node.id}" name="${escapeXML(node.data?.name || node.id)}">\n`
       if (node.data?.documentation) {
         xml += `      <documentation>${escapeXML(node.data.documentation)}</documentation>\n`
       }

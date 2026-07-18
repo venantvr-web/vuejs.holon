@@ -28,6 +28,7 @@ vi.mock('jspdf', () => ({ jsPDF: vi.fn() }))
 
 import { useGraphStore } from '../../../stores/graph'
 import { useExportable } from '../useExportable'
+import { useImportable } from '../useImportable'
 import type { Node, Edge } from '../../../types'
 
 function makeNode(id: string, archimateType?: string): Node {
@@ -100,12 +101,15 @@ describe('useExportable', () => {
       expect(xml).toContain('xmlns:archimate="http://www.opengroup.org/xsd/archimate/3.0/"')
     })
 
-    it('liste les noeuds dans <elements> avec leur id et leur type', () => {
+    it('liste les noeuds dans <elements> avec leur type au format standard Open Group', () => {
       const xml = exporter.exportAsArchimate()
       expect(xml).toContain('<elements>')
       expect(xml).toContain('id="a"')
       expect(xml).toContain('id="b"')
-      expect(xml).toContain('xsi:type="archimate:business-actor"')
+      // Le type interne kebab-case est converti en PascalCase conforme.
+      expect(xml).toContain('xsi:type="archimate:BusinessActor"')
+      expect(xml).toContain('xsi:type="archimate:ApplicationComponent"')
+      expect(xml).not.toContain('archimate:business-actor')
     })
 
     it('liste les relations avec source et target', () => {
@@ -115,6 +119,24 @@ describe('useExportable', () => {
       expect(xml).toContain('source="a"')
       expect(xml).toContain('target="b"')
       expect(xml).toContain('xsi:type="archimate:Composition"')
+    })
+
+    it('préserve le type interne lors d\'un aller-retour export → import', async () => {
+      // Export Archimate du graphe courant (business-actor + application-component).
+      const xml = exporter.exportAsArchimate()
+
+      // Réimport dans un store neuf.
+      setActivePinia(createPinia())
+      const freshStore = useGraphStore()
+      const { importFromArchimate } = useImportable()
+      const result = await importFromArchimate(xml)
+
+      expect(result.success).toBe(true)
+      const types = Object.values(freshStore.nodes)
+        .map((n) => n.data?.archimateType)
+        .sort()
+      // Les types reviennent au format interne kebab-case, pas en PascalCase.
+      expect(types).toEqual(['application-component', 'business-actor'])
     })
 
     it('échappe les caractères XML dangereux dans les noms', async () => {

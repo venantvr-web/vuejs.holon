@@ -367,6 +367,102 @@ export function useTypeable(options: TypeableOptions): TypeableState & TypeableH
   }
 }
 
+/**
+ * Métadonnées agrégées d'un type Archimate, pré-indexées pour un accès O(1).
+ */
+export interface ArchimateTypeInfo {
+  /** Couche à laquelle appartient le type. */
+  layer: ArchimateLayer
+  /** Libellé de la couche. */
+  layerLabel: string
+  /** Libellé du type. */
+  label: string
+  /** Icône associée. */
+  icon: string
+  /** Couleur de la couche (hex opaque). */
+  color: string
+  /**
+   * Nom PascalCase conforme au standard Open Group, utilisé comme `xsi:type`
+   * dans l'export/import Archimate XML.
+   */
+  xmiType: string
+}
+
+/**
+ * Cas particuliers où la transformation kebab → Pascal ne produit pas le nom
+ * standard Open Group : la couche « generic » n'est pas préfixée dans le
+ * standard (Grouping, Location, Junction).
+ */
+const XMI_TYPE_OVERRIDES: Record<string, string> = {
+  'generic-grouping': 'Grouping',
+  'generic-location': 'Location',
+  'generic-junction': 'Junction',
+  // « note » n'a pas d'équivalent élément Archimate normalisé ; on conserve un
+  // nom stable et réversible pour préserver l'aller-retour interne.
+  'generic-note': 'Note',
+}
+
+/**
+ * Convertit un identifiant kebab-case (`business-actor`) en PascalCase
+ * (`BusinessActor`).
+ */
+function kebabToPascal(type: string): string {
+  return type
+    .split('-')
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join('')
+}
+
+/**
+ * Index inverse type interne → métadonnées, et index Pascal → type interne.
+ * Construits une seule fois au chargement du module : les recherches linéaires
+ * répétées (`archimateLayer`, `typeLabel`, `typeIcon`) et les mappings XML
+ * s'appuient dessus.
+ */
+const TYPE_INDEX = new Map<string, ArchimateTypeInfo>()
+const XMI_TO_TYPE = new Map<string, string>()
+
+for (const [layerKey, layer] of Object.entries(ARCHIMATE_TYPES)) {
+  for (const [typeKey, def] of Object.entries(layer.types)) {
+    const xmiType = XMI_TYPE_OVERRIDES[typeKey] ?? kebabToPascal(typeKey)
+    TYPE_INDEX.set(typeKey, {
+      layer: layerKey as ArchimateLayer,
+      layerLabel: layer.label,
+      label: (def as { label: string }).label,
+      icon: (def as { icon: string }).icon,
+      color: layer.color,
+      xmiType,
+    })
+    XMI_TO_TYPE.set(xmiType, typeKey)
+  }
+}
+
+/**
+ * Renvoie les métadonnées d'un type Archimate interne en O(1), ou `null` si le
+ * type est inconnu.
+ */
+export function getArchimateTypeInfo(type: string | null | undefined): ArchimateTypeInfo | null {
+  if (!type) return null
+  return TYPE_INDEX.get(type) ?? null
+}
+
+/**
+ * Convertit un type interne (kebab-case) en `xsi:type` standard (PascalCase)
+ * pour l'export Archimate XML. Les types inconnus sont transformés à la volée.
+ */
+export function toArchimateXmiType(type: string): string {
+  return TYPE_INDEX.get(type)?.xmiType ?? kebabToPascal(type)
+}
+
+/**
+ * Convertit un `xsi:type` standard (PascalCase) en type interne (kebab-case)
+ * pour l'import Archimate XML. Renvoie `null` si aucun type interne ne
+ * correspond (l'appelant peut alors décider de conserver la valeur brute).
+ */
+export function fromArchimateXmiType(xmiType: string): string | null {
+  return XMI_TO_TYPE.get(xmiType) ?? null
+}
+
 // Helper pour obtenir tous les types à plat
 export function getAllArchimateTypes(): Array<{
   type: string
