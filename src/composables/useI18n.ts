@@ -77,6 +77,22 @@ const messages: Messages = {
     // === Sidebar / bibliothèque ===
     'sidebar.library': 'Bibliothèque',
     'sidebar.outline': 'Plan du modèle',
+    'sidebar.eventStorming': 'Stickers Event Storming',
+    'sidebar.eventStormingHint': 'Glissez un sticker sur le canevas',
+
+    // === Mode Event Storming ===
+    'notation.archimate': 'Archimate',
+    'notation.eventStorming': 'Event Storming',
+    'notation.tooltip': 'Choisir la notation du canevas (Archimate ou Event Storming)',
+    'es.type.domain-event': 'Événement de domaine',
+    'es.type.command': 'Commande',
+    'es.type.actor': 'Acteur',
+    'es.type.aggregate': 'Agrégat',
+    'es.type.policy': 'Politique',
+    'es.type.read-model': 'Modèle de lecture',
+    'es.type.external-system': 'Système externe',
+    'es.type.hotspot': 'Point chaud',
+    'es.grammar.invalid': 'Relation non conforme à la grammaire Event Storming',
 
     // === Actions communes ===
     'common.cancel': 'Annuler',
@@ -550,6 +566,22 @@ const messages: Messages = {
 
     'sidebar.library': 'Library',
     'sidebar.outline': 'Model outline',
+    'sidebar.eventStorming': 'Event Storming stickers',
+    'sidebar.eventStormingHint': 'Drag a sticker onto the canvas',
+
+    // === Event Storming mode ===
+    'notation.archimate': 'Archimate',
+    'notation.eventStorming': 'Event Storming',
+    'notation.tooltip': 'Choose the canvas notation (Archimate or Event Storming)',
+    'es.type.domain-event': 'Domain event',
+    'es.type.command': 'Command',
+    'es.type.actor': 'Actor',
+    'es.type.aggregate': 'Aggregate',
+    'es.type.policy': 'Policy',
+    'es.type.read-model': 'Read model',
+    'es.type.external-system': 'External system',
+    'es.type.hotspot': 'Hotspot',
+    'es.grammar.invalid': 'Relation does not follow the Event Storming grammar',
 
     'common.cancel': 'Cancel',
     'common.confirm': 'Confirm',

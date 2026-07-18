@@ -6,16 +6,34 @@ import { useLibraryStore } from '../../stores/library'
 import type { LibraryItem } from '../../types'
 import OutlinePanel from './OutlinePanel.vue'
 import { useI18n } from '../../composables/useI18n'
+import {
+  useEventStormable,
+  getAllEventStormingTypes,
+  type EventStormingType,
+} from '../../composables/traits'
 
 const libraryStore = useLibraryStore()
 const { t } = useI18n()
+const { isEventStormingMode, createStickerTemplate } = useEventStormable()
 
 const libraryOpen = ref(true)
 const outlineOpen = ref(true)
+const stickersOpen = ref(true)
+
+const stickers = getAllEventStormingTypes()
 
 function handleDragStart(event: DragEvent, item: LibraryItem) {
   if (event.dataTransfer) {
     event.dataTransfer.setData('application/json', JSON.stringify(item.template))
+    event.dataTransfer.effectAllowed = 'copy'
+  }
+}
+
+function handleStickerDragStart(event: DragEvent, type: EventStormingType) {
+  if (event.dataTransfer) {
+    // Même canal que la bibliothèque : le canevas instancie le gabarit au drop.
+    const template = createStickerTemplate(type, t(`es.type.${type}`))
+    event.dataTransfer.setData('application/json', JSON.stringify(template))
     event.dataTransfer.effectAllowed = 'copy'
   }
 }
@@ -30,6 +48,41 @@ function handleRemove(event: MouseEvent, item: LibraryItem) {
 
 <template>
   <aside class="w-64 app-surface-2 border-r app-border flex flex-col overflow-hidden">
+    <!-- Palette Event Storming (visible uniquement dans cette notation) -->
+    <div v-if="isEventStormingMode" class="flex-shrink-0 border-b app-border">
+      <button
+        class="w-full flex items-center justify-between px-3 py-2 app-hover app-fg transition-colors duration-150"
+        @click="stickersOpen = !stickersOpen"
+      >
+        <span
+          class="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide app-muted"
+        >
+          <component :is="stickersOpen ? ChevronDown : ChevronRight" :size="14" />
+          {{ t('sidebar.eventStorming') }}
+        </span>
+        <span class="text-xs app-subtle font-mono">{{ stickers.length }}</span>
+      </button>
+      <div v-if="stickersOpen" class="p-2 max-h-[40vh] overflow-y-auto">
+        <p class="text-xs app-subtle mb-2 px-1">{{ t('sidebar.eventStormingHint') }}</p>
+        <ul class="grid grid-cols-2 gap-2">
+          <li
+            v-for="sticker in stickers"
+            :key="sticker.type"
+            class="flex flex-col items-center justify-center gap-1 p-2 rounded cursor-grab border shadow-sm text-center select-none"
+            :style="{ backgroundColor: sticker.fill, borderColor: sticker.stroke }"
+            draggable="true"
+            v-tooltip="t(`es.type.${sticker.type}`)"
+            @dragstart="handleStickerDragStart($event, sticker.type)"
+          >
+            <span class="text-base leading-none">{{ sticker.icon }}</span>
+            <span class="text-[11px] font-medium leading-tight text-gray-900">
+              {{ t(`es.type.${sticker.type}`) }}
+            </span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
     <!-- Bibliothèque -->
     <div class="flex-shrink-0 border-b app-border">
       <button
