@@ -197,6 +197,61 @@ describe('useImportable', () => {
     })
   })
 
+  describe('migration de version du format', () => {
+    it('refuse une version plus récente que celle supportée', async () => {
+      const store = useGraphStore()
+      const { importFromJSON } = useImportable()
+
+      const json = JSON.stringify({
+        version: '2.0',
+        nodes: [
+          {
+            id: 'futur',
+            parentId: null,
+            type: 'shape',
+            geometry: { x: 0, y: 0, w: 50, h: 50 },
+            styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 },
+            data: {},
+          },
+        ],
+        edges: [],
+      })
+
+      const result = await importFromJSON(json)
+
+      expect(result.success).toBe(false)
+      expect(result.errors.join(' ')).toMatch(/2\.0/)
+      // Rien n'a été importé.
+      expect(store.nodes['futur']).toBeUndefined()
+    })
+
+    it('tolère un document sans version (supposé courant) avec un avertissement', async () => {
+      const store = useGraphStore()
+      const { importFromJSON } = useImportable()
+
+      const json = JSON.stringify({
+        // version absente
+        nodes: [
+          {
+            id: 'legacy',
+            parentId: null,
+            type: 'shape',
+            geometry: { x: 0, y: 0, w: 50, h: 50 },
+            styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 },
+            data: {},
+          },
+        ],
+        edges: [],
+      })
+
+      const result = await importFromJSON(json)
+
+      expect(result.success).toBe(true)
+      expect(store.nodes['legacy']).toBeDefined()
+      expect(result.warnings.some((w) => /[Vv]ersion/.test(w))).toBe(true)
+    })
+  })
+
   describe("erreurs d'entrée", () => {
     it("rejette un JSON malformé avec un message d'erreur", async () => {
       const { importFromJSON } = useImportable()

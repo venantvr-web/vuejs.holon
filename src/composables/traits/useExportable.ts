@@ -4,6 +4,7 @@ import { useI18n } from '../useI18n'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 import { nanoid } from 'nanoid'
+import { CURRENT_FORMAT_VERSION } from './utils/import-migrations'
 import {
   ARCHIMATE_TYPES,
   toArchimateXmiType,
@@ -431,7 +432,7 @@ export function useExportable(): ExportableHandlers {
     const { includeMetadata = true } = options
 
     const exportData: Record<string, unknown> = {
-      version: '1.0',
+      version: CURRENT_FORMAT_VERSION,
       exportedAt: new Date().toISOString(),
       nodes: Object.values(graphStore.nodes),
       edges: Object.values(graphStore.edges),

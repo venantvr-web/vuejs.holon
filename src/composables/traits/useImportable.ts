@@ -4,6 +4,7 @@ import { z } from 'zod'
 import type { Node, Edge } from '../../types'
 import { nanoid } from 'nanoid'
 import { fromArchimateXmiType } from './useTypeable'
+import { migrateImportData } from './utils/import-migrations'
 
 /**
  * Stratégies de gestion des conflits d'IDs lors de l'import.
@@ -387,11 +388,21 @@ export function useImportable(): ImportableHandlers {
       // Parser le JSON
       const data = JSON.parse(json)
 
+      // Migration de version : amène le document au format courant, ou refuse
+      // proprement une version non supportée (format du futur, chemin absent).
+      const migration = migrateImportData(data)
+      if (!migration.ok) {
+        result.errors.push(migration.error ?? 'Échec de migration du format')
+        return result
+      }
+      result.warnings.push(...migration.warnings)
+      const migratedData = migration.data as Record<string, unknown>
+
       // Validation : quand elle est active, on repart des données normalisées
       // (routing par défaut, data à {}) plutôt que de l'entrée brute.
       let normalized: { nodes: Node[]; edges: Edge[] } | null = null
       if (validateBeforeImport) {
-        const validation = validateImport(data)
+        const validation = validateImport(migratedData)
         if (!validation.valid) {
           result.errors = validation.errors
           return result
@@ -399,8 +410,11 @@ export function useImportable(): ImportableHandlers {
         normalized = validation.data as unknown as { nodes: Node[]; edges: Edge[] }
       }
 
-      // Extraire nodes et edges (données validées si disponibles, sinon brutes)
-      let { nodes, edges } = (normalized ?? data) as { nodes: Node[]; edges: Edge[] }
+      // Extraire nodes et edges (données validées si disponibles, sinon migrées)
+      let { nodes, edges } = (normalized ?? migratedData) as unknown as {
+        nodes: Node[]
+        edges: Edge[]
+      }
 
       // Stratégie 'merge' : les éléments dont l'ID existe déjà sont fusionnés
       // champ à champ avec l'existant (l'entrant prime, les `data` sont
@@ -410,7 +424,7 @@ export function useImportable(): ImportableHandlers {
         const merged = await applyMerge(nodes, edges)
         result.nodesImported = merged.nodesImported
         result.edgesImported = merged.edgesImported
-        result.warnings = merged.warnings
+        result.warnings.push(...merged.warnings)
         result.success = true
         return result
       }
@@ -420,7 +434,7 @@ export function useImportable(): ImportableHandlers {
       const resolved = resolveIDConflicts(nodes, edges, onConflict)
       nodes = resolved.nodes
       edges = resolved.edges
-      result.warnings = resolved.warnings
+      result.warnings.push(...resolved.warnings)
 
       // Appliquer la stratégie de merge
       if (mergeStrategy === 'replace') {
