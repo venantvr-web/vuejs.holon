@@ -70,12 +70,14 @@ const NOTATION_MODES: Array<{ value: NotationMode; labelKey: string }> = [
 ]
 
 const layoutMenuOpen = ref(false)
-const LAYOUTS: Array<{ value: LayoutAlgorithm; label: string; hint: string }> = [
-  { value: 'force', label: 'Force', hint: 'Réseau de dépendances (d3-force)' },
-  { value: 'hierarchical', label: 'Hiérarchique', hint: 'Arbre orienté (top-bottom)' },
-  { value: 'tree', label: 'Arbre', hint: 'Reingold-Tilford' },
-  { value: 'circular', label: 'Circulaire', hint: 'Placement radial' },
-  { value: 'grid', label: 'Grille', hint: 'Matrice 2D' },
+// Les libellés/indications sont référencés par clé i18n et traduits au rendu
+// pour rester réactifs au changement de langue.
+const LAYOUTS: Array<{ value: LayoutAlgorithm; labelKey: string; hintKey: string }> = [
+  { value: 'force', labelKey: 'layout.force', hintKey: 'layout.force.hint' },
+  { value: 'hierarchical', labelKey: 'layout.hierarchical', hintKey: 'layout.hierarchical.hint' },
+  { value: 'tree', labelKey: 'layout.tree', hintKey: 'layout.tree.hint' },
+  { value: 'circular', labelKey: 'layout.circular', hintKey: 'layout.circular.hint' },
+  { value: 'grid', labelKey: 'layout.grid', hintKey: 'layout.grid.hint' },
 ]
 
 async function runLayout(algo: LayoutAlgorithm) {
@@ -269,7 +271,7 @@ function handleUngroup() {
           aria-controls="history-panel-popover"
         >
           <span class="inline-flex items-center gap-1.5"
-            ><HistoryIcon class="w-4 h-4" /> Historique</span
+            ><HistoryIcon class="w-4 h-4" /> {{ t('toolbar.history') }}</span
           >
         </button>
         <div
@@ -292,7 +294,7 @@ function handleUngroup() {
           aria-controls="layers-panel-popover"
         >
           <span class="inline-flex items-center gap-1.5"
-            ><LayersIcon class="w-4 h-4" /> Couches</span
+            ><LayersIcon class="w-4 h-4" /> {{ t('toolbar.layers') }}</span
           >
         </button>
         <div
@@ -313,7 +315,9 @@ function handleUngroup() {
         :class="snapConfig.snapToGrid ? 'app-toggle-active' : 'app-btn'"
         v-tooltip="t('toolbar.tooltip.grid')"
       >
-        <span class="inline-flex items-center gap-1.5"><LayoutGrid class="w-4 h-4" /> Grille</span>
+        <span class="inline-flex items-center gap-1.5"
+          ><LayoutGrid class="w-4 h-4" /> {{ t('toolbar.grid') }}</span
+        >
       </button>
       <button
         @click="toggleNodeSnap"
@@ -321,7 +325,9 @@ function handleUngroup() {
         :class="snapConfig.snapToNodes ? 'app-toggle-active' : 'app-btn'"
         v-tooltip="t('toolbar.tooltip.snap')"
       >
-        <span class="inline-flex items-center gap-1.5"><Magnet class="w-4 h-4" /> Aimant</span>
+        <span class="inline-flex items-center gap-1.5"
+          ><Magnet class="w-4 h-4" /> {{ t('toolbar.snap') }}</span
+        >
       </button>
 
       <span class="w-px h-5 bg-[var(--border)] mx-1"></span>
@@ -335,10 +341,10 @@ function handleUngroup() {
           v-tooltip="t('toolbar.tooltip.layout')"
         >
           <span v-if="isLayouting" class="inline-flex items-center gap-1.5"
-            ><Loader2 class="w-4 h-4 animate-spin" /> Mise en page…</span
+            ><Loader2 class="w-4 h-4 animate-spin" /> {{ t('toolbar.layouting') }}</span
           >
           <span v-else class="inline-flex items-center gap-1.5"
-            >Layout <ChevronDown class="w-3.5 h-3.5"
+            >{{ t('toolbar.layout') }} <ChevronDown class="w-3.5 h-3.5"
           /></span>
         </button>
         <div
@@ -346,17 +352,19 @@ function handleUngroup() {
           class="absolute top-full left-0 mt-1 app-surface border app-border rounded shadow-lg py-1 w-56 z-40 text-sm"
           @mouseleave="layoutMenuOpen = false"
         >
-          <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">Algorithmes</div>
+          <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">
+            {{ t('toolbar.algorithms') }}
+          </div>
           <button
             v-for="l in LAYOUTS"
             :key="l.value"
             class="w-full text-left px-3 py-1.5 app-hover"
             :class="{ 'app-selected font-medium': currentAlgorithm === l.value }"
-            v-tooltip="l.hint"
+            v-tooltip="t(l.hintKey)"
             @click="runLayout(l.value)"
           >
-            <div>{{ l.label }}</div>
-            <div class="text-xs app-subtle">{{ l.hint }}</div>
+            <div>{{ t(l.labelKey) }}</div>
+            <div class="text-xs app-subtle">{{ t(l.hintKey) }}</div>
           </button>
         </div>
       </div>
@@ -370,7 +378,7 @@ function handleUngroup() {
           v-tooltip="t('toolbar.tooltip.align')"
         >
           <span class="inline-flex items-center gap-1.5"
-            >Aligner <ChevronDown class="w-3.5 h-3.5"
+            >{{ t('toolbar.align') }} <ChevronDown class="w-3.5 h-3.5"
           /></span>
         </button>
         <div
@@ -378,77 +386,83 @@ function handleUngroup() {
           class="absolute top-full left-0 mt-1 app-surface border app-border rounded shadow-lg py-1 w-56 z-40 text-sm"
           @mouseleave="alignMenuOpen = false"
         >
-          <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">Aligner</div>
+          <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">
+            {{ t('align.title') }}
+          </div>
           <button
             class="w-full text-left px-3 py-1 app-hover"
             @click="runAlign(() => alignNodes('left'))"
           >
-            Gauche
+            {{ t('align.left') }}
           </button>
           <button
             class="w-full text-left px-3 py-1 app-hover"
             @click="runAlign(() => alignNodes('center-h'))"
           >
-            Centrer horizontalement
+            {{ t('align.centerH') }}
           </button>
           <button
             class="w-full text-left px-3 py-1 app-hover"
             @click="runAlign(() => alignNodes('right'))"
           >
-            Droite
+            {{ t('align.right') }}
           </button>
           <button
             class="w-full text-left px-3 py-1 app-hover"
             @click="runAlign(() => alignNodes('top'))"
           >
-            Haut
+            {{ t('align.top') }}
           </button>
           <button
             class="w-full text-left px-3 py-1 app-hover"
             @click="runAlign(() => alignNodes('center-v'))"
           >
-            Centrer verticalement
+            {{ t('align.centerV') }}
           </button>
           <button
             class="w-full text-left px-3 py-1 app-hover"
             @click="runAlign(() => alignNodes('bottom'))"
           >
-            Bas
+            {{ t('align.bottom') }}
           </button>
 
           <div class="my-1 border-t app-border"></div>
-          <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">Distribuer</div>
+          <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">
+            {{ t('align.distribute') }}
+          </div>
           <button
             class="w-full text-left px-3 py-1 app-hover disabled:opacity-40"
             :disabled="!canDistribute"
             @click="runAlign(() => distributeNodes('horizontal'))"
           >
-            Horizontalement
+            {{ t('align.horizontal') }}
           </button>
           <button
             class="w-full text-left px-3 py-1 app-hover disabled:opacity-40"
             :disabled="!canDistribute"
             @click="runAlign(() => distributeNodes('vertical'))"
           >
-            Verticalement
+            {{ t('align.vertical') }}
           </button>
 
           <div class="my-1 border-t app-border"></div>
-          <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">Harmoniser taille</div>
+          <div class="px-3 py-1 text-xs font-semibold app-subtle uppercase">
+            {{ t('align.matchSize') }}
+          </div>
           <button
             class="w-full text-left px-3 py-1 app-hover"
             @click="runAlign(() => matchWidth())"
           >
-            Largeur
+            {{ t('align.width') }}
           </button>
           <button
             class="w-full text-left px-3 py-1 app-hover"
             @click="runAlign(() => matchHeight())"
           >
-            Hauteur
+            {{ t('align.height') }}
           </button>
           <button class="w-full text-left px-3 py-1 app-hover" @click="runAlign(() => matchSize())">
-            Largeur et hauteur
+            {{ t('align.widthHeight') }}
           </button>
         </div>
       </div>
@@ -462,7 +476,7 @@ function handleUngroup() {
         class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         v-tooltip="t('toolbar.tooltip.group')"
       >
-        Grouper
+        {{ t('toolbar.group') }}
       </button>
       <button
         @click="handleUngroup"
@@ -470,7 +484,7 @@ function handleUngroup() {
         class="px-3 py-1.5 text-sm app-btn rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         v-tooltip="t('toolbar.tooltip.ungroup')"
       >
-        Dégrouper
+        {{ t('toolbar.ungroup') }}
       </button>
 
       <span class="w-px h-5 bg-[var(--border)] mx-1"></span>
