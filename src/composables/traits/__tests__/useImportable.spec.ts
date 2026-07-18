@@ -276,6 +276,91 @@ describe('useImportable', () => {
       expect(store.nodes['new']).toBeDefined()
     })
 
+    it('mergeStrategy "merge" fusionne champ à champ les données des noeuds existants', async () => {
+      const store = useGraphStore()
+      const { importFromJSON } = useImportable()
+
+      await importFromJSON(
+        validJson({
+          nodes: [
+            {
+              id: 'm',
+              parentId: null,
+              type: 'shape',
+              geometry: { x: 0, y: 0, w: 50, h: 50 },
+              styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 },
+              data: { name: 'Origine', keep: 'moi' },
+            },
+          ],
+        })
+      )
+
+      const result = await importFromJSON(
+        validJson({
+          nodes: [
+            {
+              id: 'm',
+              parentId: null,
+              type: 'shape',
+              geometry: { x: 99, y: 99, w: 50, h: 50 },
+              styling: { fill: '#000', stroke: '#333', strokeWidth: 1, opacity: 1 },
+              data: { name: 'Fusionné', ajout: 'nouveau' },
+            },
+          ],
+        }),
+        { mergeStrategy: 'merge' }
+      )
+
+      expect(result.success).toBe(true)
+      // Un seul noeud (pas de renommage)
+      expect(Object.keys(store.nodes)).toHaveLength(1)
+      // La géométrie/le style entrants priment
+      expect(store.nodes['m'].geometry.x).toBe(99)
+      expect(store.nodes['m'].styling.fill).toBe('#000')
+      // data fusionnée : clé écrasée + clé conservée + clé ajoutée
+      expect(store.nodes['m'].data.name).toBe('Fusionné')
+      expect(store.nodes['m'].data.keep).toBe('moi')
+      expect(store.nodes['m'].data.ajout).toBe('nouveau')
+    })
+
+    it('mergeStrategy "merge" ajoute les noeuds inconnus', async () => {
+      const store = useGraphStore()
+      const { importFromJSON } = useImportable()
+
+      await importFromJSON(
+        validJson({
+          nodes: [
+            {
+              id: 'existant',
+              parentId: null,
+              type: 'shape',
+              geometry: { x: 0, y: 0, w: 50, h: 50 },
+              styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 },
+              data: {},
+            },
+          ],
+        })
+      )
+
+      await importFromJSON(
+        validJson({
+          nodes: [
+            {
+              id: 'nouveau',
+              parentId: null,
+              type: 'shape',
+              geometry: { x: 0, y: 0, w: 50, h: 50 },
+              styling: { fill: '#fff', stroke: '#333', strokeWidth: 1, opacity: 1 },
+              data: {},
+            },
+          ],
+        }),
+        { mergeStrategy: 'merge' }
+      )
+
+      expect(Object.keys(store.nodes).sort()).toEqual(['existant', 'nouveau'])
+    })
+
     it('mergeStrategy "append" (défaut) conserve l\'existant', async () => {
       const store = useGraphStore()
       const { importFromJSON } = useImportable()

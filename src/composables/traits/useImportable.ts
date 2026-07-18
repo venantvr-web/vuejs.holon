@@ -34,9 +34,12 @@ export interface ImportOptions {
   validateBeforeImport?: boolean
   /**
    * Stratégie de fusion avec le graphe existant.
-   * - append: Ajoute aux données existantes
-   * - replace: Remplace toutes les données
-   * - merge: Fusionne intelligemment
+   * - append: Ajoute aux données existantes (les conflits d'ID sont gérés par
+   *   `onConflict`)
+   * - replace: Efface tout le graphe avant l'import
+   * - merge: Fusionne champ à champ les éléments dont l'ID existe déjà (les
+   *   `data` sont fusionnées clé à clé, l'entrant l'emportant) et ajoute les
+   *   nouveaux ; `onConflict` est ignoré dans ce mode
    * @default 'append'
    */
   mergeStrategy?: MergeStrategy
@@ -275,6 +278,56 @@ export function useImportable(): ImportableHandlers {
   }
 
   /**
+   * Fusionne intelligemment un lot de noeuds/arêtes avec le graphe existant :
+   * un élément dont l'ID existe déjà est mis à jour champ à champ (les `data`
+   * sont fusionnées clé à clé, l'entrant l'emportant), un élément inconnu est
+   * ajouté tel quel.
+   */
+  async function applyMerge(
+    nodes: Node[],
+    edges: Edge[]
+  ): Promise<{ nodesImported: number; edgesImported: number; warnings: string[] }> {
+    const warnings: string[] = []
+    let nodesImported = 0
+    let edgesImported = 0
+
+    for (const node of nodes) {
+      const existing = graphStore.nodes[node.id]
+      if (existing) {
+        await graphStore.updateNode(node.id, {
+          parentId: node.parentId,
+          type: node.type,
+          geometry: { ...existing.geometry, ...node.geometry },
+          styling: { ...existing.styling, ...node.styling },
+          data: { ...existing.data, ...node.data },
+        })
+        warnings.push(`Noeud ${node.id} fusionné`)
+      } else {
+        await graphStore.importNode(node)
+      }
+      nodesImported++
+    }
+
+    for (const edge of edges) {
+      const existing = graphStore.edges[edge.id]
+      if (existing) {
+        await graphStore.updateEdge(edge.id, {
+          sourceId: edge.sourceId,
+          targetId: edge.targetId,
+          routing: edge.routing,
+          data: { ...existing.data, ...edge.data },
+        })
+        warnings.push(`Arête ${edge.id} fusionnée`)
+      } else {
+        await graphStore.importEdge(edge)
+      }
+      edgesImported++
+    }
+
+    return { nodesImported, edgesImported, warnings }
+  }
+
+  /**
    * Importe depuis JSON.
    */
   async function importFromJSON(json: string, options: ImportOptions = {}): Promise<ImportResult> {
@@ -303,6 +356,19 @@ export function useImportable(): ImportableHandlers {
 
       // Extraire nodes et edges
       let { nodes, edges } = data as { nodes: Node[]; edges: Edge[] }
+
+      // Stratégie 'merge' : les éléments dont l'ID existe déjà sont fusionnés
+      // champ à champ avec l'existant (l'entrant prime, les `data` sont
+      // fusionnées clé à clé) ; les nouveaux sont ajoutés. La résolution de
+      // conflits par renommage/skip ne s'applique donc pas à ce mode.
+      if (mergeStrategy === 'merge') {
+        const merged = await applyMerge(nodes, edges)
+        result.nodesImported = merged.nodesImported
+        result.edgesImported = merged.edgesImported
+        result.warnings = merged.warnings
+        result.success = true
+        return result
+      }
 
       // Résoudre les conflits d'IDs (stratégie 'rename' remappe aussi les
       // références source/target des arêtes).
