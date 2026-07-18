@@ -2,26 +2,28 @@
 
 Ce document recense la dette technique identifiée lors de l'audit du code (juillet 2026). Conformément aux principes de maintenance du projet, chaque élément est décrit, priorisé et associé à une piste de remédiation. Aucun raccourci ne doit rester non documenté : ce fichier fait office de registre.
 
-> **État au 18 juillet 2026 : les dix points (D1 à D10) sont corrigés.** Chaque correction a fait l'objet d'un commit dédié, avec tests et vérification du typage. Le détail de chaque remédiation est conservé ci-dessous à titre d'historique.
-
-| ID | Sujet | Sévérité | Statut |
-|----|-------|----------|--------|
-| D1 | Export/import Archimate XML non conforme au standard | **Critique** | ✅ Corrigé |
-| D2 | Stratégie de fusion `merge` documentée mais non implémentée | **Élevée** | ✅ Corrigé |
-| D3 | Résultat de la validation Zod jeté | **Élevée** | ✅ Corrigé |
-| D4 | Double source de vérité pour les types Archimate | **Élevée** | ✅ Corrigé |
-| D5 | Chaînes françaises en dur dans la Toolbar | Moyenne | ✅ Corrigé |
-| D6 | Dialogues `confirm()` natifs | Moyenne | ✅ Corrigé |
-| D7 | UUID générés via `Math.random()` | Faible | ✅ Corrigé |
-| D8 | Suppressions IndexedDB séquentielles hors transaction | Moyenne | ✅ Corrigé |
-| D9 | Accès `localStorage` sans garde d'erreur | Faible | ✅ Corrigé |
-| D10 | Format JSON versionné sans mécanisme de migration | Moyenne | ✅ Corrigé |
+> **État au 18 juillet 2026 : les dix points (D1 à D10) sont corrigés.** Chaque correction a fait l'objet d'un commit dédié (colonne *Commit* ci-dessous), avec tests et vérification du typage. Le détail de chaque remédiation est conservé plus bas à titre d'historique.
 
 ## Synthèse
 
+| ID | Sujet | Sévérité | Fichiers concernés | Statut | Commit |
+|----|-------|----------|--------------------|--------|--------|
+| D1 | Export/import Archimate XML non conforme au standard | **Critique** | `useExportable.ts`, `useImportable.ts`, `useTypeable.ts` | Corrigé | `97565e5` |
+| D2 | Stratégie de fusion `merge` documentée mais non implémentée | **Élevée** | `useImportable.ts` | Corrigé | `b3ec27f` |
+| D3 | Résultat de la validation Zod jeté (valeurs par défaut non appliquées) | **Élevée** | `useImportable.ts` | Corrigé | `dad70d9` |
+| D4 | Double source de vérité pour les types Archimate | **Élevée** | `useTypeable.ts`, `useExportable.ts` | Corrigé | `f099297` |
+| D5 | Chaînes françaises en dur dans la Toolbar malgré l'i18n | Moyenne | `Toolbar.vue`, `useI18n.ts` | Corrigé | `8cd4500` |
+| D6 | Dialogues `confirm()` natifs pour les actions destructrices | Moyenne | `Toolbar.vue`, `Sidebar.vue`, `ViewsPanel.vue`, `VersionsPanel.vue`, `useConfirm.ts`, `ConfirmHost.vue` | Corrigé | `578beff` |
+| D7 | UUID générés via `Math.random()` | Faible | `useExportable.ts` | Corrigé | `35f5202` |
+| D8 | Suppressions IndexedDB séquentielles hors transaction | Moyenne | `stores/graph.ts` | Corrigé | `7ae19e7` |
+| D9 | Accès `localStorage` sans garde d'erreur | Faible | `usePropertyable.ts`, `utils/safe-storage.ts` | Corrigé | `79de42b` |
+| D10 | Format JSON versionné `1.0` sans mécanisme de migration | Moyenne | `useExportable.ts`, `useImportable.ts`, `utils/import-migrations.ts` | Corrigé | `ce396a7` |
+
+Le quadrant ci-dessous est la photographie de la priorisation **au moment de l'audit initial**, conservée pour mémoire.
+
 ```mermaid
 quadrantChart
-    title Priorisation de la dette (impact vs effort)
+    title Priorisation de la dette à l'audit initial (impact vs effort)
     x-axis "Effort faible" --> "Effort important"
     y-axis "Impact faible" --> "Impact fort"
     quadrant-1 "Planifier"
@@ -39,19 +41,6 @@ quadrantChart
     "D9 localStorage sans garde": [0.15, 0.35]
     "D10 Version JSON sans migration": [0.55, 0.6]
 ```
-
-| ID | Sujet | Sévérité | Fichiers concernés |
-|----|-------|----------|--------------------|
-| D1 | Export/import Archimate XML non conforme au standard | **Critique** | `useExportable.ts`, `useImportable.ts` |
-| D2 | Stratégie de fusion `merge` documentée mais non implémentée | **Élevée** | `useImportable.ts` |
-| D3 | Résultat de la validation Zod jeté (valeurs par défaut non appliquées) | **Élevée** | `useImportable.ts` |
-| D4 | Double source de vérité pour les types Archimate | **Élevée** | `useTypeable.ts` |
-| D5 | Chaînes françaises en dur dans la Toolbar malgré l'i18n | Moyenne | `Toolbar.vue` |
-| D6 | Dialogues `confirm()` natifs pour les actions destructrices | Moyenne | `Toolbar.vue`, `Sidebar.vue`, `ViewsPanel.vue`, `VersionsPanel.vue` |
-| D7 | UUID générés via `Math.random()` | Faible | `useExportable.ts` |
-| D8 | Suppressions IndexedDB séquentielles hors transaction | Moyenne | `stores/graph.ts` |
-| D9 | Accès `localStorage` sans garde d'erreur | Faible | `usePropertyable.ts` |
-| D10 | Format JSON versionné `1.0` sans mécanisme de migration | Moyenne | `useExportable.ts`, `useImportable.ts` |
 
 ---
 
